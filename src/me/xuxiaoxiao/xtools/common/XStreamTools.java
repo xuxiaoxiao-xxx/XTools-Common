@@ -2,7 +2,7 @@ package me.xuxiaoxiao.xtools.common;
 
 import java.io.*;
 
-public class XStreamTools {
+public final class XStreamTools {
 
     /**
      * 将输入流中的全部数据读取成字符串

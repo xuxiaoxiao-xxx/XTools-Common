@@ -11,10 +11,12 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * HTTP请求工具，支持HTTP和HTTPS
@@ -122,7 +124,7 @@ public final class XHttpTools {
                 break;
             case URLENCODED:
                 connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded;charset=" + config.charset);
-                contentLength = XStrTools.urlJoin(body.params, config.charset).getBytes(config.charset).length;
+                contentLength = urlJoin(body.params, config.charset).getBytes(config.charset).length;
                 break;
             default:
                 connection.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + body.multipartBoundary);
@@ -166,7 +168,7 @@ public final class XHttpTools {
                     dOutStream.write(String.valueOf(body.params.get(body.type.name())).getBytes(config.charset));
                     break;
                 case URLENCODED:
-                    dOutStream.write(XStrTools.urlJoin(body.params, config.charset).getBytes(config.charset));
+                    dOutStream.write(urlJoin(body.params, config.charset).getBytes(config.charset));
                     break;
                 case MULTIPART:
                     for (String key : body.params.keySet()) {
@@ -197,6 +199,25 @@ public final class XHttpTools {
             }
             dOutStream.flush();
         }
+    }
+
+    /**
+     * 将键值对集合经过URL编码后用固定的字符串连接起来
+     *
+     * @param urlMap  键值对集合
+     * @param charset URL的编码类型
+     * @return 连接后的字符串
+     * @throws UnsupportedEncodingException 给定的编码格式不支持时抛出异常
+     */
+    private static String urlJoin(Map<?, ?> urlMap, String charset) throws UnsupportedEncodingException {
+        StringBuilder sbStr = new StringBuilder();
+        for (Object key : urlMap.keySet()) {
+            if (sbStr.length() > 0) {
+                sbStr.append('&');
+            }
+            sbStr.append(URLEncoder.encode(String.valueOf(key), charset)).append('=').append(URLEncoder.encode(String.valueOf(urlMap.get(key)), charset));
+        }
+        return sbStr.toString();
     }
 
     /**
@@ -357,9 +378,9 @@ public final class XHttpTools {
             if (params.isEmpty()) {
                 return base;
             } else if (base.indexOf('?') < 0) {
-                return base + '?' + XStrTools.urlJoin(params, charset);
+                return base + '?' + urlJoin(params, charset);
             } else {
-                return base + '&' + XStrTools.urlJoin(params, charset);
+                return base + '&' + urlJoin(params, charset);
             }
         }
 
