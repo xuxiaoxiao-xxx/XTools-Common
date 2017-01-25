@@ -2,6 +2,7 @@ package me.xuxiaoxiao.xtools.common;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -9,9 +10,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class XTimeTools {
+    public static final int WORKDAY = 0;
+    public static final int RESTDAY = 1;
+    public static final int HOLIDAY = 2;
+
+    private static final String PATTERN_WEEK = ".+[一二三四五]";
     private static final TLYMDHMS tlYMDHMS = new TLYMDHMS();
     private static final TLYMD tlYMD = new TLYMD();
+    private static final TLMD tlMD = new TLMD();
     private static final TLHMS tlHMS = new TLHMS();
+    private static final TLHM tlHM = new TLHM();
     private static final TLE tlE = new TLE();
 
     private XTimeTools() {
@@ -36,12 +44,30 @@ public final class XTimeTools {
     }
 
     /**
+     * 获取MM-dd格式的SimpleDateFormat，线程安全
+     *
+     * @return SimpleDateFormat对象
+     */
+    public static SimpleDateFormat sdfMD() {
+        return tlMD.get();
+    }
+
+    /**
      * 获取HH:mm:ss格式的SimpleDateFormat，线程安全
      *
      * @return SimpleDateFormat对象
      */
     public static SimpleDateFormat sdfHMS() {
         return tlHMS.get();
+    }
+
+    /**
+     * 获取HH:mm格式的SimpleDateFormat，线程安全
+     *
+     * @return SimpleDateFormat对象
+     */
+    public static SimpleDateFormat sdfHM() {
+        return tlHM.get();
     }
 
     /**
@@ -99,6 +125,36 @@ public final class XTimeTools {
     }
 
     /**
+     * 获取任意一天的类型，0：工作日，1：公休日，2：节假日
+     *
+     * @param date 要获取的date对象
+     * @return date对象对应的那天的类型。0：工作日，1：公休日，2：节假日
+     */
+    public static int dateType(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        int year = calendar.get(Calendar.YEAR);
+        if (year < XHolidayDb.YEAR_MIN || year >= XHolidayDb.YEAR_MAX) {
+            return Pattern.matches(PATTERN_WEEK, sdfE().format(date)) ? WORKDAY : RESTDAY;
+        } else {
+            try {
+                String[][] holidays = (String[][]) XHolidayDb.class.getDeclaredField("HOLIDAY_" + year).get(null);
+                String dateMD = sdfMD().format(date);
+                for (int type = WORKDAY; type <= HOLIDAY; type++) {
+                    for (String typeMD : holidays[type]) {
+                        if (typeMD.equals(dateMD)) {
+                            return type;
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return Pattern.matches(PATTERN_WEEK, sdfE().format(date)) ? WORKDAY : RESTDAY;
+        }
+    }
+
+    /**
      * 将农历时间转换成阳历时间
      *
      * @param lunarDate 农历时间字符串。例1：2016年八月初六。例2：2033年闰冬月廿八。
@@ -106,7 +162,7 @@ public final class XTimeTools {
      */
     public static Date lunarToSolar(String lunarDate) {
         // 匹配年月日闰
-        Matcher matcher = Pattern.compile(ALunarTools.LUNAR_PATTERN).matcher(lunarDate);
+        Matcher matcher = Pattern.compile(XLunarDb.LUNAR_PATTERN).matcher(lunarDate);
         if (!matcher.matches()) {
             throw new RuntimeException("农历日期格式不正确，例1：2016年八月初六。例2：2033年闰冬月廿八。");
         }
@@ -117,8 +173,8 @@ public final class XTimeTools {
         // 解析年月日闰
         int lunarYear = Integer.valueOf(strYear);
         int lunarMonth = 0;
-        for (int i = 0; i < ALunarTools.LUNAR_MONTH.length; i++) {
-            if (ALunarTools.LUNAR_MONTH[i].equals(strMonth)) {
+        for (int i = 0; i < XLunarDb.LUNAR_MONTH.length; i++) {
+            if (XLunarDb.LUNAR_MONTH[i].equals(strMonth)) {
                 lunarMonth = i + 1;
                 break;
             }
@@ -144,8 +200,8 @@ public final class XTimeTools {
                     lunarDay = 20;
                     break;
             }
-            for (int i = 0; i < ALunarTools.LUNAR_DAY.length; i++) {
-                if (ALunarTools.LUNAR_DAY[i].equals(strOne)) {
+            for (int i = 0; i < XLunarDb.LUNAR_DAY.length; i++) {
+                if (XLunarDb.LUNAR_DAY[i].equals(strOne)) {
                     lunarDay = lunarDay + i + 1;
                     break;
                 }
@@ -153,24 +209,24 @@ public final class XTimeTools {
         }
         boolean lunarLeap = !XStrTools.isEmpty(strLeap);
         // 验证年月日闰
-        ALunarTools.checkLunarDate(lunarYear, lunarMonth, lunarDay, lunarLeap);
+        XLunarDb.checkLunarDate(lunarYear, lunarMonth, lunarDay, lunarLeap);
         // 计算与1900-01-31相差多少天
         int dayBetween = 0;
-        for (int i = ALunarTools.MIN_YEAR; i < lunarYear; i++) {
-            dayBetween += ALunarTools.getYearDays(i);
+        for (int i = XLunarDb.MIN_YEAR; i < lunarYear; i++) {
+            dayBetween += XLunarDb.getYearDays(i);
         }
         for (int i = 1; i < lunarMonth; i++) {
-            dayBetween += ALunarTools.getMonthDays(lunarYear, i, false);
+            dayBetween += XLunarDb.getMonthDays(lunarYear, i, false);
         }
-        final int leapMonth = ALunarTools.LUNAR_INFO[lunarYear - ALunarTools.MIN_YEAR] & 0xf;
+        final int leapMonth = XLunarDb.LUNAR_INFO[lunarYear - XLunarDb.MIN_YEAR] & 0xf;
         if (0 < leapMonth && leapMonth < lunarMonth) {
-            dayBetween += ALunarTools.getMonthDays(lunarYear, leapMonth, true);
+            dayBetween += XLunarDb.getMonthDays(lunarYear, leapMonth, true);
         } else if (leapMonth == lunarMonth && lunarLeap) {
-            dayBetween += ALunarTools.getMonthDays(lunarYear, leapMonth, false);
+            dayBetween += XLunarDb.getMonthDays(lunarYear, leapMonth, false);
         }
         dayBetween += lunarDay - 1;
         try {
-            Date minDate = ALunarTools.sdfLunar().parse(ALunarTools.MIN_DATE);
+            Date minDate = XLunarDb.sdfLunar().parse(XLunarDb.MIN_DATE);
             return new Date(minDate.getTime() + (long) dayBetween * 24L * 60L * 60L * 1000L);
         } catch (ParseException e) {
             throw new RuntimeException("解析日期出错");
@@ -187,8 +243,8 @@ public final class XTimeTools {
         // 验证日期是否在范围内
         Date minDate, maxDate;
         try {
-            minDate = ALunarTools.sdfLunar().parse(ALunarTools.MIN_DATE);
-            maxDate = ALunarTools.sdfLunar().parse(ALunarTools.MAX_DATE);
+            minDate = XLunarDb.sdfLunar().parse(XLunarDb.MIN_DATE);
+            maxDate = XLunarDb.sdfLunar().parse(XLunarDb.MAX_DATE);
         } catch (ParseException e) {
             throw new RuntimeException("解析日期出错");
         }
@@ -199,8 +255,8 @@ public final class XTimeTools {
         int dayBetween = (int) ((solarDate.getTime() - minDate.getTime()) / 24 / 60 / 60 / 1000);
         // 确定年
         int lunarYear = 0;
-        for (int i = ALunarTools.MIN_YEAR; i <= ALunarTools.MAX_YEAR; i++) {
-            int yearDays = ALunarTools.getYearDays(i);
+        for (int i = XLunarDb.MIN_YEAR; i <= XLunarDb.MAX_YEAR; i++) {
+            int yearDays = XLunarDb.getYearDays(i);
             if (dayBetween - yearDays < 0) {
                 lunarYear = i;
                 break;
@@ -211,9 +267,9 @@ public final class XTimeTools {
         // 确定年中的月和是否是闰月
         int lunarMonth = 0;
         boolean lunarLeap = false;
-        final int leapMonth = ALunarTools.LUNAR_INFO[lunarYear - ALunarTools.MIN_YEAR] & 0xf;
+        final int leapMonth = XLunarDb.LUNAR_INFO[lunarYear - XLunarDb.MIN_YEAR] & 0xf;
         for (int i = 1; i <= 12; i++) {
-            int monthDays = ALunarTools.getMonthDays(lunarYear, i, false);
+            int monthDays = XLunarDb.getMonthDays(lunarYear, i, false);
             if (dayBetween - monthDays < 0) {
                 lunarMonth = i;
                 lunarLeap = false;
@@ -222,7 +278,7 @@ public final class XTimeTools {
                 dayBetween -= monthDays;
             }
             if (i == leapMonth) {
-                monthDays = ALunarTools.getMonthDays(lunarYear, leapMonth, true);
+                monthDays = XLunarDb.getMonthDays(lunarYear, leapMonth, true);
                 if (dayBetween - monthDays < 0) {
                     lunarMonth = leapMonth;
                     lunarLeap = true;
@@ -240,7 +296,7 @@ public final class XTimeTools {
         if (lunarLeap) {
             sbLunar.append("闰");
         }
-        sbLunar.append(ALunarTools.LUNAR_MONTH[lunarMonth - 1]).append("月");
+        sbLunar.append(XLunarDb.LUNAR_MONTH[lunarMonth - 1]).append("月");
         if (lunarDay == 10) {
             sbLunar.append("初十");
         } else if (lunarDay == 20) {
@@ -259,7 +315,7 @@ public final class XTimeTools {
                     sbLunar.append("廿");
                     break;
             }
-            sbLunar.append(ALunarTools.LUNAR_DAY[lunarDay % 10 - 1]);
+            sbLunar.append(XLunarDb.LUNAR_DAY[lunarDay % 10 - 1]);
         }
         return sbLunar.toString();
     }
@@ -281,6 +337,26 @@ public final class XTimeTools {
         @Override
         protected SimpleDateFormat initialValue() {
             return new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA);
+        }
+    }
+
+    /**
+     * MM-dd格式的SimpleDateFormat的ThreadLocal类
+     */
+    private static class TLMD extends ThreadLocal<SimpleDateFormat> {
+        @Override
+        protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat("MM-dd", Locale.CHINA);
+        }
+    }
+
+    /**
+     * HH:mm:ss格式的SimpleDateFormat的ThreadLocal类
+     */
+    private static class TLHM extends ThreadLocal<SimpleDateFormat> {
+        @Override
+        protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat("HH:mm", Locale.CHINA);
         }
     }
 
@@ -307,7 +383,7 @@ public final class XTimeTools {
     /**
      * 农历工具类，保存了农历的一些信息，和操作函数
      */
-    public static class ALunarTools {
+    private static class XLunarDb {
         // 可接受的最早的时间
         public static final String MIN_DATE = "1900-01-31 UTC+0800";
         // 可接受的最迟的时间
@@ -417,5 +493,101 @@ public final class XTimeTools {
                 return sdfLunar;
             }
         }
+    }
+
+    private static class XHolidayDb {
+        public static final int YEAR_MIN = 2000;
+        public static final int YEAR_MAX = 2018;
+
+        public static final String[][] HOLIDAY_2000 = new String[][]{
+                {"02-12", "02-13", "04-29", "04-30", "09-30", "10-08"},
+                {"02-08", "02-09", "02-10", "02-11", "05-04", "05-05", "10-04", "10-05", "10-06"},
+                {"02-05", "02-06", "02-07", "05-01", "05-02", "05-03", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2001 = new String[][]{
+                {"01-20", "01-21", "04-28", "04-29", "09-29", "09-30", "12-29", "12-30"},
+                {"01-29", "01-30", "05-04", "05-07", "10-04", "10-05"},
+                {"01-01", "01-24", "01-25", "01-26", "05-01", "05-02", "05-03", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2002 = new String[][]{
+                {"02-09", "02-10", "04-27", "04-28", "09-28", "09-29"},
+                {"01-02", "01-03", "02-15", "02-18", "05-06", "05-07", "10-04", "10-07"},
+                {"01-01", "02-12", "02-13", "02-14", "05-01", "05-02", "05-03", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2003 = new String[][]{
+                {"02-08", "02-09", "04-26", "04-27", "09-27", "09-28"},
+                {"02-04", "02-05", "02-06", "02-07", "05-05", "05-06", "05-07", "10-06", "10-07"},
+                {"01-01", "02-01", "02-02", "02-03", "05-01", "05-02", "05-03", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2004 = new String[][]{
+                {"01-17", "01-18", "05-08", "05-09", "10-09", "10-10"},
+                {"01-26", "01-27", "01-28", "05-04", "05-05", "05-06", "05-07", "10-04", "10-05", "10-06", "10-07"},
+                {"01-01", "01-22", "01-23", "01-24", "05-01", "05-02", "05-03", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2005 = new String[][]{
+                {"02-05", "02-06", "04-30", "05-08", "10-08", "10-09", "12-31"},
+                {"01-03", "02-14", "02-15", "05-04", "05-05", "05-06", "10-04", "10-05", "10-06", "10-07"},
+                {"01-01", "02-09", "02-10", "02-11", "05-01", "05-02", "05-03", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2006 = new String[][]{
+                {"01-28", "02-05", "04-29", "04-30", "09-30", "10-08", "12-30", "12-31"},
+                {"01-02", "01-03", "02-01", "02-02", "02-03", "05-04", "05-05", "10-04", "10-05", "10-06"},
+                {"01-01", "01-29", "01-30", "01-31", "05-01", "05-02", "05-03", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2007 = new String[][]{
+                {"02-17", "02-25", "04-28", "04-29", "09-29", "09-30", "12-29"},
+                {"01-02", "01-03", "02-21", "02-22", "02-23", "05-04", "05-07", "10-04", "10-05", "12-31"},
+                {"01-01", "02-18", "02-19", "02-20", "05-01", "05-02", "05-03", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2008 = new String[][]{
+                {"02-02", "02-03", "05-04", "09-27", "09-28"},
+                {"02-11", "02-12", "05-02", "06-09", "09-15", "09-29", "09-30"},
+                {"01-01", "02-06", "02-07", "02-08", "04-04", "05-01", "06-08", "09-14", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2009 = new String[][]{
+                {"01-04", "01-24", "02-01", "05-31", "09-27", "10-10"},
+                {"01-02", "01-28", "01-29", "01-30", "04-06", "05-29", "10-05", "10-07", "10-08"},
+                {"01-01", "01-25", "01-26", "01-27", "04-04", "05-01", "05-28", "10-01", "10-02", "10-03", "10-06"}
+        };
+        public static final String[][] HOLIDAY_2010 = new String[][]{
+                {"02-20", "02-21", "06-12", "06-13", "09-19", "09-25", "09-26", "10-09"},
+                {"02-16", "02-17", "02-18", "02-19", "05-03", "06-14", "06-15", "09-23", "09-24", "10-04", "10-05", "10-06", "10-07"},
+                {"01-01", "02-13", "02-14", "02-15", "04-05", "05-01", "06-16", "09-22", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2011 = new String[][]{
+                {"01-30", "02-12", "04-02", "10-08", "10-09", "12-31"},
+                {"01-03", "02-07", "02-08", "05-02", "10-04", "10-05", "10-06", "10-07"},
+                {"01-01", "02-02", "02-03", "02-04", "04-05", "05-01", "06-06", "09-12", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2012 = new String[][]{
+                {"01-21", "01-29", "03-31", "04-01", "04-28", "09-29"},
+                {"01-02", "01-03", "01-25", "01-26", "01-27", "04-02", "04-03", "04-30", "06-22", "10-04", "10-05"},
+                {"01-01", "01-22", "01-23", "01-24", "04-04", "05-01", "06-23", "09-30", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2013 = new String[][]{
+                {"01-05", "01-06", "02-16", "02-17", "04-07", "04-27", "04-28", "06-08", "06-09", "09-22", "09-29", "10-12"},
+                {"01-02", "01-03", "02-12", "02-13", "02-14", "02-15", "04-05", "04-29", "04-30", "06-10", "06-11", "09-20", "10-04", "10-07"},
+                {"01-01", "02-09", "02-10", "02-11", "04-04", "05-01", "06-12", "09-19", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2014 = new String[][]{
+                {"01-26", "02-08", "05-04", "09-28", "10-11"},
+                {"02-03", "02-04", "02-05", "02-06", "04-07", "05-02", "10-06", "10-07"},
+                {"01-01", "01-31", "02-01", "02-02", "04-05", "05-01", "06-02", "09-08", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2015 = new String[][]{
+                {"01-04", "02-15", "02-28", "09-06", "10-10"},
+                {"01-02", "02-23", "02-24", "04-06", "06-22", "09-04", "10-05", "10-06", "10-07"},
+                {"01-01", "02-18", "02-19", "02-20", "04-05", "05-01", "06-20", "09-03", "09-27", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2016 = new String[][]{
+                {"02-06", "02-14", "06-12", "09-18", "10-08", "10-09"},
+                {"02-10", "02-11", "02-12", "05-02", "06-10", "06-11", "09-16", "09-17", "10-04", "10-05", "10-06", "10-07"},
+                {"01-01", "02-07", "02-08", "02-09", "04-04", "05-01", "06-09", "09-15", "10-01", "10-02", "10-03"}
+        };
+        public static final String[][] HOLIDAY_2017 = new String[][]{
+                {"01-02", "01-22", "02-04", "04-01", "05-27", "09-30"},
+                {"01-30", "01-31", "02-01", "02-02", "04-03", "05-29", "10-05", "10-06"},
+                {"01-01", "01-27", "01-28", "01-29", "04-04", "05-01", "05-30", "10-01", "10-02", "10-03", "10-04"}
+        };
     }
 }
