@@ -520,7 +520,7 @@ public final class XHttpTools {
         @Nullable
         public final String string() {
             try {
-                return XStreamTools.streamToStr(inStream, config.charset);
+                return XStreamTools.streamToStr(inStream(), config.charset);
             } catch (Exception e) {
                 return null;
             } finally {

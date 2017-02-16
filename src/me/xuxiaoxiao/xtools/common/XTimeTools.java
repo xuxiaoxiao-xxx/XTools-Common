@@ -10,11 +10,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class XTimeTools {
-    public static final int WORKDAY = 0;
-    public static final int RESTDAY = 1;
-    public static final int HOLIDAY = 2;
+    public static final int WORKDAY = 1;
+    public static final int RESTDAY = 2;
+    public static final int HOLIDAY = 3;
 
-    private static final String PATTERN_WEEK = ".+[一二三四五]";
+    private static final String PATTERN_WORKDAY = ".+[一二三四五]";
     private static final TLYMDHMS tlYMDHMS = new TLYMDHMS();
     private static final TLYMD tlYMD = new TLYMD();
     private static final TLMD tlMD = new TLMD();
@@ -125,23 +125,23 @@ public final class XTimeTools {
     }
 
     /**
-     * 获取任意一天的类型，0：工作日，1：公休日，2：节假日
+     * 获取任意一天的类型，1：工作日，2：公休日，3：节假日
      *
      * @param date 要获取的date对象
-     * @return date对象对应的那天的类型。0：工作日，1：公休日，2：节假日
+     * @return date对象对应的那天的类型。1：工作日，2：公休日，3：节假日
      */
     public static int dateType(Date date) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         int year = calendar.get(Calendar.YEAR);
         if (year < XHolidayDb.YEAR_MIN || year >= XHolidayDb.YEAR_MAX) {
-            return Pattern.matches(PATTERN_WEEK, sdfE().format(date)) ? WORKDAY : RESTDAY;
+            return Pattern.matches(PATTERN_WORKDAY, sdfE().format(date)) ? WORKDAY : RESTDAY;
         } else {
             try {
                 String[][] holidays = (String[][]) XHolidayDb.class.getDeclaredField("HOLIDAY_" + year).get(null);
                 String dateMD = sdfMD().format(date);
                 for (int type = WORKDAY; type <= HOLIDAY; type++) {
-                    for (String typeMD : holidays[type]) {
+                    for (String typeMD : holidays[type - 1]) {
                         if (typeMD.equals(dateMD)) {
                             return type;
                         }
@@ -150,7 +150,7 @@ public final class XTimeTools {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            return Pattern.matches(PATTERN_WEEK, sdfE().format(date)) ? WORKDAY : RESTDAY;
+            return Pattern.matches(PATTERN_WORKDAY, sdfE().format(date)) ? WORKDAY : RESTDAY;
         }
     }
 
