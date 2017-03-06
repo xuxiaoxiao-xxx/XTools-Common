@@ -1,6 +1,9 @@
 package me.xuxiaoxiao.xtools;
 
 import com.sun.istack.internal.Nullable;
+import me.xuxiaoxiao.xtools.XHttpTools.XBody;
+import me.xuxiaoxiao.xtools.XHttpTools.XResp;
+import me.xuxiaoxiao.xtools.XHttpTools.XUrl;
 
 import java.io.*;
 import java.util.Calendar;
@@ -24,8 +27,8 @@ public final class XTools {
      */
     public static String md5(String str) {
         try {
-            return XUCode.hash(XUCode.HASH_MD5, str.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
+            return XCodeTools.hash(XCodeTools.HASH_MD5, str.getBytes("UTF-8"));
+        } catch (Exception e) {
             return null;
         }
     }
@@ -37,7 +40,12 @@ public final class XTools {
      * @return 散列结果，全小写字母
      */
     public static String md5(File file) {
-        return XUCode.hash(XUCode.HASH_MD5, file);
+        try {
+            return XCodeTools.hash(XCodeTools.HASH_MD5, file);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
@@ -48,8 +56,8 @@ public final class XTools {
      */
     public static String sha1(String str) {
         try {
-            return XUCode.hash(XUCode.HASH_SHA1, str.getBytes("UTF-8"));
-        } catch (UnsupportedEncodingException e) {
+            return XCodeTools.hash(XCodeTools.HASH_SHA1, str.getBytes("UTF-8"));
+        } catch (Exception e) {
             return null;
         }
     }
@@ -61,30 +69,35 @@ public final class XTools {
      * @return 散列结果，全小写字母
      */
     public static String sha1(File file) {
-        return XUCode.hash(XUCode.HASH_SHA1, file);
-    }
-
-    /**
-     * 使用默认的请求选项进行HTTP的GET请求，
-     * 如需对HTTP请求进行更复杂的配置，请移步XUHttp.request(XOption option, XUrl url, @Nullable XBody body);方法
-     *
-     * @param url 请求的url
-     * @return 请求的响应体
-     */
-    public static XUHttp.XResp http(XUHttp.XUrl url) {
-        return XUHttp.request(XUHttp.DEFAULT_OPTION, url, null);
+        try {
+            return XCodeTools.hash(XCodeTools.HASH_SHA1, file);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
      * 使用默认的请求选项进行HTTP请求，
-     * 如需对HTTP请求进行更复杂的配置，请移步XUHttp.request(XOption option, XUrl url, @Nullable XBody body);方法
+     * 如需对HTTP请求进行更复杂的配置，请移步XHttpTools.request(XOption option, XUrl url, XBody body);方法
+     *
+     * @param url 请求的url
+     * @return 请求的响应体
+     */
+    public static XResp http(XUrl url) {
+        return XHttpTools.request(XHttpTools.DEFAULT_OPTION, url, null);
+    }
+
+    /**
+     * 使用默认的请求选项进行HTTP请求，
+     * 如需对HTTP请求进行更复杂的配置，请移步XHttpTools.request(XOption option, XUrl url, XBody body);方法
      *
      * @param url  请求的url
      * @param body 请求的请求体，RequestMethod=(body == null ? "GET" : "POST")
      * @return 请求的响应体
      */
-    public static XUHttp.XResp http(XUHttp.XUrl url, XUHttp.XBody body) {
-        return XUHttp.request(XUHttp.DEFAULT_OPTION, url, body);
+    public static XResp http(XUrl url, XBody body) {
+        return XHttpTools.request(XHttpTools.DEFAULT_OPTION, url, body);
     }
 
     /**
@@ -252,13 +265,13 @@ public final class XTools {
     }
 
     /**
-     * 获取任意一天的类型，1：工作日(XUTime.WORKDAY)，2：公休日(XUTime.RESTDAY)，3：节假日(XUTime.HOLIDAY)
+     * 获取任意一天的类型，1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
      *
      * @param date 要获取的date对象
-     * @return date对象对应的那天的类型。1：工作日(XUTime.WORKDAY)，2：公休日(XUTime.RESTDAY)，3：节假日(XUTime.HOLIDAY)
+     * @return date对象对应的那天的类型。1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
      */
     public static int dateType(Date date) {
-        return XUTime.dateType(date);
+        return XTimeTools.dateType(date);
     }
 
     /**
@@ -270,7 +283,7 @@ public final class XTools {
      */
     public static Date dateByDay(@Nullable Date base, int dayOffset) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
-        return XUTime.dateOfTime(new Date(baseTime + dayOffset * 24 * 60 * 60 * 1000));
+        return XTimeTools.dateOfTime(new Date(baseTime + dayOffset * 24 * 60 * 60 * 1000));
     }
 
     /**
@@ -286,12 +299,11 @@ public final class XTools {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime + weekOffset * 7 * 24 * 60 * 60 * 1000);
         if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
-            return XUTime.dateOfTime(new Date(calendar.getTimeInMillis() - (long) (6 - dayIndex) * 24L * 60L * 60L * 1000L));
+            return XTimeTools.dateOfTime(new Date(calendar.getTimeInMillis() - (long) (6 - dayIndex) * 24L * 60L * 60L * 1000L));
         } else {
             calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-            return XUTime.dateOfTime(new Date(calendar.getTimeInMillis() + (long) dayIndex * 24L * 60L * 60L * 1000L));
+            return XTimeTools.dateOfTime(new Date(calendar.getTimeInMillis() + (long) dayIndex * 24L * 60L * 60L * 1000L));
         }
-
     }
 
     /**
@@ -308,7 +320,7 @@ public final class XTools {
         calendar.setTimeInMillis(baseTime);
         calendar.roll(Calendar.MONTH, monthOffset);
         calendar.set(Calendar.DAY_OF_MONTH, dayIndex + 1);
-        return XUTime.dateOfTime(calendar.getTime());
+        return XTimeTools.dateOfTime(calendar.getTime());
     }
 
     /**
@@ -318,7 +330,7 @@ public final class XTools {
      * @return 对应的农历时间的字符串，例1：1992年八月初六。例2：2033年闰冬月廿八
      */
     public static String solarToLunar(Date solarDate) {
-        return XUTime.solarToLunar(solarDate);
+        return XTimeTools.solarToLunar(solarDate);
     }
 
     /**
@@ -328,6 +340,6 @@ public final class XTools {
      * @return 阳历时间的Date对象
      */
     public static Date lunarToSolar(String lunarDate) {
-        return XUTime.lunarToSolar(lunarDate);
+        return XTimeTools.lunarToSolar(lunarDate);
     }
 }

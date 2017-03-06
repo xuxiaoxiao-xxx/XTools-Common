@@ -2,25 +2,27 @@ package me.xuxiaoxiao.xtools;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * XuXiaoXiao的常用的基本的关于编码和解码的函数的集合
  */
-public final class XUCode {
+public final class XCodeTools {
     /**
      * 散列算法-MD5
      */
     public static final String HASH_MD5 = "MD5";
     /**
-     * 散列算法SHA1
+     * 散列算法-SHA1
      */
     public static final String HASH_SHA1 = "SHA1";
 
     private static final char HEX[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
-    private XUCode() {
+    private XCodeTools() {
     }
 
     /**
@@ -29,16 +31,12 @@ public final class XUCode {
      * @param algorithm 散列算法
      * @param bytes     被散列的字节数组
      * @return 散列结果，全小写字母
+     * @throws NoSuchAlgorithmException 当未找到指定的散列算法时抛出异常
      */
-    public static String hash(String algorithm, byte[] bytes) {
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
-            messageDigest.update(bytes);
-            return bytesToHex(messageDigest.digest());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+    public static String hash(String algorithm, byte[] bytes) throws NoSuchAlgorithmException {
+        MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
+        messageDigest.update(bytes);
+        return bytesToHex(messageDigest.digest());
     }
 
     /**
@@ -47,22 +45,19 @@ public final class XUCode {
      * @param algorithm 散列算法
      * @param file      被散列的文件
      * @return 散列结果，全小写字母
+     * @throws IOException              当文件未找到或者输入输出时错误时抛出异常
+     * @throws NoSuchAlgorithmException 当未找到指定的散列算法时抛出异常
      */
-    public static String hash(String algorithm, File file) {
-        try {
-            MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
-            try (FileInputStream fileInputStream = new FileInputStream(file); DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)) {
-                byte[] buffer = new byte[1024];
-                while (true) {
-                    if (digestInputStream.read(buffer) <= 0) {
-                        break;
-                    }
+    public static String hash(String algorithm, File file) throws IOException, NoSuchAlgorithmException {
+        MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
+        try (FileInputStream fileInputStream = new FileInputStream(file); DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)) {
+            byte[] buffer = new byte[1024];
+            while (true) {
+                if (digestInputStream.read(buffer) <= 0) {
+                    break;
                 }
-                return bytesToHex(digestInputStream.getMessageDigest().digest());
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            return bytesToHex(digestInputStream.getMessageDigest().digest());
         }
     }
 

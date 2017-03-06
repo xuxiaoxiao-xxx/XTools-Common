@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 /**
  * XuXiaoXiao的常用的基本的关于时间的函数的集合
  */
-public final class XUTime {
+public final class XTimeTools {
     /**
      * int dateType(Date date);函数的返回值的枚举，工作日
      */
@@ -33,7 +33,7 @@ public final class XUTime {
     private static final TLHM tlHM = new TLHM();
     private static final TLE tlE = new TLE();
 
-    private XUTime() {
+    private XTimeTools() {
     }
 
     /**
@@ -106,10 +106,10 @@ public final class XUTime {
     }
 
     /**
-     * 获取任意一天的类型，1：工作日(XUTime.WORKDAY)，2：公休日(XUTime.RESTDAY)，3：节假日(XUTime.HOLIDAY)
+     * 获取任意一天的类型，1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
      *
      * @param date 要获取的date对象
-     * @return date对象对应的那天的类型。1：工作日(XUTime.WORKDAY)，2：公休日(XUTime.RESTDAY)，3：节假日(XUTime.HOLIDAY)
+     * @return date对象对应的那天的类型。1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
      * @see #WORKDAY
      * @see #RESTDAY
      * @see #HOLIDAY

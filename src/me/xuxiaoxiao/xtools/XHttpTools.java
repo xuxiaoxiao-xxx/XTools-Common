@@ -21,13 +21,13 @@ import java.util.Map;
 /**
  * XuXiaoXiao的常用的基本的关于HTTP的函数的集合
  */
-public final class XUHttp {
+public final class XHttpTools {
     /**
      * 默认的请求配置
      */
     public static final XOption DEFAULT_OPTION = new XOption();
 
-    private XUHttp() {
+    private XHttpTools() {
     }
 
     /**
@@ -51,7 +51,9 @@ public final class XUHttp {
                 body.chunkedMode(connection);
                 body.contentType(connection, option);
                 body.contentLength(connection, option);
-                body.contentWrite(connection, option);
+                try (DataOutputStream dOutStream = new DataOutputStream(connection.getOutputStream())) {
+                    body.contentWrite(dOutStream, option);
+                }
             }
             if (option.working()) {
                 // 请求没有被停止，获取输入流，返回请求结果
@@ -63,8 +65,8 @@ public final class XUHttp {
                 return new XResp(connection, null, option);
             }
         } catch (Exception e) {
-            e.printStackTrace();
             // 请求异常结束，返回空的请求结果
+            e.printStackTrace();
             return new XResp(null, null, option);
         }
     }
@@ -87,7 +89,7 @@ public final class XUHttp {
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
             return connection;
         } else {
-            throw new Exception("XTHttp仅支持HTTP协议和HTTPS协议");
+            throw new Exception("XHttpTools仅支持HTTP协议和HTTPS协议");
         }
     }
 
@@ -311,7 +313,7 @@ public final class XUHttp {
         // POST的参数
         private final HashMap<String, Object> params;
         // 如果请求体的Content-Type是multipart/form-data，该成员是分割线
-        private final String multipartBoundary = XTools.md5(XUHttp.class.getSimpleName() + System.currentTimeMillis()) + (int) (Math.random() * 10000);
+        private final String multipartBoundary = XTools.md5(XHttpTools.class.getSimpleName() + System.currentTimeMillis()) + (int) (Math.random() * 10000);
 
         private XBody(String type) {
             this.type = type;
@@ -452,47 +454,45 @@ public final class XUHttp {
         /**
          * 将POST请求的请求体写出到连接中
          *
-         * @param connection 请求的连接
+         * @param dOutStream 请求的输出流
          * @param option     请求的配置
          * @throws IOException 写出请求体时可能会抛出IO异常
          */
-        private void contentWrite(HttpURLConnection connection, XOption option) throws IOException {
-            try (DataOutputStream dOutStream = new DataOutputStream(connection.getOutputStream())) {
-                switch (type) {
-                    case URLENCODED:
-                        dOutStream.write(urlJoin(params, option.charset).getBytes(option.charset));
-                        break;
-                    case MULTIPART:
-                        for (String key : params.keySet()) {
-                            Object value = params.get(key);
-                            if (value instanceof File) {
-                                dOutStream.write((XOption.MINUS + multipartBoundary + XOption.CRLF).getBytes(option.charset));
-                                dOutStream.write(String.format("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"%s", key, ((File) value).getName(), XOption.CRLF).getBytes(option.charset));
-                                dOutStream.write(String.format("Content-Type: %s%s", URLConnection.getFileNameMap().getContentTypeFor(((File) value).getAbsolutePath()), XOption.CRLF).getBytes(option.charset));
-                                dOutStream.write(XOption.CRLF.getBytes(option.charset));
-                                try (FileInputStream fInStream = new FileInputStream((File) value)) {
-                                    int count;
-                                    byte[] buffer = new byte[1024];
-                                    while (option.working() && (count = fInStream.read(buffer)) > 0) {
-                                        dOutStream.write(buffer, 0, count);
-                                    }
+        private void contentWrite(DataOutputStream dOutStream, XOption option) throws IOException {
+            switch (type) {
+                case URLENCODED:
+                    dOutStream.write(urlJoin(params, option.charset).getBytes(option.charset));
+                    break;
+                case MULTIPART:
+                    for (String key : params.keySet()) {
+                        Object value = params.get(key);
+                        if (value instanceof File) {
+                            dOutStream.write((XOption.MINUS + multipartBoundary + XOption.CRLF).getBytes(option.charset));
+                            dOutStream.write(String.format("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"%s", key, ((File) value).getName(), XOption.CRLF).getBytes(option.charset));
+                            dOutStream.write(String.format("Content-Type: %s%s", URLConnection.getFileNameMap().getContentTypeFor(((File) value).getAbsolutePath()), XOption.CRLF).getBytes(option.charset));
+                            dOutStream.write(XOption.CRLF.getBytes(option.charset));
+                            try (FileInputStream fInStream = new FileInputStream((File) value)) {
+                                int count;
+                                byte[] buffer = new byte[1024];
+                                while (option.working() && (count = fInStream.read(buffer)) > 0) {
+                                    dOutStream.write(buffer, 0, count);
                                 }
-                                dOutStream.write(XOption.CRLF.getBytes(option.charset));
-                            } else {
-                                dOutStream.write((XOption.MINUS + multipartBoundary + XOption.CRLF).getBytes(option.charset));
-                                dOutStream.write(String.format("Content-Disposition: form-data; name=\"%s\"%s", key, XOption.CRLF).getBytes(option.charset));
-                                dOutStream.write(XOption.CRLF.getBytes(option.charset));
-                                dOutStream.write(String.valueOf(value).getBytes(option.charset));
-                                dOutStream.write(XOption.CRLF.getBytes(option.charset));
                             }
+                            dOutStream.write(XOption.CRLF.getBytes(option.charset));
+                        } else {
+                            dOutStream.write((XOption.MINUS + multipartBoundary + XOption.CRLF).getBytes(option.charset));
+                            dOutStream.write(String.format("Content-Disposition: form-data; name=\"%s\"%s", key, XOption.CRLF).getBytes(option.charset));
+                            dOutStream.write(XOption.CRLF.getBytes(option.charset));
+                            dOutStream.write(String.valueOf(value).getBytes(option.charset));
+                            dOutStream.write(XOption.CRLF.getBytes(option.charset));
                         }
-                        dOutStream.write((XOption.MINUS + multipartBoundary + XOption.MINUS + XOption.CRLF).getBytes(option.charset));
-                        break;
-                    case JSON:
-                    case XML:
-                        dOutStream.write(String.valueOf(params.get(type)).getBytes(option.charset));
-                        break;
-                }
+                    }
+                    dOutStream.write((XOption.MINUS + multipartBoundary + XOption.MINUS + XOption.CRLF).getBytes(option.charset));
+                    break;
+                case JSON:
+                case XML:
+                    dOutStream.write(String.valueOf(params.get(type)).getBytes(option.charset));
+                    break;
             }
         }
     }
@@ -547,6 +547,7 @@ public final class XUHttp {
             try {
                 return XTools.streamToStr(inStream(), config.charset);
             } catch (Exception e) {
+                e.printStackTrace();
                 return null;
             } finally {
                 close();
