@@ -108,7 +108,7 @@ public final class XTimeTools {
     /**
      * 获取任意一天的类型，1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
      *
-     * @param date 要获取的date对象
+     * @param date date对象
      * @return date对象对应的那天的类型。1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
      * @see #WORKDAY
      * @see #RESTDAY
@@ -131,7 +131,36 @@ public final class XTimeTools {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return Pattern.matches(".+[一二三四五]", sdfE().format(date)) ? WORKDAY : RESTDAY;
+        return weekIndex(date) < 5 ? WORKDAY : RESTDAY;
+    }
+
+    /**
+     * 获取任意一天是一周中的第几天，0：周一，1：周二...6：周日
+     *
+     * @param date date对象
+     * @return date对象是一周中的第几天
+     */
+    public static int weekIndex(Date date) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        switch (calendar.get(Calendar.DAY_OF_WEEK)) {
+            case Calendar.MONDAY:
+                return 0;
+            case Calendar.TUESDAY:
+                return 1;
+            case Calendar.WEDNESDAY:
+                return 2;
+            case Calendar.THURSDAY:
+                return 3;
+            case Calendar.FRIDAY:
+                return 4;
+            case Calendar.SATURDAY:
+                return 5;
+            case Calendar.SUNDAY:
+                return 6;
+            default:
+                return -1;
+        }
     }
 
     /**
@@ -385,7 +414,7 @@ public final class XTimeTools {
         // 农历日期
         private static final String[] LUNAR_DAY = new String[]{"一", "二", "三", "四", "五", "六", "七", "八", "九"};
         // 农历的正则表达式
-        private static final String LUNAR_PATTERN = "((19|20|21)\\d{2})年(闰)?(正|二|三|四|五|六|七|八|九|十|冬|腊)月((初|十|廿)(一|二|三|四|五|六|七|八|九)|初十|二十|三十)";
+        private static final String LUNAR_PATTERN = "((19|20|21)\\d{2})年(闰)?([正二三四五六七八九十冬腊])月(([初十廿])([一二三四五六七八九])|初十|二十|三十)";
         // 1901年到2100年的阴历数据，来源于香港天文台http://data.weather.gov.hk/gts/time/conversion1_text_c.htm
         private static final int[] LUNAR_INFO = {
                 0x04ae0, 0x0a570, 0x054d5, 0x0d260, 0x0d950, 0x16554, 0x056a0, 0x09ad0, 0x055d2, 0x04ae0,//1901-1910

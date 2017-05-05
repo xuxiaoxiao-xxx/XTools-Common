@@ -324,6 +324,16 @@ public final class XTools {
     }
 
     /**
+     * 获取任意一天是一周中的第几天，0：周一，1：周二...6：周日
+     *
+     * @param date date对象
+     * @return date对象是一周中的第几天
+     */
+    public static int weekIndex(Date date) {
+        return XTimeTools.weekIndex(date);
+    }
+
+    /**
      * 将阳历时间转化成农历时间
      *
      * @param solarDate 阳历时间的Date对象
