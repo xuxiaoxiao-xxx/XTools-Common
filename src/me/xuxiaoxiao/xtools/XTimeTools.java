@@ -31,7 +31,7 @@ public final class XTimeTools {
     private static final TLMD tlMD = new TLMD();
     private static final TLHMS tlHMS = new TLHMS();
     private static final TLHM tlHM = new TLHM();
-    private static final TLE tlE = new TLE();
+    private static final TLEEEE tlEEEE = new TLEEEE();
 
     private XTimeTools() {
     }
@@ -86,8 +86,8 @@ public final class XTimeTools {
      *
      * @return SimpleDateFormat对象
      */
-    public static SimpleDateFormat sdfE() {
-        return tlE.get();
+    public static SimpleDateFormat sdfEEEE() {
+        return tlEEEE.get();
     }
 
     /**
@@ -387,7 +387,7 @@ public final class XTimeTools {
     /**
      * EEEE格式的SimpleDateFormat的ThreadLocal类
      */
-    private static class TLE extends ThreadLocal<SimpleDateFormat> {
+    private static class TLEEEE extends ThreadLocal<SimpleDateFormat> {
         @Override
         protected SimpleDateFormat initialValue() {
             return new SimpleDateFormat("EEEE");
