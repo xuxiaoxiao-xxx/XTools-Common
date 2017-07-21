@@ -265,6 +265,16 @@ public final class XTools {
     }
 
     /**
+     * 获取任意一天是一周中的第几天，0：周一，1：周二...6：周日
+     *
+     * @param date date对象
+     * @return date对象是一周中的第几天
+     */
+    public static int weekIndex(Date date) {
+        return XTimeTools.weekIndex(date);
+    }
+
+    /**
      * 获取任意一天的类型，1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
      *
      * @param date 要获取的date对象
@@ -321,16 +331,6 @@ public final class XTools {
         calendar.roll(Calendar.MONTH, monthOffset);
         calendar.set(Calendar.DAY_OF_MONTH, dayIndex + 1);
         return XTimeTools.dateOfTime(calendar.getTime());
-    }
-
-    /**
-     * 获取任意一天是一周中的第几天，0：周一，1：周二...6：周日
-     *
-     * @param date date对象
-     * @return date对象是一周中的第几天
-     */
-    public static int weekIndex(Date date) {
-        return XTimeTools.weekIndex(date);
     }
 
     /**
