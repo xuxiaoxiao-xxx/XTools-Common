@@ -12,7 +12,7 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * XuXiaoXiao的常用的基本的函数的集合和索引
+ * 常用的基本的函数的集合和索引
  */
 public final class XTools {
 
@@ -328,7 +328,26 @@ public final class XTools {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
-        calendar.roll(Calendar.MONTH, monthOffset);
+        calendar.add(Calendar.MONTH, monthOffset);
+        calendar.set(Calendar.DAY_OF_MONTH, dayIndex + 1);
+        return XTimeTools.dateOfTime(calendar.getTime());
+    }
+
+    /**
+     * 获取以某天所在的那一年为基准偏移若干年若干月的某天00:00:00时刻的date对象
+     *
+     * @param base        基准时间的date对象，如果为null则以当前时间为基准
+     * @param yearOffset  偏移的年数
+     * @param monthOffset 偏移的月数
+     * @param dayIndex    那一月的第几天，1号为0
+     * @return 以base所在的那一年为基准偏移yearOffset年monthOffset月的第dayIndex天00:00:00时刻的date对象
+     */
+    public static Date dateByYear(@Nullable Date base, int yearOffset, int monthOffset, int dayIndex) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
+        calendar.add(Calendar.YEAR, yearOffset);
+        calendar.add(Calendar.MONTH, monthOffset);
         calendar.set(Calendar.DAY_OF_MONTH, dayIndex + 1);
         return XTimeTools.dateOfTime(calendar.getTime());
     }
@@ -351,5 +370,44 @@ public final class XTools {
      */
     public static Date lunarToSolar(String lunarDate) {
         return XTimeTools.lunarToSolar(lunarDate);
+    }
+
+    /**
+     * 判断是否是windows系统
+     *
+     * @return 是否是windows系统
+     */
+    public static boolean sysWindows() {
+        return System.getProperties().getProperty("os.name").toLowerCase().contains("windows");
+    }
+
+    /**
+     * 判断是否是MacOS系统
+     *
+     * @return 是否是MacOS系统
+     */
+    public static boolean sysMacOS() {
+        String osName = System.getProperties().getProperty("os.name").toLowerCase();
+        return osName.contains("mac") && !osName.contains("x");
+    }
+
+    /**
+     * 判断是否是MacOSX系统
+     *
+     * @return 是否是MacOSX系统
+     */
+    public static boolean sysMacOSX() {
+        String osName = System.getProperties().getProperty("os.name").toLowerCase();
+        return osName.contains("mac") && osName.contains("x");
+    }
+
+    /**
+     * 判断是否是Linux系统
+     *
+     * @return 是否是Linux系统
+     */
+    public static boolean sysLinux() {
+        String osName = System.getProperties().getProperty("os.name").toLowerCase();
+        return osName.contains("linux");
     }
 }
