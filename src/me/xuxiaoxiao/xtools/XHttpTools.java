@@ -19,7 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * XuXiaoXiao的常用的基本的关于HTTP的函数的集合
+ * 常用的基本的关于HTTP的函数的集合
  */
 public final class XHttpTools {
     /**

@@ -8,7 +8,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 /**
- * XuXiaoXiao的常用的基本的关于编码和解码的函数的集合
+ * 常用的基本的关于编码和解码的函数的集合
  */
 public final class XCodeTools {
     /**

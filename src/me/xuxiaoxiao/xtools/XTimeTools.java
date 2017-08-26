@@ -10,7 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * XuXiaoXiao的常用的基本的关于时间的函数的集合
+ * 常用的基本的关于时间的函数的集合
  */
 public final class XTimeTools {
     /**
