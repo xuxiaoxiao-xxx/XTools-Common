@@ -3,10 +3,7 @@ package me.xuxiaoxiao.xtools;
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.*;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -87,6 +84,7 @@ public final class XHttpTools {
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, option.trustManagers, new SecureRandom());
             connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setHostnameVerifier(option.hostnameVerifier);
             return connection;
         } else {
             throw new Exception("XHttpTools仅支持HTTP协议和HTTPS协议");
@@ -139,6 +137,10 @@ public final class XHttpTools {
          * 证书管理器
          */
         public final TrustManager[] trustManagers = trustManagers();
+        /**
+         * 主机名验证器
+         */
+        public final HostnameVerifier hostnameVerifier = hostnameVerifier();
 
         /**
          * 新建一个配置对象，并指定UTF-8编码格式、30秒连接超时、30秒读取超时
@@ -175,7 +177,24 @@ public final class XHttpTools {
          * @return 证书管理器
          */
         public TrustManager[] trustManagers() {
-            return new TrustManager[]{new XOption.XTrustManager()};
+            return new TrustManager[]{new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                }
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                }
+
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+            }};
+        }
+
+        public HostnameVerifier hostnameVerifier() {
+            return (s, sslSession) -> true;
         }
 
         /**
@@ -205,22 +224,6 @@ public final class XHttpTools {
          * @param connection 　要解析的连接
          */
         public void connectionParsing(HttpURLConnection connection) {
-        }
-
-        public static class XTrustManager implements X509TrustManager {
-
-            @Override
-            public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-            }
-
-            @Override
-            public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-            }
-
-            @Override
-            public X509Certificate[] getAcceptedIssuers() {
-                return null;
-            }
         }
     }
 
