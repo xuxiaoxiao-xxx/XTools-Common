@@ -1,12 +1,10 @@
 package me.xuxiaoxiao.xtools;
 
-import com.sun.istack.internal.Nullable;
 import me.xuxiaoxiao.xtools.XHttpTools.XBody;
 import me.xuxiaoxiao.xtools.XHttpTools.XResp;
 import me.xuxiaoxiao.xtools.XHttpTools.XUrl;
 
 import java.io.*;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -81,7 +79,7 @@ public final class XTools {
      * 使用默认的请求选项进行HTTP请求，
      * 如需对HTTP请求进行更复杂的配置，请移步XHttpTools.request(XOption option, XUrl url, XBody body);方法
      *
-     * @param url 请求的url
+     * @param url 请求的url，HTTP方法：GET
      * @return 请求的响应体
      */
     public static XResp http(XUrl url) {
@@ -92,8 +90,8 @@ public final class XTools {
      * 使用默认的请求选项进行HTTP请求，
      * 如需对HTTP请求进行更复杂的配置，请移步XHttpTools.request(XOption option, XUrl url, XBody body);方法
      *
-     * @param url  请求的url
-     * @param body 请求的请求体，RequestMethod=(body == null ? "GET" : "POST")
+     * @param url  请求的url，HTTP方法：body == null ? "GET" : "POST"
+     * @param body 请求的请求体
      * @return 请求的响应体
      */
     public static XResp http(XUrl url, XBody body) {
@@ -265,55 +263,35 @@ public final class XTools {
     }
 
     /**
-     * 获取任意一天是一周中的第几天，0：周一，1：周二...6：周日
+     * 获取任意时间当天00:00:00时刻的date对象
      *
-     * @param date date对象
-     * @return date对象是一周中的第几天
+     * @param date 任意时间的date对象
+     * @return 任意时间当天00:00:00时刻的date对象
      */
-    public static int weekIndex(Date date) {
-        return XTimeTools.weekIndex(date);
+    public static Date date(Date date) {
+        return XTimeTools.date(date);
     }
 
     /**
-     * 获取任意一天的类型，1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
+     * 获取任意一天的类型
      *
-     * @param date 要获取的date对象
-     * @return date对象对应的那天的类型。1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
+     * @param date 任意一天的date对象
+     * @return 任意一天的类型。1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
      */
     public static int dateType(Date date) {
         return XTimeTools.dateType(date);
     }
 
     /**
-     * 获取以某天为基准偏移若干天的00:00:00时刻的date对象
-     *
-     * @param base      基准时间的date对象，如果为null则以当前时间为基准
-     * @param dayOffset 偏移的天数
-     * @return 以base那天为基准偏移dayOffset天的00:00:00时刻的date对象
-     */
-    public static Date dateByDay(@Nullable Date base, int dayOffset) {
-        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
-        return XTimeTools.dateOfTime(new Date(baseTime + dayOffset * 24 * 60 * 60 * 1000));
-    }
-
-    /**
-     * 获取以某天所在的那一周为基准偏移若干周的某天00:00:00时刻的date对象（每周的第一天是周一）
+     * 获取以某天所在的那一周为基准偏移若干周的某天00:00:00时刻的date对象
      *
      * @param base       基准时间的date对象，如果为null则以当前时间为基准
      * @param weekOffset 偏移的周数
-     * @param dayIndex   那一周的第几天，周一为0
-     * @return 以base所在的那一周为基准偏移weekOffset周的第dayIndex天00:00:00时刻的date对象（每周的第一天是周一）
+     * @param dayIndex   那一周的第几天（每周的第一天是周一，周一为0）
+     * @return 以base所在的那一周为基准偏移weekOffset周的dayIndex天00:00:00时刻的date对象
      */
-    public static Date dateByWeek(@Nullable Date base, int weekOffset, int dayIndex) {
-        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(baseTime + weekOffset * 7 * 24 * 60 * 60 * 1000);
-        if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
-            return XTimeTools.dateOfTime(new Date(calendar.getTimeInMillis() - (long) (6 - dayIndex) * 24L * 60L * 60L * 1000L));
-        } else {
-            calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-            return XTimeTools.dateOfTime(new Date(calendar.getTimeInMillis() + (long) dayIndex * 24L * 60L * 60L * 1000L));
-        }
+    public static Date dateByWeek(Date base, int weekOffset, int dayIndex) {
+        return XTimeTools.dateByWeek(base, weekOffset, dayIndex);
     }
 
     /**
@@ -321,35 +299,99 @@ public final class XTools {
      *
      * @param base        基准时间的date对象，如果为null则以当前时间为基准
      * @param monthOffset 偏移的月数
-     * @param dayIndex    那一月的第几天，1号为0
-     * @return 以base所在的那一月为基准偏移monthOffset月的第dayIndex天00:00:00时刻的date对象
+     * @param dayIndex    那一月的第几天（一号为0）
+     * @return 以base所在的那一月为基准偏移monthOffset月的dayIndex天00:00:00时刻的date对象
      */
-    public static Date dateByMonth(@Nullable Date base, int monthOffset, int dayIndex) {
-        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(baseTime);
-        calendar.add(Calendar.MONTH, monthOffset);
-        calendar.set(Calendar.DAY_OF_MONTH, dayIndex + 1);
-        return XTimeTools.dateOfTime(calendar.getTime());
+    public static Date dateByMonth(Date base, int monthOffset, int dayIndex) {
+        return XTimeTools.dateByMonth(base, monthOffset, dayIndex);
     }
 
     /**
-     * 获取以某天所在的那一年为基准偏移若干年若干月的某天00:00:00时刻的date对象
+     * 获取以某天所在的那一年为基准偏移若干年的某月的某天00:00:00时刻的date对象
+     *
+     * @param base       基准时间的date对象，如果为null则以当前时间为基准
+     * @param yearOffset 偏移的年数
+     * @param monthIndex 那一年的第几个月（一月为0）
+     * @param dayIndex   那一月的第几天（一号为0）
+     * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的dayIndex天00:00:00时刻的date对象
+     */
+    public static Date dateByYear(Date base, int yearOffset, int monthIndex, int dayIndex) {
+        return XTimeTools.dateByYear(base, yearOffset, monthIndex, dayIndex);
+    }
+
+    /**
+     * 获取以某天所在的那一月为基准偏移若干月的某周的周一00:00:00时刻的date对象
      *
      * @param base        基准时间的date对象，如果为null则以当前时间为基准
-     * @param yearOffset  偏移的年数
      * @param monthOffset 偏移的月数
-     * @param dayIndex    那一月的第几天，1号为0
-     * @return 以base所在的那一年为基准偏移yearOffset年monthOffset月的第dayIndex天00:00:00时刻的date对象
+     * @param weekIndex   那一月的第几周（每周的第一天是周一，每月的第一周是第一个周一所在的那一周，第一周为0）
+     * @return 以base所在的那一月为基准偏移monthOffset月的weekIndex周的周一00:00:00时刻的date对象
      */
-    public static Date dateByYear(@Nullable Date base, int yearOffset, int monthOffset, int dayIndex) {
-        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(baseTime);
-        calendar.add(Calendar.YEAR, yearOffset);
-        calendar.add(Calendar.MONTH, monthOffset);
-        calendar.set(Calendar.DAY_OF_MONTH, dayIndex + 1);
-        return XTimeTools.dateOfTime(calendar.getTime());
+    public static Date weekByMonth(Date base, int monthOffset, int weekIndex) {
+        return XTimeTools.weekByMonth(base, monthOffset, weekIndex);
+    }
+
+    /**
+     * 获取以某天所在的那一年为基准偏移若干年的某月的某周的周一00:00:00时刻的date对象
+     *
+     * @param base       基准时间的date对象，如果为null则以当前时间为基准
+     * @param yearOffset 偏移的年数
+     * @param monthIndex 那一年的第几个月（一月为0）
+     * @param weekIndex  那一月的第几周（每周的第一天是周一，每月的第一周是第一个周一所在的那一周，第一周为0）
+     * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的weekIndex周的周一00:00:00时刻的date对象
+     */
+    public static Date weekByYear(Date base, int yearOffset, int monthIndex, int weekIndex) {
+        return XTimeTools.weekByYear(base, yearOffset, monthIndex, weekIndex);
+    }
+
+    /**
+     * 获取任意一天是一周中的第几天
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天是那周中的第几天（每周的第一天是周一，周一为0）
+     */
+    public static int dateInWeek(Date base) {
+        return XTimeTools.dateInWeek(base);
+    }
+
+    /**
+     * 获取任意一天是一个月中的第几天
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天是那个月中的第几天（一号为0）
+     */
+    public static int dateInMonth(Date base) {
+        return XTimeTools.dateInMonth(base);
+    }
+
+    /**
+     * 获取任意一天是一年中的第几天
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天是那一年中的第几天（第一天为0）
+     */
+    public static int dateInYear(Date base) {
+        return XTimeTools.dateInYear(base);
+    }
+
+    /**
+     * 获取任意一天所在的周是哪个月的第几周
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天所在的周是哪个月的第几周（正数表示本月第几周，负数表示上月第几周,例：1=本月第二周，-3=上月第四周）
+     */
+    public static int weekInMonth(Date base) {
+        return XTimeTools.weekInMonth(base);
+    }
+
+    /**
+     * 获取任意一天所在的周是哪一年的第几周
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天所在的周是哪一年的第几周（正数表示今年第几周，负数表示去年第几周,例：1=今年第二周，-51=去年第52周）
+     */
+    public static int weekInYear(Date base) {
+        return XTimeTools.weekInYear(base);
     }
 
     /**

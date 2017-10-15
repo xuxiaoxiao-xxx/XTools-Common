@@ -1,8 +1,5 @@
 package me.xuxiaoxiao.xtools;
 
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
-
 import javax.net.ssl.*;
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -35,8 +32,7 @@ public final class XHttpTools {
      * @param body   请求的请求体，RequestMethod=(body == null ? "GET" : "POST")
      * @return 请求的响应体
      */
-    @NotNull
-    public static XResp request(XOption option, XUrl url, @Nullable XBody body) {
+    public static XResp request(XOption option, XUrl url, XBody body) {
         try {
             HttpURLConnection connection = connect(option, url.build(option.charset));
             option.connectionSetting(connection);
@@ -156,7 +152,7 @@ public final class XHttpTools {
          * @param connectTimeout 　指定的连接超时时间
          * @param readTimeout    　指定的读取超时时间
          */
-        public XOption(@NotNull String charset, int connectTimeout, int readTimeout) {
+        public XOption(String charset, int connectTimeout, int readTimeout) {
             this.charset = charset;
             this.connectTimeout = connectTimeout;
             this.readTimeout = readTimeout;
@@ -535,7 +531,6 @@ public final class XHttpTools {
          *
          * @return 连接的输入流，记得使用XResp实例的close()方法关闭输入流和连接
          */
-        @Nullable
         public final InputStream inStream() {
             return this.inStream;
         }
@@ -545,7 +540,6 @@ public final class XHttpTools {
          *
          * @return 转化后的字符串
          */
-        @Nullable
         public final String string() {
             try {
                 return XTools.streamToStr(inStream(), config.charset);
@@ -563,7 +557,6 @@ public final class XHttpTools {
          * @param path 文件存储的路径
          * @return 转化后的文件
          */
-        @Nullable
         public final File file(String path) {
             try {
                 return XTools.streamToFile(inStream(), path);

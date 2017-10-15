@@ -14,6 +14,35 @@ import java.util.regex.Pattern;
  */
 public final class XTimeTools {
     /**
+     * 周一
+     */
+    public final static int MONDAY = 0;
+    /**
+     * 周二
+     */
+    public final static int TUESDAY = 1;
+    /**
+     * 周三
+     */
+    public final static int WEDNESDAY = 2;
+    /**
+     * 周四
+     */
+    public final static int THURSDAY = 3;
+    /**
+     * 周五
+     */
+    public final static int FRIDAY = 4;
+    /**
+     * 周六
+     */
+    public final static int SATURDAY = 5;
+    /**
+     * 周日
+     */
+    public final static int SUNDAY = 6;
+
+    /**
      * int dateType(Date date);函数的返回值的枚举，工作日
      */
     public static final int WORKDAY = 1;
@@ -25,6 +54,15 @@ public final class XTimeTools {
      * int dateType(Date date);函数的返回值的枚举，节假日
      */
     public static final int HOLIDAY = 3;
+
+    /**
+     * 一天的毫秒数
+     */
+    public static final long DAY_MILLIS = 24L * 60 * 60 * 1000;
+    /**
+     * 一周的毫秒数
+     */
+    public static final long WEEK_MILLIS = 7L * DAY_MILLIS;
 
     private static final TLYMDHMS tlYMDHMS = new TLYMDHMS();
     private static final TLYMD tlYMD = new TLYMD();
@@ -91,12 +129,12 @@ public final class XTimeTools {
     }
 
     /**
-     * 获取任意date对象当天00:00:00的date对象
+     * 获取任意时间当天00:00:00时刻的date对象
      *
      * @param date 任意时间的date对象
-     * @return 参数中的date对象所对应的当天的00:00:00时刻
+     * @return 任意时间当天00:00:00时刻的date对象
      */
-    public static Date dateOfTime(Date date) {
+    public static Date date(Date date) {
         try {
             return sdfYMD().parse(sdfYMD().format(date));
         } catch (ParseException e) {
@@ -106,10 +144,10 @@ public final class XTimeTools {
     }
 
     /**
-     * 获取任意一天的类型，1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
+     * 获取任意一天的类型
      *
-     * @param date date对象
-     * @return date对象对应的那天的类型。1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
+     * @param date 任意一天的date对象
+     * @return 任意一天的类型。1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
      * @see #WORKDAY
      * @see #RESTDAY
      * @see #HOLIDAY
@@ -118,8 +156,8 @@ public final class XTimeTools {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH) + 1;
-        int day = calendar.get(Calendar.DATE);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DATE) - 1;
         try {
             int[] holidays = (int[]) XHolidayDb.class.getDeclaredField("HOLIDAY_" + year).get(null);
             for (int typeMD : holidays) {
@@ -130,35 +168,191 @@ public final class XTimeTools {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return weekIndex(date) < 5 ? WORKDAY : RESTDAY;
+        return dateInWeek(date) < SATURDAY ? WORKDAY : RESTDAY;
     }
 
     /**
-     * 获取任意一天是一周中的第几天，0：周一，1：周二...6：周日
+     * 获取以某天所在的那一周为基准偏移若干周的某天00:00:00时刻的date对象
      *
-     * @param date date对象
-     * @return date对象是一周中的第几天
+     * @param base       基准时间的date对象，如果为null则以当前时间为基准
+     * @param weekOffset 偏移的周数
+     * @param dayIndex   那一周的第几天（每周的第一天是周一，周一为0）
+     * @return 以base所在的那一周为基准偏移weekOffset周的dayIndex天00:00:00时刻的date对象
      */
-    public static int weekIndex(Date date) {
+    public static Date dateByWeek(Date base, int weekOffset, int dayIndex) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
+        calendar.setTimeInMillis(baseTime + weekOffset * WEEK_MILLIS);
+        if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
+            return XTimeTools.date(new Date(calendar.getTimeInMillis() - (6 - dayIndex) * DAY_MILLIS));
+        } else {
+            calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+            return XTimeTools.date(new Date(calendar.getTimeInMillis() + dayIndex * DAY_MILLIS));
+        }
+    }
+
+    /**
+     * 获取以某天所在的那一月为基准偏移若干月的某天00:00:00时刻的date对象
+     *
+     * @param base        基准时间的date对象，如果为null则以当前时间为基准
+     * @param monthOffset 偏移的月数
+     * @param dayIndex    那一月的第几天（一号为0）
+     * @return 以base所在的那一月为基准偏移monthOffset月的dayIndex天00:00:00时刻的date对象
+     */
+    public static Date dateByMonth(Date base, int monthOffset, int dayIndex) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
+        calendar.add(Calendar.MONTH, monthOffset);
+        calendar.set(Calendar.DAY_OF_MONTH, dayIndex + 1);
+        return XTimeTools.date(calendar.getTime());
+    }
+
+    /**
+     * 获取以某天所在的那一年为基准偏移若干年的某月的某天00:00:00时刻的date对象
+     *
+     * @param base       基准时间的date对象，如果为null则以当前时间为基准
+     * @param yearOffset 偏移的年数
+     * @param monthIndex 那一年的第几个月（一月为0）
+     * @param dayIndex   那一月的第几天（一号为0）
+     * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的dayIndex天00:00:00时刻的date对象
+     */
+    public static Date dateByYear(Date base, int yearOffset, int monthIndex, int dayIndex) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
+        calendar.add(Calendar.YEAR, yearOffset);
+        calendar.set(Calendar.MONTH, monthIndex);
+        calendar.set(Calendar.DAY_OF_MONTH, dayIndex + 1);
+        return XTimeTools.date(calendar.getTime());
+    }
+
+    /**
+     * 获取以某天所在的那一月为基准偏移若干月的某周的周一00:00:00时刻的date对象
+     *
+     * @param base        基准时间的date对象，如果为null则以当前时间为基准
+     * @param monthOffset 偏移的月数
+     * @param weekIndex   那一月的第几周（每周的第一天是周一，每月的第一周是第一个周一所在的那一周，第一周为0）
+     * @return 以base所在的那一月为基准偏移monthOffset月的weekIndex周的周一00:00:00时刻的date对象
+     */
+    public static Date weekByMonth(Date base, int monthOffset, int weekIndex) {
+        Date date = dateByMonth(base, monthOffset, 0);
+        while (dateInWeek(date) != MONDAY) {
+            date = new Date(date.getTime() + DAY_MILLIS);
+        }
+        return new Date(date.getTime() + weekIndex * WEEK_MILLIS);
+    }
+
+    /**
+     * 获取以某天所在的那一年为基准偏移若干年的某月的某周的周一00:00:00时刻的date对象
+     *
+     * @param base       基准时间的date对象，如果为null则以当前时间为基准
+     * @param yearOffset 偏移的年数
+     * @param monthIndex 那一年的第几个月（一月为0）
+     * @param weekIndex  那一月的第几周（每周的第一天是周一，每月的第一周是第一个周一所在的那一周，第一周为0）
+     * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的weekIndex周的周一00:00:00时刻的date对象
+     */
+    public static Date weekByYear(Date base, int yearOffset, int monthIndex, int weekIndex) {
+        Date date = dateByYear(base, yearOffset, monthIndex, 0);
+        while (dateInWeek(date) != MONDAY) {
+            date = new Date(date.getTime() + DAY_MILLIS);
+        }
+        return new Date(date.getTime() + weekIndex * WEEK_MILLIS);
+    }
+
+    /**
+     * 获取任意一天是一周中的第几天
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天是那周中的第几天（每周的第一天是周一，周一为0）
+     */
+    public static int dateInWeek(Date base) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
         switch (calendar.get(Calendar.DAY_OF_WEEK)) {
             case Calendar.MONDAY:
-                return 0;
+                return MONDAY;
             case Calendar.TUESDAY:
-                return 1;
+                return TUESDAY;
             case Calendar.WEDNESDAY:
-                return 2;
+                return WEDNESDAY;
             case Calendar.THURSDAY:
-                return 3;
+                return THURSDAY;
             case Calendar.FRIDAY:
-                return 4;
+                return FRIDAY;
             case Calendar.SATURDAY:
-                return 5;
+                return SATURDAY;
             case Calendar.SUNDAY:
-                return 6;
+                return SUNDAY;
             default:
                 return -1;
+        }
+    }
+
+    /**
+     * 获取任意一天是一个月中的第几天
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天是那个月中的第几天（一号为0）
+     */
+    public static int dateInMonth(Date base) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
+        return calendar.get(Calendar.DAY_OF_MONTH) - 1;
+    }
+
+    /**
+     * 获取任意一天是一年中的第几天
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天是那一年中的第几天（第一天为0）
+     */
+    public static int dateInYear(Date base) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
+        return calendar.get(Calendar.DAY_OF_YEAR) - 1;
+    }
+
+    /**
+     * 获取任意一天所在的周是哪个月的第几周
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天所在的周是哪个月的第几周（正数表示本月第几周，负数表示上月第几周,例：1=本月第二周，-3=上月第四周）
+     */
+    public static int weekInMonth(Date base) {
+        Date monday = XTimeTools.dateByWeek(base, 0, MONDAY);
+        Date month = XTimeTools.weekByMonth(monday, 0, 0);
+        Calendar baseCalendar = Calendar.getInstance();
+        baseCalendar.setTime(base == null ? new Date() : base);
+        Calendar monthCalendar = Calendar.getInstance();
+        monthCalendar.setTime(month);
+        if (baseCalendar.get(Calendar.MONTH) == monthCalendar.get(Calendar.MONTH)) {
+            return (int) ((monday.getTime() - month.getTime()) / WEEK_MILLIS);
+        } else {
+            return (int) ((month.getTime() - monday.getTime()) / WEEK_MILLIS);
+        }
+    }
+
+    /**
+     * 获取任意一天所在的周是哪一年的第几周
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天所在的周是哪一年的第几周（正数表示今年第几周，负数表示去年第几周,例：1=今年第二周，-51=去年第52周）
+     */
+    public static int weekInYear(Date base) {
+        Date monday = XTimeTools.dateByWeek(base, 0, MONDAY);
+        Date year = XTimeTools.weekByYear(monday, 0, 0, 0);
+        Calendar baseCalendar = Calendar.getInstance();
+        baseCalendar.setTime(base == null ? new Date() : base);
+        Calendar yearCalendar = Calendar.getInstance();
+        yearCalendar.setTime(year);
+        if (baseCalendar.get(Calendar.YEAR) == yearCalendar.get(Calendar.YEAR)) {
+            return (int) ((monday.getTime() - year.getTime()) / WEEK_MILLIS);
+        } else {
+            return (int) ((year.getTime() - monday.getTime()) / WEEK_MILLIS);
         }
     }
 
@@ -181,7 +375,7 @@ public final class XTimeTools {
             throw new IllegalStateException("要转换的公历超出范围");
         }
         // 计算目标日期与基准日期差多少天。开头那天算，结尾那天不算
-        int dayBetween = (int) ((solarDate.getTime() - minDate.getTime()) / 24 / 60 / 60 / 1000);
+        int dayBetween = (int) ((solarDate.getTime() - minDate.getTime()) / DAY_MILLIS);
         // 确定农历年
         int lunarYear = 0;
         for (int i = XLunarDb.MIN_YEAR; i < XLunarDb.MAX_YEAR; i++) {
@@ -328,7 +522,7 @@ public final class XTimeTools {
             System.out.println(minDate);
             System.out.println(minDate.getTime());
 
-            return new Date(minDate.getTime() + ((long) dayBetween) * 24L * 60L * 60L * 1000L);
+            return new Date(minDate.getTime() + dayBetween * DAY_MILLIS);
         } catch (ParseException e) {
             throw new RuntimeException("解析日期出错");
         }
@@ -508,23 +702,23 @@ public final class XTimeTools {
      * 节假日数据库，保存了节假日，调休的一些数据，含义为0x(1位日期类型)（1位月份）（2位日期）
      */
     private static class XHolidayDb {
-        public static final int[] HOLIDAY_2000 = {0x120c, 0x120d, 0x141d, 0x141e, 0x191e, 0x1a08, 0x2208, 0x2209, 0x220a, 0x220b, 0x2504, 0x2505, 0x2a04, 0x2a05, 0x2a06, 0x3205, 0x3206, 0x3207, 0x3501, 0x3502, 0x3503, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2001 = {0x1114, 0x1115, 0x141c, 0x141d, 0x191d, 0x191e, 0x1c1d, 0x1c1e, 0x211d, 0x211e, 0x2504, 0x2507, 0x2a04, 0x2a05, 0x3101, 0x3118, 0x3119, 0x311a, 0x3501, 0x3502, 0x3503, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2002 = {0x1209, 0x120a, 0x141b, 0x141c, 0x191c, 0x191d, 0x2102, 0x2103, 0x220f, 0x2212, 0x2506, 0x2507, 0x2a04, 0x2a07, 0x3101, 0x320c, 0x320d, 0x320e, 0x3501, 0x3502, 0x3503, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2003 = {0x1208, 0x1209, 0x141a, 0x141b, 0x191b, 0x191c, 0x2204, 0x2205, 0x2206, 0x2207, 0x2505, 0x2506, 0x2507, 0x2a06, 0x2a07, 0x3101, 0x3201, 0x3202, 0x3203, 0x3501, 0x3502, 0x3503, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2004 = {0x1111, 0x1112, 0x1508, 0x1509, 0x1a09, 0x1a0a, 0x211a, 0x211b, 0x211c, 0x2504, 0x2505, 0x2506, 0x2507, 0x2a04, 0x2a05, 0x2a06, 0x2a07, 0x3101, 0x3116, 0x3117, 0x3118, 0x3501, 0x3502, 0x3503, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2005 = {0x1205, 0x1206, 0x141e, 0x1508, 0x1a08, 0x1a09, 0x1c1f, 0x2103, 0x220e, 0x220f, 0x2504, 0x2505, 0x2506, 0x2a04, 0x2a05, 0x2a06, 0x2a07, 0x3101, 0x3209, 0x320a, 0x320b, 0x3501, 0x3502, 0x3503, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2006 = {0x111c, 0x1205, 0x141d, 0x141e, 0x191e, 0x1a08, 0x1c1e, 0x1c1f, 0x2102, 0x2103, 0x2201, 0x2202, 0x2203, 0x2504, 0x2505, 0x2a04, 0x2a05, 0x2a06, 0x3101, 0x311d, 0x311e, 0x311f, 0x3501, 0x3502, 0x3503, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2007 = {0x1211, 0x1219, 0x141c, 0x141d, 0x191d, 0x191e, 0x1c1d, 0x2102, 0x2103, 0x2215, 0x2216, 0x2217, 0x2504, 0x2507, 0x2a04, 0x2a05, 0x2c1f, 0x3101, 0x3212, 0x3213, 0x3214, 0x3501, 0x3502, 0x3503, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2008 = {0x1202, 0x1203, 0x1504, 0x191b, 0x191c, 0x220b, 0x220c, 0x2502, 0x2609, 0x290f, 0x291d, 0x291e, 0x3101, 0x3206, 0x3207, 0x3208, 0x3404, 0x3501, 0x3608, 0x390e, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2009 = {0x1104, 0x1118, 0x1201, 0x151f, 0x191b, 0x1a0a, 0x2102, 0x211c, 0x211d, 0x211e, 0x2406, 0x251d, 0x2a05, 0x2a07, 0x2a08, 0x3101, 0x3119, 0x311a, 0x311b, 0x3404, 0x3501, 0x351c, 0x3a01, 0x3a02, 0x3a03, 0x3a06};
-        public static final int[] HOLIDAY_2010 = {0x1214, 0x1215, 0x160c, 0x160d, 0x1913, 0x1919, 0x191a, 0x1a09, 0x2210, 0x2211, 0x2212, 0x2213, 0x2503, 0x260e, 0x260f, 0x2917, 0x2918, 0x2a04, 0x2a05, 0x2a06, 0x2a07, 0x3101, 0x320d, 0x320e, 0x320f, 0x3405, 0x3501, 0x3610, 0x3916, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2011 = {0x111e, 0x120c, 0x1402, 0x1a08, 0x1a09, 0x1c1f, 0x2103, 0x2207, 0x2208, 0x2502, 0x2a04, 0x2a05, 0x2a06, 0x2a07, 0x3101, 0x3202, 0x3203, 0x3204, 0x3405, 0x3501, 0x3606, 0x390c, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2012 = {0x1115, 0x111d, 0x131f, 0x1401, 0x141c, 0x191d, 0x2102, 0x2103, 0x2119, 0x211a, 0x211b, 0x2402, 0x2403, 0x241e, 0x2616, 0x2a04, 0x2a05, 0x3101, 0x3116, 0x3117, 0x3118, 0x3404, 0x3501, 0x3617, 0x391e, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2013 = {0x1105, 0x1106, 0x1210, 0x1211, 0x1407, 0x141b, 0x141c, 0x1608, 0x1609, 0x1916, 0x191d, 0x1a0c, 0x2102, 0x2103, 0x220c, 0x220d, 0x220e, 0x220f, 0x2405, 0x241d, 0x241e, 0x260a, 0x260b, 0x2914, 0x2a04, 0x2a07, 0x3101, 0x3209, 0x320a, 0x320b, 0x3404, 0x3501, 0x360c, 0x3913, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2014 = {0x111a, 0x1208, 0x1504, 0x191c, 0x1a0b, 0x2203, 0x2204, 0x2205, 0x2206, 0x2407, 0x2502, 0x2a06, 0x2a07, 0x3101, 0x311f, 0x3201, 0x3202, 0x3405, 0x3501, 0x3602, 0x3908, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2015 = {0x1104, 0x120f, 0x121c, 0x1906, 0x1a0a, 0x2102, 0x2217, 0x2218, 0x2406, 0x2616, 0x2904, 0x2a05, 0x2a06, 0x2a07, 0x3101, 0x3212, 0x3213, 0x3214, 0x3405, 0x3501, 0x3614, 0x3903, 0x391b, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2016 = {0x1206, 0x120e, 0x160c, 0x1912, 0x1a08, 0x1a09, 0x220a, 0x220b, 0x220c, 0x2502, 0x260a, 0x260b, 0x2910, 0x2911, 0x2a04, 0x2a05, 0x2a06, 0x2a07, 0x3101, 0x3207, 0x3208, 0x3209, 0x3404, 0x3501, 0x3609, 0x390f, 0x3a01, 0x3a02, 0x3a03};
-        public static final int[] HOLIDAY_2017 = {0x1102, 0x1116, 0x1204, 0x1401, 0x151b, 0x191e, 0x211e, 0x211f, 0x2201, 0x2202, 0x2403, 0x251d, 0x2a05, 0x2a06, 0x3101, 0x311b, 0x311c, 0x311d, 0x3404, 0x3501, 0x351e, 0x3a01, 0x3a02, 0x3a03, 0x3a04};
+        public static final int[] HOLIDAY_2000 = {0x110b, 0x110c, 0x131c, 0x131d, 0x181d, 0x1907, 0x2107, 0x2108, 0x2109, 0x210a, 0x2403, 0x2404, 0x2903, 0x2904, 0x2905, 0x3104, 0x3105, 0x3106, 0x3400, 0x3401, 0x3402, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2001 = {0x1013, 0x1014, 0x131b, 0x131c, 0x181c, 0x181d, 0x1b1c, 0x1b1d, 0x201c, 0x201d, 0x2403, 0x2406, 0x2903, 0x2904, 0x3000, 0x3017, 0x3018, 0x3019, 0x3400, 0x3401, 0x3402, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2002 = {0x1108, 0x1109, 0x131a, 0x131b, 0x181b, 0x181c, 0x2001, 0x2002, 0x210e, 0x2111, 0x2405, 0x2406, 0x2903, 0x2906, 0x3000, 0x310b, 0x310c, 0x310d, 0x3400, 0x3401, 0x3402, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2003 = {0x1107, 0x1108, 0x1319, 0x131a, 0x181a, 0x181b, 0x2103, 0x2104, 0x2105, 0x2106, 0x2404, 0x2405, 0x2406, 0x2905, 0x2906, 0x3000, 0x3100, 0x3101, 0x3102, 0x3400, 0x3401, 0x3402, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2004 = {0x1010, 0x1011, 0x1407, 0x1408, 0x1908, 0x1909, 0x2019, 0x201a, 0x201b, 0x2403, 0x2404, 0x2405, 0x2406, 0x2903, 0x2904, 0x2905, 0x2906, 0x3000, 0x3015, 0x3016, 0x3017, 0x3400, 0x3401, 0x3402, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2005 = {0x1104, 0x1105, 0x131d, 0x1407, 0x1907, 0x1908, 0x1b1e, 0x2002, 0x210d, 0x210e, 0x2403, 0x2404, 0x2405, 0x2903, 0x2904, 0x2905, 0x2906, 0x3000, 0x3108, 0x3109, 0x310a, 0x3400, 0x3401, 0x3402, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2006 = {0x101b, 0x1104, 0x131c, 0x131d, 0x181d, 0x1907, 0x1b1d, 0x1b1e, 0x2001, 0x2002, 0x2100, 0x2101, 0x2102, 0x2403, 0x2404, 0x2903, 0x2904, 0x2905, 0x3000, 0x301c, 0x301d, 0x301e, 0x3400, 0x3401, 0x3402, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2007 = {0x1110, 0x1118, 0x131b, 0x131c, 0x181c, 0x181d, 0x1b1c, 0x2001, 0x2002, 0x2114, 0x2115, 0x2116, 0x2403, 0x2406, 0x2903, 0x2904, 0x2b1e, 0x3000, 0x3111, 0x3112, 0x3113, 0x3400, 0x3401, 0x3402, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2008 = {0x1101, 0x1102, 0x1403, 0x181a, 0x181b, 0x210a, 0x210b, 0x2401, 0x2508, 0x280e, 0x281c, 0x281d, 0x3000, 0x3105, 0x3106, 0x3107, 0x3303, 0x3400, 0x3507, 0x380d, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2009 = {0x1003, 0x1017, 0x1100, 0x141e, 0x181a, 0x1909, 0x2001, 0x201b, 0x201c, 0x201d, 0x2305, 0x241c, 0x2904, 0x2906, 0x2907, 0x3000, 0x3018, 0x3019, 0x301a, 0x3303, 0x3400, 0x341b, 0x3900, 0x3901, 0x3902, 0x3905};
+        public static final int[] HOLIDAY_2010 = {0x1113, 0x1114, 0x150b, 0x150c, 0x1812, 0x1818, 0x1819, 0x1908, 0x210f, 0x2110, 0x2111, 0x2112, 0x2402, 0x250d, 0x250e, 0x2816, 0x2817, 0x2903, 0x2904, 0x2905, 0x2906, 0x3000, 0x310c, 0x310d, 0x310e, 0x3304, 0x3400, 0x350f, 0x3815, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2011 = {0x101d, 0x110b, 0x1301, 0x1907, 0x1908, 0x1b1e, 0x2002, 0x2106, 0x2107, 0x2401, 0x2903, 0x2904, 0x2905, 0x2906, 0x3000, 0x3101, 0x3102, 0x3103, 0x3304, 0x3400, 0x3505, 0x380b, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2012 = {0x1014, 0x101c, 0x121e, 0x1300, 0x131b, 0x181c, 0x2001, 0x2002, 0x2018, 0x2019, 0x201a, 0x2301, 0x2302, 0x231d, 0x2515, 0x2903, 0x2904, 0x3000, 0x3015, 0x3016, 0x3017, 0x3303, 0x3400, 0x3516, 0x381d, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2013 = {0x1004, 0x1005, 0x110f, 0x1110, 0x1306, 0x131a, 0x131b, 0x1507, 0x1508, 0x1815, 0x181c, 0x190b, 0x2001, 0x2002, 0x210b, 0x210c, 0x210d, 0x210e, 0x2304, 0x231c, 0x231d, 0x2509, 0x250a, 0x2813, 0x2903, 0x2906, 0x3000, 0x3108, 0x3109, 0x310a, 0x3303, 0x3400, 0x350b, 0x3812, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2014 = {0x1019, 0x1107, 0x1403, 0x181b, 0x190a, 0x2102, 0x2103, 0x2104, 0x2105, 0x2306, 0x2401, 0x2905, 0x2906, 0x3000, 0x301e, 0x3100, 0x3101, 0x3304, 0x3400, 0x3501, 0x3807, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2015 = {0x1003, 0x110e, 0x111b, 0x1805, 0x1909, 0x2001, 0x2116, 0x2117, 0x2305, 0x2515, 0x2803, 0x2904, 0x2905, 0x2906, 0x3000, 0x3111, 0x3112, 0x3113, 0x3304, 0x3400, 0x3513, 0x3802, 0x381a, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2016 = {0x1105, 0x110d, 0x150b, 0x1811, 0x1907, 0x1908, 0x2109, 0x210a, 0x210b, 0x2401, 0x2509, 0x250a, 0x280f, 0x2810, 0x2903, 0x2904, 0x2905, 0x2906, 0x3000, 0x3106, 0x3107, 0x3108, 0x3303, 0x3400, 0x3508, 0x380e, 0x3900, 0x3901, 0x3902};
+        public static final int[] HOLIDAY_2017 = {0x1001, 0x1015, 0x1103, 0x1300, 0x141a, 0x181d, 0x201d, 0x201e, 0x2100, 0x2101, 0x2302, 0x241c, 0x2904, 0x2905, 0x3000, 0x301a, 0x301b, 0x301c, 0x3303, 0x3400, 0x341d, 0x3900, 0x3901, 0x3902, 0x3903};
     }
 }
