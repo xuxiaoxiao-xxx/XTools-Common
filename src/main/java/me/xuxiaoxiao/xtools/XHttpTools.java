@@ -77,9 +77,7 @@ public final class XHttpTools {
             return (HttpURLConnection) new URL(url).openConnection();
         } else if (url.toLowerCase().startsWith("https://")) {
             HttpsURLConnection connection = (HttpsURLConnection) new URL(url).openConnection();
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, option.trustManagers, new SecureRandom());
-            connection.setSSLSocketFactory(sslContext.getSocketFactory());
+            connection.setSSLSocketFactory(option.sslContext.getSocketFactory());
             connection.setHostnameVerifier(option.hostnameVerifier);
             return connection;
         } else {
@@ -130,9 +128,9 @@ public final class XHttpTools {
          */
         public final boolean followRedirect = followRedirect();
         /**
-         * 证书管理器
+         * SSL上下文
          */
-        public final TrustManager[] trustManagers = trustManagers();
+        public final SSLContext sslContext = sslContext();
         /**
          * 主机名验证器
          */
@@ -168,29 +166,40 @@ public final class XHttpTools {
         }
 
         /**
-         * 请求的证书管理器
+         * 获取SSL上下文
          *
-         * @return 证书管理器
+         * @return 默认不进行证书验证
          */
-        public TrustManager[] trustManagers() {
-            return new TrustManager[]{new X509TrustManager() {
-                @Override
-                public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-                }
+        public SSLContext sslContext() {
+            try {
+                SSLContext sslContext = SSLContext.getInstance("TLS");
+                sslContext.init(null, new TrustManager[]{new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                    }
 
-                @Override
-                public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
-                }
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                    }
 
-                @Override
-                public X509Certificate[] getAcceptedIssuers() {
-                    return null;
-                }
-            }};
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                }}, new SecureRandom());
+                return sslContext;
+            } catch (Exception e) {
+                return null;
+            }
         }
 
         public HostnameVerifier hostnameVerifier() {
-            return (s, sslSession) -> true;
+            return new HostnameVerifier() {
+                @Override
+                public boolean verify(String s, SSLSession sslSession) {
+                    return true;
+                }
+            };
         }
 
         /**
