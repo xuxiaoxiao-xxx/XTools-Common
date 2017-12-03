@@ -1,4 +1,4 @@
-package me.xuxiaoxiao.xtools;
+package me.xuxiaoxiao.xtools.common.code;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -55,7 +55,7 @@ public final class XCodeTools {
     public static String hash(String algorithm, File file) throws IOException, NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
         try (FileInputStream fileInputStream = new FileInputStream(file); DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)) {
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[128 * 1024];
             while (true) {
                 if (digestInputStream.read(buffer) <= 0) {
                     break;

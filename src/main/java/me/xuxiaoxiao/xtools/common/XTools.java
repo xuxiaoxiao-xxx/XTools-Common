@@ -1,10 +1,14 @@
-package me.xuxiaoxiao.xtools;
+package me.xuxiaoxiao.xtools.common;
 
-import me.xuxiaoxiao.xtools.XHttpTools.XBody;
-import me.xuxiaoxiao.xtools.XHttpTools.XResp;
-import me.xuxiaoxiao.xtools.XHttpTools.XUrl;
+import me.xuxiaoxiao.xtools.common.code.XCodeTools;
+import me.xuxiaoxiao.xtools.common.http.XHttpTools;
+import me.xuxiaoxiao.xtools.common.http.XOption;
+import me.xuxiaoxiao.xtools.common.http.XRequest;
+import me.xuxiaoxiao.xtools.common.http.XResponse;
+import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -76,26 +80,22 @@ public final class XTools {
     }
 
     /**
-     * 使用默认的请求选项进行HTTP请求，
-     * 如需对HTTP请求进行更复杂的配置，请移步XHttpTools.request(XOption option, XUrl url, XBody body);方法
+     * 使用默认的请求配置进行HTTP请求，
+     * 如需对HTTP请求进行更复杂的配置，请移步XTools.http(XOption option, XRequest request);方法
      *
-     * @param url 请求的url，HTTP方法：GET
      * @return 请求的响应体
      */
-    public static XResp http(XUrl url) {
-        return XHttpTools.request(XHttpTools.DEFAULT_OPTION, url, null);
+    public static XResponse http(XRequest request) {
+        return XHttpTools.http(XHttpTools.DEFAULT_OPTION, request);
     }
 
     /**
-     * 使用默认的请求选项进行HTTP请求，
-     * 如需对HTTP请求进行更复杂的配置，请移步XHttpTools.request(XOption option, XUrl url, XBody body);方法
+     * 使用自定义的配置的请求选项进行HTTP请求
      *
-     * @param url  请求的url，HTTP方法：body == null ? "GET" : "POST"
-     * @param body 请求的请求体
      * @return 请求的响应体
      */
-    public static XResp http(XUrl url, XBody body) {
-        return XHttpTools.request(XHttpTools.DEFAULT_OPTION, url, body);
+    public static XResponse http(XOption option, XRequest request) {
+        return XHttpTools.http(option, request);
     }
 
     /**
@@ -283,6 +283,16 @@ public final class XTools {
     }
 
     /**
+     * 获取一个SimpleDateFormat，自动缓存，线程安全
+     *
+     * @param format 格式字符串
+     * @return SimpleDateFormat实例
+     */
+    public static SimpleDateFormat dateFormat(String format) {
+        return XTimeTools.dateFormat(format);
+    }
+
+    /**
      * 获取以某天所在的那一周为基准偏移若干周的某天00:00:00时刻的date对象
      *
      * @param base       基准时间的date对象，如果为null则以当前时间为基准
@@ -307,16 +317,15 @@ public final class XTools {
     }
 
     /**
-     * 获取以某天所在的那一年为基准偏移若干年的某月的某天00:00:00时刻的date对象
+     * 获取以某天所在的那一年为基准偏移若干年的某天00:00:00时刻的date对象
      *
      * @param base       基准时间的date对象，如果为null则以当前时间为基准
      * @param yearOffset 偏移的年数
-     * @param monthIndex 那一年的第几个月（一月为0）
-     * @param dayIndex   那一月的第几天（一号为0）
-     * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的dayIndex天00:00:00时刻的date对象
+     * @param dayIndex   那一年的第几天（第一天为0）
+     * @return 以base所在的那一年为基准偏移yearOffset年的dayIndex天00:00:00时刻的date对象
      */
-    public static Date dateByYear(Date base, int yearOffset, int monthIndex, int dayIndex) {
-        return XTimeTools.dateByYear(base, yearOffset, monthIndex, dayIndex);
+    public static Date dateByYear(Date base, int yearOffset, int dayIndex) {
+        return XTimeTools.dateByYear(base, yearOffset, dayIndex);
     }
 
     /**
@@ -332,16 +341,27 @@ public final class XTools {
     }
 
     /**
-     * 获取以某天所在的那一年为基准偏移若干年的某月的某周的周一00:00:00时刻的date对象
+     * 获取以某天所在的那一年为基准偏移若干年的某周的周一00:00:00时刻的date对象
+     *
+     * @param base       基准时间的date对象，如果为null则以当前时间为基准
+     * @param yearOffset 偏移的年数
+     * @param weekIndex  那一年的第几周（每周的第一天是周一，每年的第一周是第一个周一所在的那一周，第一周为0）
+     * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的weekIndex周的周一00:00:00时刻的date对象
+     */
+    public static Date weekByYear(Date base, int yearOffset, int weekIndex) {
+        return XTimeTools.weekByYear(base, yearOffset, weekIndex);
+    }
+
+    /**
+     * 获取以某天所在的那一年为基准偏移若干年的某月的一号00:00:00时刻的date对象
      *
      * @param base       基准时间的date对象，如果为null则以当前时间为基准
      * @param yearOffset 偏移的年数
      * @param monthIndex 那一年的第几个月（一月为0）
-     * @param weekIndex  那一月的第几周（每周的第一天是周一，每月的第一周是第一个周一所在的那一周，第一周为0）
      * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的weekIndex周的周一00:00:00时刻的date对象
      */
-    public static Date weekByYear(Date base, int yearOffset, int monthIndex, int weekIndex) {
-        return XTimeTools.weekByYear(base, yearOffset, monthIndex, weekIndex);
+    public static Date monthByYear(Date base, int yearOffset, int monthIndex) {
+        return XTimeTools.monthByYear(base, yearOffset, monthIndex);
     }
 
     /**
@@ -392,6 +412,16 @@ public final class XTools {
      */
     public static int weekInYear(Date base) {
         return XTimeTools.weekInYear(base);
+    }
+
+    /**
+     * 获取任意一天所在的月是那一年的第几月
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天所在的月是那一年的第几月
+     */
+    public static int monthInYear(Date base) {
+        return XTimeTools.monthInYear(base);
     }
 
     /**
