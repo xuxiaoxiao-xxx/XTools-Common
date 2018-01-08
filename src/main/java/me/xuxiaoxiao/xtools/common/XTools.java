@@ -5,6 +5,8 @@ import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.XOption;
 import me.xuxiaoxiao.xtools.common.http.XRequest;
 import me.xuxiaoxiao.xtools.common.http.XResponse;
+import me.xuxiaoxiao.xtools.common.ioc.XIocTools;
+import me.xuxiaoxiao.xtools.common.ioc.injector.XInjector;
 import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
 import java.io.*;
@@ -96,6 +98,24 @@ public final class XTools {
      */
     public static XResponse http(XOption option, XRequest request) {
         return XHttpTools.http(option, request);
+    }
+
+    public static <T> T supply(Class<T> clazz, XInjector... injectors) {
+        try {
+            return XIocTools.supply(clazz, null, injectors);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
+    }
+
+    public static <T> T inject(T target, XInjector... injectors) {
+        try {
+            return XIocTools.inject(target, injectors);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException();
+        }
     }
 
     /**
