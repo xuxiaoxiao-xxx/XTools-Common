@@ -186,9 +186,9 @@ public final class XTools {
      */
     public static File strToFile(String str, String path, String charset) throws IOException {
         File file = new File(path);
-        try (FileOutputStream fOutStream = new FileOutputStream(file)) {
-            fOutStream.write(str.getBytes(charset));
-            fOutStream.flush();
+        try (BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(file))) {
+            outStream.write(str.getBytes(charset));
+            outStream.flush();
             return file;
         }
     }
@@ -255,11 +255,11 @@ public final class XTools {
         byte[] buffer = new byte[1024];
         File file = new File(path);
         BufferedInputStream bufInStream = new BufferedInputStream(inStream);
-        try (FileOutputStream fOutStream = new FileOutputStream(file)) {
+        try (BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(file))) {
             while ((count = bufInStream.read(buffer)) > 0) {
-                fOutStream.write(buffer, 0, count);
+                outStream.write(buffer, 0, count);
             }
-            fOutStream.flush();
+            outStream.flush();
         }
         return file;
     }
