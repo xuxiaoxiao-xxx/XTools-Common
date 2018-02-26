@@ -44,26 +44,19 @@ public final class XRequest {
     private Content requestContent;
 
     private XRequest(String method, String url) {
-        this.requestMethod = method;
         if (!url.toLowerCase().startsWith("http://") && !url.toLowerCase().startsWith("https://")) {
             throw new IllegalArgumentException("XHttpTools仅支持HTTP协议和HTTPS协议");
-        } else if (url.indexOf('?') < 0) {
-            this.requestUri = url;
-        } else {
-            //带参数的url将uri与参数分离，并将参数存入到参数类型的请求体中
-            String[] strArr = url.split("\\?");
-            this.requestUri = strArr[0];
-            if (strArr.length > 1) {
-                for (String keyValue : strArr[1].split("&")) {
-                    int index = keyValue.indexOf('=');
-                    if (index < 0) {
-                        throw new IllegalArgumentException("请求的url有误");
-                    } else {
-                        param(keyValue.substring(0, index), keyValue.substring(index + 1));
-                    }
+        }
+        if (url.indexOf('?') >= 0) {
+            //如果是带参数的url需要验证格式是否正确
+            for (String keyValue : url.substring(url.indexOf('?') + 1).split("&")) {
+                if (keyValue.indexOf('=') < 0) {
+                    throw new IllegalArgumentException("请求的url格式有误");
                 }
             }
         }
+        this.requestMethod = method;
+        this.requestUri = url;
     }
 
     /**
@@ -254,7 +247,11 @@ public final class XRequest {
     String requestUrl() {
         try {
             if (this.requestMethod.equals(METHOD_GET) && this.requestContent instanceof ParamsContent) {
-                return String.format("%s?%s", this.requestUri, kvJoin(((ParamsContent) this.requestContent).params));
+                if (this.requestUri.indexOf('?') < 0) {
+                    return String.format("%s?%s", this.requestUri, kvJoin(((ParamsContent) this.requestContent).params));
+                } else {
+                    return String.format("%s&%s", this.requestUri, kvJoin(((ParamsContent) this.requestContent).params));
+                }
             } else {
                 return this.requestUri;
             }

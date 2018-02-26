@@ -105,7 +105,7 @@ public final class XTools {
             return XIocTools.supply(clazz, null, injectors);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException();
+            throw new RuntimeException(e.getMessage());
         }
     }
 
@@ -114,7 +114,7 @@ public final class XTools {
             return XIocTools.inject(target, injectors);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException();
+            throw new RuntimeException(e.getMessage());
         }
     }
 

@@ -15,7 +15,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 /**
  * 依赖注入工具类
  */
-@SuppressWarnings("unchecked")
 public final class XIocTools {
 
     private static final ReentrantReadWriteLock SUPPLIERS_LOCK = new ReentrantReadWriteLock();
@@ -30,11 +29,7 @@ public final class XIocTools {
         Objects.requireNonNull(supplier);
         SUPPLIERS_LOCK.writeLock().lock();
         try {
-            if (SUPPLIERS.containsKey(clazz)) {
-                throw new IllegalStateException(String.format("%s类已经注册生成器", clazz.getName()));
-            } else {
-                SUPPLIERS.put(clazz, supplier);
-            }
+            SUPPLIERS.put(clazz, supplier);
         } finally {
             SUPPLIERS_LOCK.writeLock().unlock();
         }
@@ -57,16 +52,13 @@ public final class XIocTools {
             for (Class<?> keyClass : SUPPLIERS.keySet()) {
                 if (keyClass.isAssignableFrom(clazz)) {
                     target = SUPPLIERS.get(keyClass).supply(clazz, context);
-                    if (target == null) {
-                        throw new RuntimeException(String.format("未能实例化类%s", clazz.getName()));
-                    } else {
-                        for (Class<?> targetClass = target.getClass(); !targetClass.equals(Object.class); targetClass = targetClass.getSuperclass()) {
-                            for (Field field : targetClass.getDeclaredFields()) {
-                                if (field.isAnnotationPresent(Resource.class) || field.isAnnotationPresent(Supply.class)) {
-                                    field.setAccessible(true);
-                                    if (field.get(target) == null) {
-                                        field.set(target, supply(field.getType(), new XContext(context, target, field)));
-                                    }
+                    Objects.requireNonNull(target, String.format("未能实例化类%s", clazz.getName()));
+                    for (Class<?> targetClass = target.getClass(); !targetClass.equals(Object.class); targetClass = targetClass.getSuperclass()) {
+                        for (Field field : targetClass.getDeclaredFields()) {
+                            if (field.isAnnotationPresent(Resource.class) || field.isAnnotationPresent(Supply.class)) {
+                                field.setAccessible(true);
+                                if (field.get(target) == null) {
+                                    field.set(target, supply(field.getType(), new XContext(context, target, field)));
                                 }
                             }
                         }
