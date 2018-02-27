@@ -11,7 +11,7 @@ import java.net.URLEncoder;
 import java.util.*;
 
 /**
- * HTTP请求类，记录了HTTP请求的请求方法，请求uri，请求头，请求体
+ * HTTP请求类，记录了HTTP请求的请求方法，请求地址，请求头，请求体
  */
 public final class XRequest {
     public static final String MIME_URLENCODED = "application/x-www-form-urlencoded";
@@ -31,9 +31,9 @@ public final class XRequest {
      */
     private final String requestMethod;
     /**
-     * 请求uri
+     * 请求地址
      */
-    private final String requestUri;
+    private final String requestUrl;
     /**
      * 请求头
      */
@@ -56,7 +56,7 @@ public final class XRequest {
             }
         }
         this.requestMethod = method;
-        this.requestUri = url;
+        this.requestUrl = url;
     }
 
     /**
@@ -156,10 +156,10 @@ public final class XRequest {
     }
 
     /**
-     * 添加HTTP请求参数，允许同名的请求参数
+     * 添加HTTP请求体参数，允许同名的请求体参数
      *
-     * @param key   请求参数名
-     * @param value 请求参数值
+     * @param key   请求体参数名
+     * @param value 请求体参数值
      * @return HTTP请求实例
      */
     public XRequest param(String key, Object value) {
@@ -167,11 +167,11 @@ public final class XRequest {
     }
 
     /**
-     * 添加HTTP请求参数，可选择对同名的请求参数的处理方式
+     * 添加HTTP请求体参数，可选择对同名的请求体参数的处理方式
      *
-     * @param key   请求参数名
-     * @param value 请求参数值
-     * @param clear true：清除已经存在的同名的请求参数，false：追加同名请求参数
+     * @param key   请求体参数名
+     * @param value 请求体参数值
+     * @param clear true：清除已经存在的同名的请求体参数，false：追加同名请求体参数
      * @return HTTP请求实例
      */
     public XRequest param(String key, Object value, boolean clear) {
@@ -247,13 +247,13 @@ public final class XRequest {
     String requestUrl() {
         try {
             if (this.requestMethod.equals(METHOD_GET) && this.requestContent instanceof ParamsContent) {
-                if (this.requestUri.indexOf('?') < 0) {
-                    return String.format("%s?%s", this.requestUri, kvJoin(((ParamsContent) this.requestContent).params));
+                if (this.requestUrl.indexOf('?') < 0) {
+                    return String.format("%s?%s", this.requestUrl, kvJoin(((ParamsContent) this.requestContent).params));
                 } else {
-                    return String.format("%s&%s", this.requestUri, kvJoin(((ParamsContent) this.requestContent).params));
+                    return String.format("%s&%s", this.requestUrl, kvJoin(((ParamsContent) this.requestContent).params));
                 }
             } else {
-                return this.requestUri;
+                return this.requestUrl;
             }
         } catch (Exception e) {
             throw new IllegalStateException("生成请求url时出错");
@@ -378,7 +378,9 @@ public final class XRequest {
                         outStream.write(String.format("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"%s", keyValue.key, ((File) keyValue.value).getName(), CRLF).getBytes());
                         outStream.write(String.format("Content-Type: %s%s", URLConnection.getFileNameMap().getContentTypeFor(((File) keyValue.value).getAbsolutePath()), CRLF).getBytes());
                         outStream.write(CRLF.getBytes());
-                        XTools.streamToStream(new FileInputStream((File) keyValue.value), outStream);
+                        try (FileInputStream finStream = new FileInputStream((File) keyValue.value)) {
+                            XTools.streamToStream(finStream, outStream);
+                        }
                         outStream.write(CRLF.getBytes());
                     } else {
                         outStream.write((MINUS + boundary + CRLF).getBytes());
@@ -441,7 +443,9 @@ public final class XRequest {
 
         @Override
         public void contentWrite(DataOutputStream outStream) throws Exception {
-            XTools.streamToStream(new FileInputStream(file), outStream);
+            try (FileInputStream finStream = new FileInputStream(file)) {
+                XTools.streamToStream(finStream, outStream);
+            }
         }
     }
 

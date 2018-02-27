@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 /**
  * 常用的基本的关于HTTP的函数的集合
@@ -34,8 +35,11 @@ public final class XHttpTools {
             //设置请求方法
             connection.setRequestMethod(request.requestMethod());
             //设置请求头
-            for (XRequest.KeyValue keyValue : request.requestHeaders()) {
-                connection.addRequestProperty(keyValue.key, String.valueOf(keyValue.value));
+            List<XRequest.KeyValue> headers = request.requestHeaders();
+            if (headers != null) {
+                for (XRequest.KeyValue keyValue : headers) {
+                    connection.addRequestProperty(keyValue.key, String.valueOf(keyValue.value));
+                }
             }
             //如果为PUT和POST方法则输出请求体
             if (XRequest.METHOD_PUT.equals(request.requestMethod()) || XRequest.METHOD_POST.equals(request.requestMethod())) {
@@ -84,5 +88,4 @@ public final class XHttpTools {
             throw new Exception("XHttpTools仅支持HTTP协议和HTTPS协议");
         }
     }
-
 }
