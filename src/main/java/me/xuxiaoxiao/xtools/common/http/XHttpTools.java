@@ -14,7 +14,7 @@ public final class XHttpTools {
     /**
      * 默认的请求配置
      */
-    public static final XOption DEFAULT_OPTION = new XOption();
+    public static XOption DEFAULT_OPTION = new XOption();
 
     private XHttpTools() {
     }
@@ -87,5 +87,23 @@ public final class XHttpTools {
         } else {
             throw new Exception("XHttpTools仅支持HTTP协议和HTTPS协议");
         }
+    }
+
+    /**
+     * 设置默认的Http请求配置
+     *
+     * @param option Http请求配置
+     */
+    public static void setDefaultOption(XOption option) {
+        XHttpTools.DEFAULT_OPTION = option;
+    }
+
+    /**
+     * 获取默认的Http请求配置
+     *
+     * @return 默认的Http请求配置
+     */
+    public static XOption getDefaultOption() {
+        return XHttpTools.DEFAULT_OPTION;
     }
 }

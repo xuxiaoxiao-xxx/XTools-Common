@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLConnection;
+import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.util.*;
 
@@ -54,10 +55,17 @@ public final class XRequest {
         this.requestMethod = method;
         if (url.indexOf('?') >= 0) {
             this.requestUrl = url.substring(0, url.indexOf('?'));
-            for (String keyValue : url.substring(url.indexOf('?') + 1).split("&")) {
-                if (keyValue.indexOf('=') < 0) {
-                    throw new IllegalArgumentException("请求的url格式有误");
+            try {
+                for (String keyValue : url.substring(url.indexOf('?') + 1).split("&")) {
+                    int eqIndex = keyValue.indexOf('=');
+                    if (eqIndex < 0) {
+                        throw new IllegalArgumentException("请求的url格式有误");
+                    } else {
+                        query(URLDecoder.decode(keyValue.substring(0, eqIndex), CHARSET_UTF8), URLDecoder.decode(keyValue.substring(eqIndex + 1), CHARSET_UTF8));
+                    }
                 }
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
             }
         } else {
             this.requestUrl = url;
