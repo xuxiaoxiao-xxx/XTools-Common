@@ -19,10 +19,10 @@ public final class XRequest {
     public static final String MIME_JSON = "application/json";
     public static final String MIME_XML = "text/xml";
 
-    static final String METHOD_GET = "GET";
-    static final String METHOD_POST = "POST";
-    static final String METHOD_PUT = "PUT";
-    static final String METHOD_DELETE = "DELETE";
+    public static final String METHOD_GET = "GET";
+    public static final String METHOD_POST = "POST";
+    public static final String METHOD_PUT = "PUT";
+    public static final String METHOD_DELETE = "DELETE";
 
     private static final String CHARSET_UTF8 = "utf-8";
 
@@ -34,6 +34,10 @@ public final class XRequest {
      * 请求地址
      */
     private final String requestUrl;
+    /**
+     * 请求地址参数
+     */
+    private List<KeyValue> requestQueries;
     /**
      * 请求头
      */
@@ -47,16 +51,17 @@ public final class XRequest {
         if (!url.toLowerCase().startsWith("http://") && !url.toLowerCase().startsWith("https://")) {
             throw new IllegalArgumentException("XHttpTools仅支持HTTP协议和HTTPS协议");
         }
+        this.requestMethod = method;
         if (url.indexOf('?') >= 0) {
-            //如果是带参数的url需要验证格式是否正确
+            this.requestUrl = url.substring(0, url.indexOf('?'));
             for (String keyValue : url.substring(url.indexOf('?') + 1).split("&")) {
                 if (keyValue.indexOf('=') < 0) {
                     throw new IllegalArgumentException("请求的url格式有误");
                 }
             }
+        } else {
+            this.requestUrl = url;
         }
-        this.requestMethod = method;
-        this.requestUrl = url;
     }
 
     /**
@@ -117,6 +122,45 @@ public final class XRequest {
     }
 
     /**
+     * 添加HTTP请求地址参数，允许同名的请求地址参数
+     *
+     * @param key   请求地址参数名称
+     * @param value 请求地址参数值
+     * @return HTTP请求实例
+     */
+    public XRequest query(String key, Object value) {
+        return query(key, value, false);
+    }
+
+    /**
+     * 添加HTTP请求地址参数，可选择对于同名的请求地址参数的处理方式
+     *
+     * @param key   请求地址参数名称
+     * @param value 请求地址参数值
+     * @param clear true：清除已经存在的同名的请求地址参数，false：追加同名的请求地址参数
+     * @return HTTP请求实例
+     */
+    public XRequest query(String key, Object value, boolean clear) {
+        Objects.requireNonNull(key);
+        if (this.requestQueries == null) {
+            this.requestQueries = new LinkedList<>();
+        }
+        if (clear) {
+            Iterator<KeyValue> iterator = this.requestQueries.iterator();
+            while (iterator.hasNext()) {
+                KeyValue keyValue = iterator.next();
+                if (keyValue.key.equals(key)) {
+                    iterator.remove();
+                }
+            }
+        }
+        if (value != null) {
+            this.requestQueries.add(new KeyValue(key, value));
+        }
+        return this;
+    }
+
+    /**
      * 添加HTTP请求头，允许同名的请求头
      *
      * @param key   请求头名称
@@ -162,8 +206,8 @@ public final class XRequest {
      * @param value 请求体参数值
      * @return HTTP请求实例
      */
-    public XRequest param(String key, Object value) {
-        return param(key, value, false);
+    public XRequest content(String key, Object value) {
+        return content(key, value, false);
     }
 
     /**
@@ -174,56 +218,24 @@ public final class XRequest {
      * @param clear true：清除已经存在的同名的请求体参数，false：追加同名请求体参数
      * @return HTTP请求实例
      */
-    public XRequest param(String key, Object value, boolean clear) {
+    public XRequest content(String key, Object value, boolean clear) {
         Objects.requireNonNull(key);
-        if (this.requestContent == null) {
+        if (this.requestContent == null || !(this.requestContent instanceof ParamsContent)) {
             this.requestContent = new ParamsContent();
         }
-        if (this.requestContent instanceof ParamsContent) {
-            ParamsContent paramsContent = ((ParamsContent) this.requestContent);
-            if (clear) {
-                Iterator<KeyValue> iterator = paramsContent.params.iterator();
-                while (iterator.hasNext()) {
-                    KeyValue keyValue = iterator.next();
-                    if (keyValue.key.equals(key)) {
-                        iterator.remove();
-                    }
+        ParamsContent paramsContent = ((ParamsContent) this.requestContent);
+        if (clear) {
+            Iterator<KeyValue> iterator = paramsContent.params.iterator();
+            while (iterator.hasNext()) {
+                KeyValue keyValue = iterator.next();
+                if (keyValue.key.equals(key)) {
+                    iterator.remove();
                 }
             }
-            if (value != null) {
-                paramsContent.params.add(new KeyValue(key, value));
-            }
-        } else {
-            throw new IllegalStateException(String.format("请求体%s无法添加参数%s", this.requestContent.getClass().getName(), key));
         }
-        return this;
-    }
-
-    /**
-     * 添加字符串类型的请求体
-     *
-     * @param mime    请求体的类型
-     * @param content 请求体的内容
-     * @return HTTP请求实例
-     */
-    public XRequest content(String mime, String content) {
-        Objects.requireNonNull(mime);
-        Objects.requireNonNull(content);
-        this.requestContent = new StringContent(mime, content);
-        return this;
-    }
-
-    /**
-     * 添加文件类型的请求体
-     *
-     * @param mime    请求体的类型
-     * @param content 请求体的内容
-     * @return HTTP请求体的实例
-     */
-    public XRequest content(String mime, File content) {
-        Objects.requireNonNull(mime);
-        Objects.requireNonNull(content);
-        this.requestContent = new FileContent(mime, content);
+        if (value != null) {
+            paramsContent.params.add(new KeyValue(key, value));
+        }
         return this;
     }
 
@@ -246,12 +258,8 @@ public final class XRequest {
      */
     String requestUrl() {
         try {
-            if (this.requestMethod.equals(METHOD_GET) && this.requestContent instanceof ParamsContent) {
-                if (this.requestUrl.indexOf('?') < 0) {
-                    return String.format("%s?%s", this.requestUrl, kvJoin(((ParamsContent) this.requestContent).params));
-                } else {
-                    return String.format("%s&%s", this.requestUrl, kvJoin(((ParamsContent) this.requestContent).params));
-                }
+            if (this.requestQueries != null) {
+                return String.format("%s?%s", this.requestUrl, kvJoin(this.requestQueries));
             } else {
                 return this.requestUrl;
             }
@@ -275,7 +283,7 @@ public final class XRequest {
      * @return HTTP请求的请求头列表
      */
     List<KeyValue> requestHeaders() {
-        if (this.requestContent != null) {
+        if ((this.requestMethod.equals(METHOD_POST) || this.requestMethod.equals(METHOD_PUT)) && this.requestContent != null) {
             header("Content-Type", this.requestContent.contentType(), true);
             long contentLength = requestContent.contentLength();
             if (contentLength > 0) {
