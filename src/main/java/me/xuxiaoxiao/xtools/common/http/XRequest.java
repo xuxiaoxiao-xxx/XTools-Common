@@ -386,28 +386,29 @@ public final class XRequest {
         }
 
         @Override
-        public void contentWrite(DataOutputStream outStream) throws Exception {
+        public void contentWrite(DataOutputStream doStream) throws Exception {
             if (isMultipart()) {
                 for (KeyValue keyValue : params) {
                     if (keyValue.value instanceof File) {
-                        outStream.write((MINUS + boundary + CRLF).getBytes());
-                        outStream.write(String.format("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"%s", keyValue.key, ((File) keyValue.value).getName(), CRLF).getBytes());
-                        outStream.write(String.format("Content-Type: %s%s", URLConnection.getFileNameMap().getContentTypeFor(((File) keyValue.value).getAbsolutePath()), CRLF).getBytes());
-                        outStream.write(CRLF.getBytes());
-                        try (FileInputStream finStream = new FileInputStream((File) keyValue.value)) {
-                            XTools.streamToStream(finStream, outStream);
+                        doStream.write((MINUS + boundary + CRLF).getBytes());
+                        doStream.write(String.format("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"%s", keyValue.key, ((File) keyValue.value).getName(), CRLF).getBytes());
+                        doStream.write(String.format("Content-Type: %s%s", URLConnection.getFileNameMap().getContentTypeFor(((File) keyValue.value).getAbsolutePath()), CRLF).getBytes());
+                        doStream.write(CRLF.getBytes());
+                        try (FileInputStream fiStream = new FileInputStream((File) keyValue.value)) {
+                            XTools.streamToStream(fiStream, doStream);
                         }
-                        outStream.write(CRLF.getBytes());
+                        doStream.write(CRLF.getBytes());
                     } else {
-                        outStream.write((MINUS + boundary + CRLF).getBytes());
-                        outStream.write(String.format("Content-Disposition: form-data; name=\"%s\"%s", keyValue.key, CRLF).getBytes());
-                        outStream.write(CRLF.getBytes());
-                        outStream.write(String.valueOf(keyValue.value).getBytes());
-                        outStream.write(CRLF.getBytes());
+                        doStream.write((MINUS + boundary + CRLF).getBytes());
+                        doStream.write(String.format("Content-Disposition: form-data; name=\"%s\"%s", keyValue.key, CRLF).getBytes());
+                        doStream.write(CRLF.getBytes());
+                        doStream.write(String.valueOf(keyValue.value).getBytes());
+                        doStream.write(CRLF.getBytes());
                     }
                 }
+                doStream.write((MINUS + boundary + MINUS + CRLF).getBytes(CHARSET_UTF8));
             } else {
-                outStream.write(urlencoded);
+                doStream.write(urlencoded);
             }
         }
     }
