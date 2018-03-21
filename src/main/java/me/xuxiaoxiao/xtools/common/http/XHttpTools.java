@@ -41,8 +41,8 @@ public final class XHttpTools {
                     connection.addRequestProperty(keyValue.key, String.valueOf(keyValue.value));
                 }
             }
-            //如果为PUT和POST方法则输出请求体
-            if (XRequest.METHOD_PUT.equals(request.requestMethod()) || XRequest.METHOD_POST.equals(request.requestMethod())) {
+            //如果为POST方法则输出请求体
+            if (XRequest.METHOD_POST.equals(request.requestMethod())) {
                 connection.setDoOutput(true);
                 connection.setUseCaches(false);
                 XRequest.Content content = request.requestContent();
@@ -90,20 +90,20 @@ public final class XHttpTools {
     }
 
     /**
-     * 设置默认的Http请求配置
-     *
-     * @param option Http请求配置
-     */
-    public static void setDefaultOption(XOption option) {
-        XHttpTools.DEFAULT_OPTION = option;
-    }
-
-    /**
      * 获取默认的Http请求配置
      *
      * @return 默认的Http请求配置
      */
     public static XOption getDefaultOption() {
         return XHttpTools.DEFAULT_OPTION;
+    }
+
+    /**
+     * 设置默认的Http请求配置
+     *
+     * @param option Http请求配置
+     */
+    public static void setDefaultOption(XOption option) {
+        XHttpTools.DEFAULT_OPTION = option;
     }
 }

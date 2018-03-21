@@ -22,8 +22,6 @@ public final class XRequest {
 
     public static final String METHOD_GET = "GET";
     public static final String METHOD_POST = "POST";
-    public static final String METHOD_PUT = "PUT";
-    public static final String METHOD_DELETE = "DELETE";
 
     private static final String CHARSET_UTF8 = "utf-8";
 
@@ -93,26 +91,6 @@ public final class XRequest {
     }
 
     /**
-     * 新建一个PUT请求
-     *
-     * @param url 请求url
-     * @return PUT请求
-     */
-    public static XRequest PUT(String url) {
-        return new XRequest(METHOD_PUT, url);
-    }
-
-    /**
-     * 新建一个DELETE请求
-     *
-     * @param url 请求url
-     * @return DELETE请求
-     */
-    public static XRequest DELETE(String url) {
-        return new XRequest(METHOD_DELETE, url);
-    }
-
-    /**
      * 将键值对集合经过url编码后用固定的字符串连接起来
      *
      * @return 连接后的字符串
@@ -130,10 +108,10 @@ public final class XRequest {
     }
 
     /**
-     * 添加HTTP请求地址参数，允许同名的请求地址参数
+     * 添加值不为null的HTTP请求地址参数，允许同名的请求地址参数
      *
      * @param key   请求地址参数名称
-     * @param value 请求地址参数值
+     * @param value 请求地址参数值，为null则不会被添加
      * @return HTTP请求实例
      */
     public XRequest query(String key, Object value) {
@@ -141,10 +119,10 @@ public final class XRequest {
     }
 
     /**
-     * 添加HTTP请求地址参数，可选择对于同名的请求地址参数的处理方式
+     * 添加值不为null的HTTP请求地址参数，可选择对于同名的请求地址参数的处理方式
      *
      * @param key   请求地址参数名称
-     * @param value 请求地址参数值
+     * @param value 请求地址参数值，为null则不会被添加
      * @param clear true：清除已经存在的同名的请求地址参数，false：追加同名的请求地址参数
      * @return HTTP请求实例
      */
@@ -169,10 +147,10 @@ public final class XRequest {
     }
 
     /**
-     * 添加HTTP请求头，允许同名的请求头
+     * 添加值不为null的HTTP请求头，允许同名的请求头
      *
      * @param key   请求头名称
-     * @param value 请求头值
+     * @param value 请求头值，为null则不会被添加
      * @return HTTP请求实例
      */
     public XRequest header(String key, String value) {
@@ -180,10 +158,10 @@ public final class XRequest {
     }
 
     /**
-     * 添加HTTP请求头，可选择对于同名的请求头的处理方式
+     * 添加值不为null的HTTP请求头，可选择对于同名的请求头的处理方式
      *
      * @param key   请求头名称
-     * @param value 请求头值
+     * @param value 请求头值，为null则不会被添加
      * @param clear true：清除已经存在的同名的请求头，false：追加同名的请求头
      * @return HTTP请求实例
      */
@@ -208,10 +186,10 @@ public final class XRequest {
     }
 
     /**
-     * 添加HTTP请求体参数，允许同名的请求体参数
+     * 添加值不为null的HTTP请求体参数，允许同名的请求体参数
      *
      * @param key   请求体参数名
-     * @param value 请求体参数值
+     * @param value 请求体参数值，为null则不会被添加
      * @return HTTP请求实例
      */
     public XRequest content(String key, Object value) {
@@ -219,10 +197,10 @@ public final class XRequest {
     }
 
     /**
-     * 添加HTTP请求体参数，可选择对同名的请求体参数的处理方式
+     * 添加值不为null的HTTP请求体参数，可选择对同名的请求体参数的处理方式
      *
      * @param key   请求体参数名
-     * @param value 请求体参数值
+     * @param value 请求体参数值，为null则不会被添加
      * @param clear true：清除已经存在的同名的请求体参数，false：追加同名请求体参数
      * @return HTTP请求实例
      */
@@ -260,9 +238,9 @@ public final class XRequest {
     }
 
     /**
-     * 获得HTTP请求的url，如果请求方法为GET方法并且有请求参数则自动拼接成带参数的url
+     * 获得HTTP请求的请求url，如果有请求地址参数则自动拼接成带参数的url
      *
-     * @return HTTP请求的url
+     * @return HTTP请求的请求url
      */
     String requestUrl() {
         try {
@@ -291,7 +269,7 @@ public final class XRequest {
      * @return HTTP请求的请求头列表
      */
     List<KeyValue> requestHeaders() {
-        if ((this.requestMethod.equals(METHOD_POST) || this.requestMethod.equals(METHOD_PUT)) && this.requestContent != null) {
+        if (this.requestMethod.equals(METHOD_POST) && this.requestContent != null) {
             header("Content-Type", this.requestContent.contentType(), true);
             long contentLength = requestContent.contentLength();
             if (contentLength > 0) {
@@ -339,6 +317,11 @@ public final class XRequest {
         void contentWrite(DataOutputStream outStream) throws Exception;
     }
 
+    /**
+     * 带参数的请求体。
+     * 如果不包含文件参数，则自动使用urlencoded方式。
+     * 如果包含文件参数，则自动使用multipart方式。
+     */
     public static class ParamsContent implements Content {
         public static final String MINUS = "--";
         public static final String CRLF = "\r\n";
@@ -413,6 +396,9 @@ public final class XRequest {
         }
     }
 
+    /**
+     * 字符串类型请求体
+     */
     public static class StringContent implements Content {
 
         public final String mime;
@@ -439,6 +425,9 @@ public final class XRequest {
         }
     }
 
+    /**
+     * 文件类型请求体
+     */
     public static class FileContent implements Content {
         public final String mime;
         public final File file;
@@ -466,6 +455,9 @@ public final class XRequest {
         }
     }
 
+    /**
+     * 键值对
+     */
     public static class KeyValue {
         public final String key;
         public final Object value;

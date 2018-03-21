@@ -1,13 +1,13 @@
 package me.xuxiaoxiao.xtools.common.ioc;
 
+import me.xuxiaoxiao.xtools.common.ioc.factory.Manage;
+import me.xuxiaoxiao.xtools.common.ioc.factory.XContext;
+import me.xuxiaoxiao.xtools.common.ioc.factory.XFactory;
 import me.xuxiaoxiao.xtools.common.ioc.injector.XInjector;
-import me.xuxiaoxiao.xtools.common.ioc.supplier.Supply;
-import me.xuxiaoxiao.xtools.common.ioc.supplier.XContext;
-import me.xuxiaoxiao.xtools.common.ioc.supplier.XSupplier;
 
-import javax.annotation.Resource;
 import java.lang.reflect.Field;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -17,45 +17,66 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public final class XIocTools {
 
-    private static final ReentrantReadWriteLock SUPPLIERS_LOCK = new ReentrantReadWriteLock();
+    private static final ReentrantReadWriteLock FACTORY_LOCK = new ReentrantReadWriteLock();
 
-    private static final TreeMap<Class<?>, XSupplier> SUPPLIERS = new TreeMap<>(new ClassComparator());
+    private static final TreeMap<Class<?>, XFactory> FACTORY_TREE = new TreeMap<>(new ClassComparator());
 
     private XIocTools() {
     }
 
-    public static <T> void register(Class<T> clazz, XSupplier supplier) {
+    /**
+     * 注册工厂，注册某个类及其子类的实例工厂
+     *
+     * @param clazz   基准类，注册的工厂将会为这个类或者其子类管理实例
+     * @param factory 工厂，基准类的实例管理器
+     */
+    public static void register(Class<?> clazz, XFactory factory) {
         Objects.requireNonNull(clazz);
-        Objects.requireNonNull(supplier);
-        SUPPLIERS_LOCK.writeLock().lock();
+        Objects.requireNonNull(factory);
+        FACTORY_LOCK.writeLock().lock();
         try {
-            SUPPLIERS.put(clazz, supplier);
+            FACTORY_TREE.put(clazz, factory);
         } finally {
-            SUPPLIERS_LOCK.writeLock().unlock();
+            FACTORY_LOCK.writeLock().unlock();
         }
     }
 
-    public static <T> void unregister(Class<T> clazz) {
+    /**
+     * 取消注册工厂，取消注册某个类及其子类的实例工厂
+     *
+     * @param clazz 基准类
+     */
+    public static void unregister(Class<?> clazz) {
         Objects.requireNonNull(clazz);
-        SUPPLIERS_LOCK.writeLock().lock();
+        FACTORY_LOCK.writeLock().lock();
         try {
-            SUPPLIERS.remove(clazz);
+            FACTORY_TREE.remove(clazz);
         } finally {
-            SUPPLIERS_LOCK.writeLock().unlock();
+            FACTORY_LOCK.writeLock().unlock();
         }
     }
 
+    /**
+     * 根据子类优先的顺序查找注册的工厂，提供某个类的实例
+     *
+     * @param clazz     类对象
+     * @param context   实例的上下文
+     * @param injectors 注入器，实例化后的对象将会由注入器注入一些数据
+     * @param <T>       类模板
+     * @return 类实例
+     * @throws Exception 实例化时可能抛出异常
+     */
     public static <T> T supply(Class<T> clazz, XContext context, XInjector... injectors) throws Exception {
         T target = null;
-        SUPPLIERS_LOCK.readLock().lock();
+        FACTORY_LOCK.readLock().lock();
         try {
-            for (Class<?> keyClass : SUPPLIERS.keySet()) {
-                if (keyClass.isAssignableFrom(clazz)) {
-                    target = SUPPLIERS.get(keyClass).supply(clazz, context);
+            for (Map.Entry<Class<?>, XFactory> entry : FACTORY_TREE.entrySet()) {
+                if (entry.getKey().isAssignableFrom(clazz)) {
+                    target = entry.getValue().supply(clazz, context);
                     Objects.requireNonNull(target, String.format("未能实例化类%s", clazz.getName()));
-                    for (Class<?> targetClass = target.getClass(); !targetClass.equals(Object.class); targetClass = targetClass.getSuperclass()) {
+                    for (Class<?> targetClass = target.getClass(); !Object.class.equals(targetClass); targetClass = targetClass.getSuperclass()) {
                         for (Field field : targetClass.getDeclaredFields()) {
-                            if (field.isAnnotationPresent(Resource.class) || field.isAnnotationPresent(Supply.class)) {
+                            if (field.isAnnotationPresent(Manage.class)) {
                                 field.setAccessible(true);
                                 if (field.get(target) == null) {
                                     field.set(target, supply(field.getType(), new XContext(context, target, field)));
@@ -67,11 +88,54 @@ public final class XIocTools {
                 }
             }
         } finally {
-            SUPPLIERS_LOCK.readLock().unlock();
+            FACTORY_LOCK.readLock().unlock();
         }
+        Objects.requireNonNull(target, String.format("未能实例化类%s", clazz.getName()));
         return XIocTools.inject(target, injectors);
     }
 
+    /**
+     * 根据子类优先的顺序查找注册的工厂，回收类的实例
+     *
+     * @param target  待回收的类的实例
+     * @param context 实例的上下文
+     * @param <T>     类模板
+     * @return 被回收后的类的实例
+     * @throws Exception 回收时可能会出现异常
+     */
+    public static <T> T recycle(T target, XContext context) throws Exception {
+        for (Class<?> targetClass = target.getClass(); !Object.class.equals(targetClass); targetClass = targetClass.getSuperclass()) {
+            for (Field field : targetClass.getDeclaredFields()) {
+                if (field.isAnnotationPresent(Manage.class)) {
+                    field.setAccessible(true);
+                    if (field.get(target) != null) {
+                        field.set(target, recycle(field.get(target), new XContext(context, target, field)));
+                    }
+                }
+            }
+        }
+        FACTORY_LOCK.readLock().lock();
+        try {
+            for (Map.Entry<Class<?>, XFactory> entry : FACTORY_TREE.entrySet()) {
+                if (entry.getKey().isAssignableFrom(target.getClass())) {
+                    return entry.getValue().recycle(target, null);
+                }
+            }
+        } finally {
+            FACTORY_LOCK.readLock().unlock();
+        }
+        return target;
+    }
+
+    /**
+     * 为类的实例注入数据
+     *
+     * @param target    类的实例
+     * @param injectors 注入器
+     * @param <T>       类模板
+     * @return 注入数据后的类的实例
+     * @throws Exception 注入数据时可能发生异常
+     */
     public static <T> T inject(T target, XInjector... injectors) throws Exception {
         if (injectors != null && injectors.length > 0) {
             for (XInjector injector : injectors) {
@@ -81,6 +145,9 @@ public final class XIocTools {
         return target;
     }
 
+    /**
+     * 类比较器，子类在前，父类在后
+     */
     private static final class ClassComparator implements Comparator<Class<?>> {
 
         @Override
