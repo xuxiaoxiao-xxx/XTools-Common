@@ -100,21 +100,59 @@ public final class XTools {
         return XHttpTools.http(option, request);
     }
 
-    public static <T> T supply(Class<T> clazz, XInjector... injectors) {
+
+    /**
+     * 提供某个类的实例，需要通过XIocTools注册工厂
+     *
+     * @param clazz 类对象
+     * @param <T>   类模板
+     * @return 生成的类实例
+     */
+    public static <T> T supply(Class<T> clazz) {
         try {
-            return XIocTools.supply(clazz, null, injectors);
+            return XIocTools.supply(clazz, null);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(String.format("生成 %s 类的实例时发生异常", clazz.getName()));
         }
     }
 
+    /**
+     * 为类的实例注入数据
+     *
+     * @param target    类的实例
+     * @param injectors 注入器
+     * @param <T>       类模板
+     * @return 注入数据后的类的实例
+     */
     public static <T> T inject(T target, XInjector... injectors) {
         try {
             return XIocTools.inject(target, injectors);
+        } catch (RuntimeException e) {
+            throw e;
         } catch (Exception e) {
             e.printStackTrace();
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(String.format("为类 %s 的实例注入数据时发生异常", target.getClass()));
+        }
+    }
+
+    /**
+     * 回收类的实例，需要通过XIocTools注册工厂
+     *
+     * @param target 待回收的类的实例
+     * @param <T>    类模板
+     * @return 被回收后的类的实例
+     */
+    public static <T> T recycle(T target) {
+        try {
+            return XIocTools.recycle(target, null);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(String.format("回收类 %s 的实例时发生异常", target.getClass()));
         }
     }
 

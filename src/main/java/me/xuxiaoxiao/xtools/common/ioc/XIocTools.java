@@ -59,72 +59,35 @@ public final class XIocTools {
     /**
      * 根据子类优先的顺序查找注册的工厂，提供某个类的实例
      *
-     * @param clazz     类对象
-     * @param context   实例的上下文
-     * @param injectors 注入器，实例化后的对象将会由注入器注入一些数据
-     * @param <T>       类模板
+     * @param clazz   类对象
+     * @param context 实例的上下文
+     * @param <T>     类模板
      * @return 类实例
-     * @throws Exception 实例化时可能抛出异常
+     * @throws Exception 生成类的实例时可能发生异常
      */
-    public static <T> T supply(Class<T> clazz, XContext context, XInjector... injectors) throws Exception {
-        T target = null;
+    public static <T> T supply(Class<T> clazz, XContext context) throws Exception {
         FACTORY_LOCK.readLock().lock();
         try {
             for (Map.Entry<Class<?>, XFactory> entry : FACTORY_TREE.entrySet()) {
                 if (entry.getKey().isAssignableFrom(clazz)) {
-                    target = entry.getValue().supply(clazz, context);
-                    Objects.requireNonNull(target, String.format("未能实例化类%s", clazz.getName()));
+                    T target = entry.getValue().supply(clazz, context);
                     for (Class<?> targetClass = target.getClass(); !Object.class.equals(targetClass); targetClass = targetClass.getSuperclass()) {
                         for (Field field : targetClass.getDeclaredFields()) {
                             if (field.isAnnotationPresent(Manage.class)) {
                                 field.setAccessible(true);
                                 if (field.get(target) == null) {
-                                    field.set(target, supply(field.getType(), new XContext(context, target, field)));
+                                    field.set(target, XIocTools.supply(field.getType(), new XContext(context, target, field)));
                                 }
                             }
                         }
                     }
-                    break;
+                    return target;
                 }
             }
         } finally {
             FACTORY_LOCK.readLock().unlock();
         }
-        Objects.requireNonNull(target, String.format("未能实例化类%s", clazz.getName()));
-        return XIocTools.inject(target, injectors);
-    }
-
-    /**
-     * 根据子类优先的顺序查找注册的工厂，回收类的实例
-     *
-     * @param target  待回收的类的实例
-     * @param context 实例的上下文
-     * @param <T>     类模板
-     * @return 被回收后的类的实例
-     * @throws Exception 回收时可能会出现异常
-     */
-    public static <T> T recycle(T target, XContext context) throws Exception {
-        for (Class<?> targetClass = target.getClass(); !Object.class.equals(targetClass); targetClass = targetClass.getSuperclass()) {
-            for (Field field : targetClass.getDeclaredFields()) {
-                if (field.isAnnotationPresent(Manage.class)) {
-                    field.setAccessible(true);
-                    if (field.get(target) != null) {
-                        field.set(target, recycle(field.get(target), new XContext(context, target, field)));
-                    }
-                }
-            }
-        }
-        FACTORY_LOCK.readLock().lock();
-        try {
-            for (Map.Entry<Class<?>, XFactory> entry : FACTORY_TREE.entrySet()) {
-                if (entry.getKey().isAssignableFrom(target.getClass())) {
-                    return entry.getValue().recycle(target, null);
-                }
-            }
-        } finally {
-            FACTORY_LOCK.readLock().unlock();
-        }
-        return target;
+        throw new IllegalStateException(String.format("未能实例化类 %s", clazz.getName()));
     }
 
     /**
@@ -134,13 +97,47 @@ public final class XIocTools {
      * @param injectors 注入器
      * @param <T>       类模板
      * @return 注入数据后的类的实例
-     * @throws Exception 注入数据时可能发生异常
+     * @throws Exception 为类的实例注入数据时可能发生异常
      */
     public static <T> T inject(T target, XInjector... injectors) throws Exception {
         if (injectors != null && injectors.length > 0) {
             for (XInjector injector : injectors) {
                 target = injector.inject(target);
             }
+        }
+        return target;
+    }
+
+    /**
+     * 根据子类优先的顺序查找注册的工厂，回收类的实例
+     *
+     * @param target  待回收的类的实例
+     * @param context 实例的上下文
+     * @param <T>     类模板
+     * @return 被回收后的类的实例
+     * @throws Exception 回收类的实例时可能发生异常
+     */
+    public static <T> T recycle(T target, XContext context) throws Exception {
+        FACTORY_LOCK.readLock().lock();
+        try {
+            for (Class<?> targetClass = target.getClass(); !Object.class.equals(targetClass); targetClass = targetClass.getSuperclass()) {
+                for (Field field : targetClass.getDeclaredFields()) {
+                    if (field.isAnnotationPresent(Manage.class)) {
+                        field.setAccessible(true);
+                        if (field.get(target) != null) {
+                            field.set(target, XIocTools.recycle(field.get(target), new XContext(context, target, field)));
+                        }
+                    }
+                }
+            }
+            for (Map.Entry<Class<?>, XFactory> entry : FACTORY_TREE.entrySet()) {
+                if (entry.getKey().isAssignableFrom(target.getClass())) {
+                    return entry.getValue().recycle(target, null);
+
+                }
+            }
+        } finally {
+            FACTORY_LOCK.readLock().unlock();
         }
         return target;
     }

@@ -16,8 +16,10 @@ XTools类对XCodeTools、XHttpTools、XTimeTools等进行了再一次封装。
 #### HTTP相关
 * http get请求
 * http post请求
-* http put请求
-* http delete请求
+#### IOC相关
+* 生成某个类的实例（需要注册工厂）
+* 为某个类的实例注入数据
+* 回收某个类的实例（需要注册工厂）
 #### 字符串相关
 * 判断字符串是否为null或空
 * 判断字符串是否为空白串
@@ -62,25 +64,34 @@ public class Test {
         
         //获取字符串的MD5值
         String strMD5 = XTools.md5("XTools-Common");
+        
         //获取文件的SHA1值
         String fileSHA1 = XTools.sha1(new File("test.txt"));
         
+        //
         //将github首页保存成字符串
-        String githubToStr = XTools.http(XHttpTools.XUrl.base("https://github.com")).string();
-        //将github首页保存成文件
-        File githubToFile = XTools.http(XHttpTools.XUrl.base("https://github.com")).file("github.txt");
+        String githubToStr = XTools.http(XRequest.GET("https://github.com")).string();
         
+        //将github首页保存成文件
+        File githubToFile = XTools.http(XRequest.GET("https://github.com")).file("github.txt");
+        
+        //
         //判断字符串是否为空
         boolean isStrEmpty = XTools.strEmpty("");
+        
         //判断字符串是否为空白
         boolean isStrBlank = XTools.strBlank("\n");
+        
         //将集合中的字符串以逗号连接
         String joinStrWithComma = XTools.strJoin(Arrays.asList("A", "B", "C"), ",");
         
+        //
         //判断今天是否是节假日（农历节日仅支持2000年-今年）
         boolean isTodayHoliday = XTools.dateType(new Date()) == XTimeTools.HOLIDAY;
+        
         //获取下周一的Date对象
         Date nextMonday = XTools.dateByWeek(null, 1, 0);
+        
         //获取1901-2100年间的阳历日期对应的农历日期
         String lunarToday = XTools.solarToLunar(new Date());
     }

@@ -85,7 +85,7 @@ public final class XHttpTools {
             connection.setHostnameVerifier(option.hostnameVerifier);
             return connection;
         } else {
-            throw new Exception("XHttpTools仅支持HTTP协议和HTTPS协议");
+            throw new IllegalArgumentException("XHttpTools仅支持HTTP协议和HTTPS协议");
         }
     }
 

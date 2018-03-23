@@ -2,13 +2,12 @@ package me.xuxiaoxiao.xtools.common.http;
 
 import me.xuxiaoxiao.xtools.common.XTools;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -432,9 +431,14 @@ public final class XRequest {
         public final String mime;
         public final File file;
 
-        public FileContent(String mime, File file) {
-            this.mime = mime;
-            this.file = file;
+        public FileContent(File file) {
+            try {
+                this.mime = Files.probeContentType(Paths.get(file.getAbsolutePath()));
+                this.file = file;
+            } catch (IOException e) {
+                e.printStackTrace();
+                throw new RuntimeException("预测文件MIME类型出错");
+            }
         }
 
         @Override
