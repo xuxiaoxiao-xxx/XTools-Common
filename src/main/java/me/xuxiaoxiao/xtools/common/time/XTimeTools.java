@@ -93,30 +93,50 @@ public final class XTimeTools {
      * @return 任意时间当天00:00:00时刻的date对象
      */
     public static Date date(Date date) {
-        try {
-            SimpleDateFormat ymdFormat = dateFormat(FORMAT_YMD);
-            return ymdFormat.parse(ymdFormat.format(date));
-        } catch (ParseException e) {
-            e.printStackTrace();
-            return null;
-        }
+        return dateParse(FORMAT_YMD, dateFormat(FORMAT_YMD, date));
     }
 
     /**
-     * 获取一个SimpleDateFormat，自动缓存，线程安全
+     * 将date对象转换成相应格式的字符串，线程安全
      *
      * @param format 格式字符串
-     * @return SimpleDateFormat实例
+     * @param date   date对象
+     * @return 相应格式的字符串
      */
-    public static SimpleDateFormat dateFormat(String format) {
+    public static String dateFormat(String format, Date date) {
         Objects.requireNonNull(format);
+        Objects.requireNonNull(date);
         HashMap<String, SimpleDateFormat> formatMap = DATE_FORMATS.get();
         SimpleDateFormat dateFormat = formatMap.get(format);
         if (dateFormat == null) {
             dateFormat = new SimpleDateFormat(format);
             formatMap.put(format, dateFormat);
         }
-        return dateFormat;
+        return dateFormat.format(date);
+    }
+
+    /**
+     * 将日期字符串转换成相应的date对象，线程安全
+     *
+     * @param format  格式字符串
+     * @param dateStr 日期字符串
+     * @return 相应的date对象
+     */
+    public static Date dateParse(String format, String dateStr) {
+        Objects.requireNonNull(format);
+        Objects.requireNonNull(dateStr);
+        HashMap<String, SimpleDateFormat> formatMap = DATE_FORMATS.get();
+        SimpleDateFormat dateFormat = formatMap.get(format);
+        if (dateFormat == null) {
+            dateFormat = new SimpleDateFormat(format);
+            formatMap.put(format, dateFormat);
+        }
+        try {
+            return dateFormat.parse(dateStr);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new IllegalArgumentException(String.format("日期:%s 不符合格式:%s", dateStr, format));
+        }
     }
 
     /**
@@ -185,6 +205,23 @@ public final class XTimeTools {
     }
 
     /**
+     * 获取以某天所在的那一季度为基准偏移若干季度的某天00:00:00时刻的date对象
+     *
+     * @param base         基准时间的date对象，如果为null则以当前时间为基准
+     * @param seasonOffset 偏移的季度数
+     * @param dayIndex     那一季度的第几天（一号为0）
+     * @return 以base所在的那一季度为基准偏移seasonOffset季度的dayIndex天00:00:00时刻的date对象
+     */
+    public static Date dateBySeason(Date base, int seasonOffset, int dayIndex) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
+        calendar.set(Calendar.MONTH, (calendar.get(Calendar.MONTH) / 3 + seasonOffset) * 3);
+        calendar.set(Calendar.DAY_OF_MONTH, dayIndex + 1);
+        return XTimeTools.date(calendar.getTime());
+    }
+
+    /**
      * 获取以某天所在的那一年为基准偏移若干年的某天00:00:00时刻的date对象
      *
      * @param base       基准时间的date对象，如果为null则以当前时间为基准
@@ -218,6 +255,22 @@ public final class XTimeTools {
     }
 
     /**
+     * 获取以某天所在的那一季度为基准偏移若干季度的某周的周一00:00:00时刻的date对象
+     *
+     * @param base         基准时间的date对象，如果为null则以当前时间为基准
+     * @param seasonOffset 偏移的季度数
+     * @param weekIndex    那一季度的第几周（每周的第一天是周一，每季度的第一周是第一个周一所在的那一周，第一周为0）
+     * @return 以base所在的那一季度为基准偏移seasonOffset季度的weekIndex周的周一00:00:00时刻的date对象
+     */
+    public static Date weekBySeason(Date base, int seasonOffset, int weekIndex) {
+        Date date = dateBySeason(base, seasonOffset, 0);
+        while (dateInWeek(date) != MONDAY) {
+            date = new Date(date.getTime() + DAY_MILLIS);
+        }
+        return new Date(date.getTime() + weekIndex * WEEK_MILLIS);
+    }
+
+    /**
      * 获取以某天所在的那一年为基准偏移若干年的某周的周一00:00:00时刻的date对象
      *
      * @param base       基准时间的date对象，如果为null则以当前时间为基准
@@ -234,12 +287,29 @@ public final class XTimeTools {
     }
 
     /**
+     * 获取以某天所在的那一季度为基准偏移若干季度的某月的一号00:00:00时刻的date对象
+     *
+     * @param base         基准时间的date对象，如果为null则以当前时间为基准
+     * @param seasonOffset 偏移的季度数
+     * @param monthIndex   那一季度的第几个月（第一个月为0）
+     * @return 以base所在的那一季度为基准偏移seasonOffset季度的monthIndex月的一号00:00:00时刻的date对象
+     */
+    public static Date monthBySeason(Date base, int seasonOffset, int monthIndex) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
+        calendar.set(Calendar.MONTH, (calendar.get(Calendar.MONTH) / 3 + seasonOffset) * 3 + monthIndex);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        return XTimeTools.date(calendar.getTime());
+    }
+
+    /**
      * 获取以某天所在的那一年为基准偏移若干年的某月的一号00:00:00时刻的date对象
      *
      * @param base       基准时间的date对象，如果为null则以当前时间为基准
      * @param yearOffset 偏移的年数
      * @param monthIndex 那一年的第几个月（一月为0）
-     * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的weekIndex周的周一00:00:00时刻的date对象
+     * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的一号00:00:00时刻的date对象
      */
     public static Date monthByYear(Date base, int yearOffset, int monthIndex) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
@@ -247,6 +317,24 @@ public final class XTimeTools {
         calendar.setTimeInMillis(baseTime);
         calendar.add(Calendar.YEAR, yearOffset);
         calendar.set(Calendar.MONTH, monthIndex);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        return XTimeTools.date(calendar.getTime());
+    }
+
+    /**
+     * 获取以某天所在的那一年为基准偏移若干年的某季度的第一天00:00:00时刻的date对象
+     *
+     * @param base        基准时间的date对象，如果为null则以当前时间为基准
+     * @param yearOffset  偏移的年数
+     * @param seasonIndex 那一年的第几个季度（第一个季度为0）
+     * @return 以base所在的那一年为基准偏移yearOffset年的seasonIndex月的第一天00:00:00时刻的date对象
+     */
+    public static Date seasonByYear(Date base, int yearOffset, int seasonIndex) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
+        calendar.add(Calendar.YEAR, yearOffset);
+        calendar.set(Calendar.MONTH, seasonIndex * 3);
         calendar.set(Calendar.DAY_OF_MONTH, 1);
         return XTimeTools.date(calendar.getTime());
     }
@@ -295,6 +383,21 @@ public final class XTimeTools {
     }
 
     /**
+     * 获取任意一天是一个季度中的第几天
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天是那个季度中的第几天（第一天为0）
+     */
+    public static int dateInSeason(Date base) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
+        calendar.set(Calendar.MONTH, (calendar.get(Calendar.MONTH) / 3) * 3);
+        calendar.set(Calendar.DAY_OF_MONTH, 1);
+        return (int) ((date(new Date(baseTime)).getTime() - date(calendar.getTime()).getTime()) / DAY_MILLIS);
+    }
+
+    /**
      * 获取任意一天是一年中的第几天
      *
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
@@ -334,6 +437,31 @@ public final class XTimeTools {
     }
 
     /**
+     * 获取任意一天所在的周是哪一季度的第几周
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天所在的周是哪一季度的第几周（正数表示本季度第几周，负数表示上季度第几周,例：1=本季第第二周，-12=上季度第13周）
+     */
+    public static int weekInSeason(Date base) {
+        Date weekMonday = dateByWeek(base, 0, MONDAY);
+
+        Date seasonMonday = dateBySeason(base, 0, 0);
+        while (dateInWeek(seasonMonday) != MONDAY) {
+            seasonMonday = new Date(seasonMonday.getTime() + DAY_MILLIS);
+        }
+
+        if (weekMonday.compareTo(seasonMonday) >= 0) {
+            return (int) ((weekMonday.getTime() - seasonMonday.getTime()) / WEEK_MILLIS);
+        } else {
+            Date lastSeasonMonday = dateBySeason(base, -1, 0);
+            while (dateInWeek(lastSeasonMonday) != MONDAY) {
+                lastSeasonMonday = new Date(lastSeasonMonday.getTime() + DAY_MILLIS);
+            }
+            return (int) ((lastSeasonMonday.getTime() - weekMonday.getTime()) / WEEK_MILLIS);
+        }
+    }
+
+    /**
      * 获取任意一天所在的周是哪一年的第几周
      *
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
@@ -360,16 +488,42 @@ public final class XTimeTools {
     }
 
     /**
+     * 获取任意一天所在的月是那一季度的第几月
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天所在的月是那一季度的第几月，第一个月为0
+     */
+    public static int monthInSeason(Date base) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
+        return calendar.get(Calendar.MONTH) - (calendar.get(Calendar.MONTH) / 3) * 3;
+    }
+
+    /**
      * 获取任意一天所在的月是那一年的第几月
      *
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
-     * @return base那天所在的月是那一年的第几月
+     * @return base那天所在的月是那一年的第几月，第一个月为0
      */
     public static int monthInYear(Date base) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
         return calendar.get(Calendar.MONTH);
+    }
+
+    /**
+     * 获取任意一天所在的季度是那一年的第几个季度
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天所在的季度是那一年的第几季度，第一个季度为0
+     */
+    public static int seasonInYear(Date base) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTimeInMillis(baseTime);
+        return calendar.get(Calendar.MONTH) / 3;
     }
 
     /**

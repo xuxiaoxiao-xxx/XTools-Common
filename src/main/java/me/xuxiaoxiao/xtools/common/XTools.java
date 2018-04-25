@@ -10,7 +10,6 @@ import me.xuxiaoxiao.xtools.common.ioc.injector.XInjector;
 import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -341,13 +340,25 @@ public final class XTools {
     }
 
     /**
-     * 获取一个SimpleDateFormat，自动缓存，线程安全
+     * 将date对象转换成相应格式的字符串，线程安全
      *
      * @param format 格式字符串
-     * @return SimpleDateFormat实例
+     * @param date   date对象
+     * @return 相应格式的字符串
      */
-    public static SimpleDateFormat dateFormat(String format) {
-        return XTimeTools.dateFormat(format);
+    public static String dateFormat(String format, Date date) {
+        return XTimeTools.dateFormat(format, date);
+    }
+
+    /**
+     * 将日期字符串转换成相应的date对象，线程安全
+     *
+     * @param format  格式字符串
+     * @param dateStr 日期字符串
+     * @return 相应的date对象
+     */
+    public static Date dateParse(String format, String dateStr) {
+        return XTimeTools.dateParse(format, dateStr);
     }
 
     /**
@@ -375,6 +386,18 @@ public final class XTools {
     }
 
     /**
+     * 获取以某天所在的那一季度为基准偏移若干季度的某天00:00:00时刻的date对象
+     *
+     * @param base         基准时间的date对象，如果为null则以当前时间为基准
+     * @param seasonOffset 偏移的季度数
+     * @param dayIndex     那一季度的第几天（一号为0）
+     * @return 以base所在的那一季度为基准偏移seasonOffset季度的dayIndex天00:00:00时刻的date对象
+     */
+    public static Date dateBySeason(Date base, int seasonOffset, int dayIndex) {
+        return XTimeTools.dateBySeason(base, seasonOffset, dayIndex);
+    }
+
+    /**
      * 获取以某天所在的那一年为基准偏移若干年的某天00:00:00时刻的date对象
      *
      * @param base       基准时间的date对象，如果为null则以当前时间为基准
@@ -399,6 +422,18 @@ public final class XTools {
     }
 
     /**
+     * 获取以某天所在的那一季度为基准偏移若干季度的某周的周一00:00:00时刻的date对象
+     *
+     * @param base         基准时间的date对象，如果为null则以当前时间为基准
+     * @param seasonOffset 偏移的季度数
+     * @param weekIndex    那一季度的第几周（每周的第一天是周一，每季度的第一周是第一个周一所在的那一周，第一周为0）
+     * @return 以base所在的那一季度为基准偏移seasonOffset季度的weekIndex周的周一00:00:00时刻的date对象
+     */
+    public static Date weekBySeason(Date base, int seasonOffset, int weekIndex) {
+        return XTimeTools.weekBySeason(base, seasonOffset, weekIndex);
+    }
+
+    /**
      * 获取以某天所在的那一年为基准偏移若干年的某周的周一00:00:00时刻的date对象
      *
      * @param base       基准时间的date对象，如果为null则以当前时间为基准
@@ -411,6 +446,18 @@ public final class XTools {
     }
 
     /**
+     * 获取以某天所在的那一季度为基准偏移若干季度的某月的一号00:00:00时刻的date对象
+     *
+     * @param base         基准时间的date对象，如果为null则以当前时间为基准
+     * @param seasonOffset 偏移的季度数
+     * @param monthIndex   那一季度的第几个月（第一个月为0）
+     * @return 以base所在的那一季度为基准偏移seasonOffset季度的monthIndex月的一号00:00:00时刻的date对象
+     */
+    public static Date monthBySeason(Date base, int seasonOffset, int monthIndex) {
+        return XTimeTools.monthBySeason(base, seasonOffset, monthIndex);
+    }
+
+    /**
      * 获取以某天所在的那一年为基准偏移若干年的某月的一号00:00:00时刻的date对象
      *
      * @param base       基准时间的date对象，如果为null则以当前时间为基准
@@ -420,6 +467,18 @@ public final class XTools {
      */
     public static Date monthByYear(Date base, int yearOffset, int monthIndex) {
         return XTimeTools.monthByYear(base, yearOffset, monthIndex);
+    }
+
+    /**
+     * 获取以某天所在的那一年为基准偏移若干年的某季度的第一天00:00:00时刻的date对象
+     *
+     * @param base        基准时间的date对象，如果为null则以当前时间为基准
+     * @param yearOffset  偏移的年数
+     * @param seasonIndex 那一年的第几个季度（第一个季度为0）
+     * @return 以base所在的那一年为基准偏移yearOffset年的seasonIndex月的第一天00:00:00时刻的date对象
+     */
+    public static Date seasonByYear(Date base, int yearOffset, int seasonIndex) {
+        return XTimeTools.seasonByYear(base, yearOffset, seasonIndex);
     }
 
     /**
@@ -443,6 +502,16 @@ public final class XTools {
     }
 
     /**
+     * 获取任意一天是一个季度中的第几天
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天是那个季度中的第几天（第一天为0）
+     */
+    public static int dateInSeason(Date base) {
+        return XTimeTools.dateInSeason(base);
+    }
+
+    /**
      * 获取任意一天是一年中的第几天
      *
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
@@ -463,6 +532,16 @@ public final class XTools {
     }
 
     /**
+     * 获取任意一天所在的周是哪一季度的第几周
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天所在的周是哪一季度的第几周（正数表示本季度第几周，负数表示上季度第几周,例：1=本季第第二周，-12=上季度第13周）
+     */
+    public static int weekInSeason(Date base) {
+        return XTimeTools.weekInSeason(base);
+    }
+
+    /**
      * 获取任意一天所在的周是哪一年的第几周
      *
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
@@ -473,6 +552,16 @@ public final class XTools {
     }
 
     /**
+     * 获取任意一天所在的月是那一季度的第几月
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天所在的月是那一季度的第几月，第一个月为0
+     */
+    public static int monthInSeason(Date base) {
+        return XTimeTools.monthInSeason(base);
+    }
+
+    /**
      * 获取任意一天所在的月是那一年的第几月
      *
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
@@ -480,6 +569,16 @@ public final class XTools {
      */
     public static int monthInYear(Date base) {
         return XTimeTools.monthInYear(base);
+    }
+
+    /**
+     * 获取任意一天所在的季度是那一年的第几个季度
+     *
+     * @param base 基准时间的date对象，如果为null则以当前时间为基准
+     * @return base那天所在的季度是那一年的第几季度，第一个季度为0
+     */
+    public static int seasonInYear(Date base) {
+        return XTimeTools.seasonInYear(base);
     }
 
     /**

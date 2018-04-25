@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>me.xuxiaoxiao</groupId>
     <artifactId>xtools-common</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <name>xtools-common</name>
     <description>Java开发基础工具集，陆续收录常用的java代码，令代码更加简洁美观</description>
     <url>https://github.com/xuxiaoxiao-xxx/XTools-Common</url>
