@@ -2,9 +2,9 @@ package me.xuxiaoxiao.xtools.common.http;
 
 import javax.net.ssl.*;
 import java.net.CookieManager;
+import java.net.CookiePolicy;
 import java.net.HttpURLConnection;
 import java.security.SecureRandom;
-import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.List;
@@ -89,11 +89,11 @@ public class XOption {
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, new TrustManager[]{new X509TrustManager() {
                 @Override
-                public void checkClientTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                public void checkClientTrusted(X509Certificate[] x509Certificates, String s) {
                 }
 
                 @Override
-                public void checkServerTrusted(X509Certificate[] x509Certificates, String s) throws CertificateException {
+                public void checkServerTrusted(X509Certificate[] x509Certificates, String s) {
                 }
 
                 @Override
@@ -127,7 +127,7 @@ public class XOption {
      * @return 默认使用内存cookie管理器
      */
     public CookieManager cookieManager() {
-        return new CookieManager();
+        return new CookieManager(null, CookiePolicy.ACCEPT_ALL);
     }
 
     /**
