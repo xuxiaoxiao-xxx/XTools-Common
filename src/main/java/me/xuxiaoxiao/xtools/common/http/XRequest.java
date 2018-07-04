@@ -9,6 +9,8 @@ import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * HTTP请求类，记录了HTTP请求的请求方法，请求地址，请求头，请求体
@@ -185,7 +187,8 @@ public final class XRequest {
     }
 
     /**
-     * 添加值不为null的HTTP请求体参数，允许同名的请求体参数
+     * 添加值不为null的HTTP请求体参数，允许同名的请求体参数。
+     * 如果有文件参数，则会使用multipart请求体，否则使用urlencoded请求体
      *
      * @param key   请求体参数名
      * @param value 请求体参数值，为null则不会被添加
@@ -196,7 +199,8 @@ public final class XRequest {
     }
 
     /**
-     * 添加值不为null的HTTP请求体参数，可选择对同名的请求体参数的处理方式
+     * 添加值不为null的HTTP请求体参数，可选择对同名的请求体参数的处理方式。
+     * 如果有文件参数，则会使用multipart请求体，否则使用urlencoded请求体
      *
      * @param key   请求体参数名
      * @param value 请求体参数值，为null则不会被添加
@@ -205,23 +209,38 @@ public final class XRequest {
      */
     public XRequest content(String key, Object value, boolean clear) {
         Objects.requireNonNull(key);
-        if (this.requestContent == null || !(this.requestContent instanceof ParamsContent)) {
-            this.requestContent = new ParamsContent();
+        if (this.requestContent == null) {
+            this.requestContent = new UrlencodedContent();
         }
-        ParamsContent paramsContent = ((ParamsContent) this.requestContent);
-        if (clear) {
-            Iterator<KeyValue> iterator = paramsContent.params.iterator();
-            while (iterator.hasNext()) {
-                KeyValue keyValue = iterator.next();
-                if (keyValue.key.equals(key)) {
-                    iterator.remove();
+        if (this.requestContent instanceof UrlencodedContent) {
+            UrlencodedContent urlencodedContent = ((UrlencodedContent) this.requestContent);
+            if (value instanceof File || value instanceof MultipartContent.Part) {
+                //如果请求体一开始是urlencoded类型的，现在来了一个文件，则自动转换成multipart类型的，然后交给multipart类型的处理逻辑处理
+                MultipartContent multipartContent = new MultipartContent();
+                for (KeyValue keyValue : urlencodedContent.params) {
+                    multipartContent.part(keyValue.key, keyValue.value);
                 }
+                this.requestContent = multipartContent;
+            } else {
+                urlencodedContent.param(key, value, clear);
+                return this;
             }
         }
-        if (value != null) {
-            paramsContent.params.add(new KeyValue(key, value));
+        if (this.requestContent instanceof MultipartContent) {
+            MultipartContent multipartContent = (MultipartContent) this.requestContent;
+            if (value instanceof MultipartContent.Part) {
+                MultipartContent.Part part = (MultipartContent.Part) value;
+                if (key.equals(part.name)) {
+                    multipartContent.part((MultipartContent.Part) value, clear);
+                } else {
+                    throw new IllegalArgumentException(String.format("参数的key：%s与表单的名称：%s不相等", key, part.name));
+                }
+            } else {
+                multipartContent.part(key, value, clear);
+            }
+            return this;
         }
-        return this;
+        throw new IllegalStateException(String.format("%s不能接受键值对请求体", this.requestContent.getClass().getName()));
     }
 
     /**
@@ -267,7 +286,7 @@ public final class XRequest {
      *
      * @return HTTP请求的请求头列表
      */
-    List<KeyValue> requestHeaders() {
+    List<KeyValue> requestHeaders() throws IOException {
         if (this.requestMethod.equals(METHOD_POST) && this.requestContent != null) {
             header("Content-Type", this.requestContent.contentType(), true);
             long contentLength = requestContent.contentLength();
@@ -298,99 +317,185 @@ public final class XRequest {
          *
          * @return 请求体的MIME类型
          */
-        String contentType();
+        String contentType() throws IOException;
 
         /**
          * 请求体的长度，如果不确定长度可以返回-1，这将使用chunked模式传输
          *
          * @return 请求体的长度
          */
-        long contentLength();
+        long contentLength() throws IOException;
 
         /**
          * 请求体写出到输出流的具体方法
          *
          * @param outStream 目标输出流
-         * @throws Exception 将请求体写出到输出流时可能会发生异常
+         * @throws IOException 将请求体写出到输出流时可能会发生异常
          */
-        void contentWrite(DataOutputStream outStream) throws Exception;
+        void contentWrite(DataOutputStream outStream) throws IOException;
     }
 
     /**
-     * 带参数的请求体。
-     * 如果不包含文件参数，则自动使用urlencoded方式。
-     * 如果包含文件参数，则自动使用multipart方式。
+     * urlencoded类型请求体
      */
-    public static class ParamsContent implements Content {
-        public static final String MINUS = "--";
-        public static final String CRLF = "\r\n";
+    public static class UrlencodedContent implements Content {
+        private final List<KeyValue> params = new LinkedList<>();
+        private byte[] urlencoded;
 
-        public final List<KeyValue> params = new LinkedList<>();
-        public String boundary;
-        public byte[] urlencoded;
+        public UrlencodedContent param(String key, Object value) {
+            return this.param(key, value, false);
+        }
 
-        public boolean isMultipart() {
-            if (boundary == null && urlencoded == null) {
-                for (KeyValue keyValue : params) {
-                    if (keyValue.value instanceof File) {
-                        boundary = XTools.md5(String.format("multipart-%d-%d", System.currentTimeMillis(), new Random().nextInt()));
-                        return true;
+        public UrlencodedContent param(String key, Object value, boolean clear) {
+            Objects.requireNonNull(key);
+            this.urlencoded = null;
+            if (clear) {
+                Iterator<KeyValue> iterator = this.params.iterator();
+                while (iterator.hasNext()) {
+                    KeyValue keyValue = iterator.next();
+                    if (keyValue.key.equals(key)) {
+                        iterator.remove();
                     }
                 }
-                try {
-                    urlencoded = kvJoin(params).getBytes();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    urlencoded = new byte[0];
-                }
-                return false;
-            } else {
-                return boundary != null;
             }
+            if (value != null) {
+                this.params.add(new KeyValue(key, value));
+            }
+            return this;
         }
 
         @Override
         public String contentType() {
-            if (isMultipart()) {
-                return MIME_MULTIPART + "; boundary=" + boundary;
-            } else {
-                return MIME_URLENCODED + "; charset=utf-8";
-            }
+            return MIME_URLENCODED + "; charset=" + CHARSET_UTF8;
         }
 
         @Override
-        public long contentLength() {
-            if (isMultipart()) {
-                return -1;
-            } else {
-                return urlencoded.length;
+        public long contentLength() throws IOException {
+            if (urlencoded == null) {
+                urlencoded = kvJoin(params).getBytes(CHARSET_UTF8);
             }
+            return urlencoded.length;
         }
 
         @Override
-        public void contentWrite(DataOutputStream doStream) throws Exception {
-            if (isMultipart()) {
-                for (KeyValue keyValue : params) {
-                    if (keyValue.value instanceof File) {
-                        doStream.write((MINUS + boundary + CRLF).getBytes());
-                        doStream.write(String.format("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"%s", keyValue.key, ((File) keyValue.value).getName(), CRLF).getBytes());
-                        doStream.write(String.format("Content-Type: %s%s", URLConnection.getFileNameMap().getContentTypeFor(((File) keyValue.value).getAbsolutePath()), CRLF).getBytes());
-                        doStream.write(CRLF.getBytes());
-                        try (FileInputStream fiStream = new FileInputStream((File) keyValue.value)) {
-                            XTools.streamToStream(fiStream, doStream);
-                        }
-                        doStream.write(CRLF.getBytes());
-                    } else {
-                        doStream.write((MINUS + boundary + CRLF).getBytes());
-                        doStream.write(String.format("Content-Disposition: form-data; name=\"%s\"%s", keyValue.key, CRLF).getBytes());
-                        doStream.write(CRLF.getBytes());
-                        doStream.write(String.valueOf(keyValue.value).getBytes());
-                        doStream.write(CRLF.getBytes());
+        public void contentWrite(DataOutputStream doStream) throws IOException {
+            if (urlencoded == null) {
+                urlencoded = kvJoin(params).getBytes(CHARSET_UTF8);
+            }
+            doStream.write(urlencoded);
+        }
+    }
+
+    /**
+     * multipart类型请求体
+     */
+    public static class MultipartContent implements Content {
+        public static final String HYPHENS = "--";
+        public static final String CRLF = "\r\n";
+
+        private final List<Part> parts = new LinkedList<>();
+        private String boundary = XTools.md5(String.format("multipart-%d-%d", System.currentTimeMillis(), new Random().nextInt()));
+
+        public MultipartContent part(String key, Object value) {
+            return this.part(new Part(key, value), false);
+        }
+
+        public MultipartContent part(String key, Object value, boolean clear) {
+            return this.part(new Part(key, value), clear);
+        }
+
+        public MultipartContent part(Part part) {
+            return this.part(part, false);
+        }
+
+        public MultipartContent part(Part part, boolean clear) {
+            Objects.requireNonNull(part);
+            Objects.requireNonNull(part.name);
+            if (clear) {
+                Iterator<Part> iterator = this.parts.iterator();
+                while (iterator.hasNext()) {
+                    Part temp = iterator.next();
+                    if (part.name.equals(temp.name)) {
+                        iterator.remove();
                     }
                 }
-                doStream.write((MINUS + boundary + MINUS + CRLF).getBytes(CHARSET_UTF8));
-            } else {
-                doStream.write(urlencoded);
+            }
+            if (part.value != null) {
+                this.parts.add(part);
+            }
+            return this;
+        }
+
+        @Override
+        public String contentType() {
+            return MIME_MULTIPART + "; boundary=" + boundary;
+        }
+
+        @Override
+        public long contentLength() throws IOException {
+            long contentLength = 0;
+            for (Part part : parts) {
+                contentLength += (HYPHENS + boundary + CRLF).getBytes(CHARSET_UTF8).length;
+                for (String header : part.headers()) {
+                    contentLength += String.format("%s%s", header, CRLF).getBytes(CHARSET_UTF8).length;
+                }
+                contentLength += CRLF.getBytes(CHARSET_UTF8).length;
+                contentLength += part.partLength();
+                contentLength += CRLF.getBytes(CHARSET_UTF8).length;
+            }
+            contentLength = contentLength + (HYPHENS + boundary + HYPHENS + CRLF).getBytes(CHARSET_UTF8).length;
+            return contentLength;
+        }
+
+        @Override
+        public void contentWrite(DataOutputStream doStream) throws IOException {
+            for (Part part : parts) {
+                doStream.write((HYPHENS + boundary + CRLF).getBytes(CHARSET_UTF8));
+                for (String header : part.headers()) {
+                    doStream.write(String.format("%s%s", header, CRLF).getBytes(CHARSET_UTF8));
+                }
+                doStream.write(CRLF.getBytes(CHARSET_UTF8));
+                part.partWrite(doStream);
+                doStream.write(CRLF.getBytes(CHARSET_UTF8));
+            }
+            doStream.write((HYPHENS + boundary + HYPHENS + CRLF).getBytes(CHARSET_UTF8));
+        }
+
+        public static class Part {
+            public final String name;
+            public final Object value;
+
+            public Part(String name, Object value) {
+                this.name = name;
+                this.value = value;
+            }
+
+            public String[] headers() throws IOException {
+                if (value instanceof File) {
+                    String disposition = String.format("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"", name, URLEncoder.encode(((File) value).getName(), CHARSET_UTF8));
+                    String type = String.format("Content-Type: %s", URLConnection.getFileNameMap().getContentTypeFor(((File) value).getAbsolutePath()));
+                    return new String[]{disposition, type};
+                } else {
+                    return new String[]{String.format("Content-Disposition: form-data; name=\"%s\"", name)};
+                }
+            }
+
+            public long partLength() throws IOException {
+                if (value instanceof File) {
+                    return ((File) value).length();
+                } else {
+                    return String.valueOf(value).getBytes(CHARSET_UTF8).length;
+                }
+            }
+
+            public void partWrite(DataOutputStream doStream) throws IOException {
+                if (value instanceof File) {
+                    try (FileInputStream fiStream = new FileInputStream((File) value)) {
+                        XTools.streamToStream(fiStream, doStream);
+                    }
+                } else {
+                    doStream.write(String.valueOf(value).getBytes(CHARSET_UTF8));
+                }
             }
         }
     }
@@ -399,13 +504,27 @@ public final class XRequest {
      * 字符串类型请求体
      */
     public static class StringContent implements Content {
-
+        private static Pattern P_CHARSET = Pattern.compile("charset\\s*=\\s*\"?(.+)\"?\\s*;?");
         public final String mime;
         public final byte[] bytes;
 
         public StringContent(String mime, String str) {
-            this.mime = mime;
-            this.bytes = str.getBytes();
+            Matcher matcher = P_CHARSET.matcher(mime);
+            if (matcher.find()) {
+                try {
+                    this.mime = mime;
+                    this.bytes = str.getBytes(matcher.group(1));
+                } catch (UnsupportedEncodingException e) {
+                    throw new IllegalStateException(String.format("无法将字符串以指定的编码方式【%s】进行编码", matcher.group(1)));
+                }
+            } else {
+                try {
+                    this.mime = mime + "; charset=" + CHARSET_UTF8;
+                    this.bytes = str.getBytes(CHARSET_UTF8);
+                } catch (UnsupportedEncodingException e) {
+                    throw new IllegalStateException(String.format("无法将字符串以指定的编码方式【%s】进行编码", CHARSET_UTF8));
+                }
+            }
         }
 
         @Override
@@ -419,7 +538,7 @@ public final class XRequest {
         }
 
         @Override
-        public void contentWrite(DataOutputStream outStream) throws Exception {
+        public void contentWrite(DataOutputStream outStream) throws IOException {
             outStream.write(bytes);
         }
     }
@@ -428,22 +547,15 @@ public final class XRequest {
      * 文件类型请求体
      */
     public static class FileContent implements Content {
-        public final String mime;
         public final File file;
 
         public FileContent(File file) {
-            try {
-                this.mime = Files.probeContentType(Paths.get(file.getAbsolutePath()));
-                this.file = file;
-            } catch (IOException e) {
-                e.printStackTrace();
-                throw new RuntimeException("预测文件MIME类型出错");
-            }
+            this.file = file;
         }
 
         @Override
-        public String contentType() {
-            return mime;
+        public String contentType() throws IOException {
+            return Files.probeContentType(Paths.get(file.getAbsolutePath()));
         }
 
         @Override
@@ -452,7 +564,7 @@ public final class XRequest {
         }
 
         @Override
-        public void contentWrite(DataOutputStream outStream) throws Exception {
+        public void contentWrite(DataOutputStream outStream) throws IOException {
             try (FileInputStream finStream = new FileInputStream(file)) {
                 XTools.streamToStream(finStream, outStream);
             }
