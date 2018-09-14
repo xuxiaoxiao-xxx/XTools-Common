@@ -3,7 +3,6 @@ package me.xuxiaoxiao.xtools.common.http;
 import me.xuxiaoxiao.xtools.common.XTools;
 
 import java.io.*;
-import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.file.Files;
@@ -23,6 +22,8 @@ public final class XRequest {
 
     public static final String METHOD_GET = "GET";
     public static final String METHOD_POST = "POST";
+    public static final String METHOD_PUT = "PUT";
+    public static final String METHOD_DELETE = "DELETE";
 
     private static final String CHARSET_UTF8 = "utf-8";
 
@@ -89,6 +90,26 @@ public final class XRequest {
      */
     public static XRequest POST(String url) {
         return new XRequest(METHOD_POST, url);
+    }
+
+    /**
+     * 新建一个PUT请求
+     *
+     * @param url 请求url
+     * @return PUT请求
+     */
+    public static XRequest PUT(String url) {
+        return new XRequest(METHOD_PUT, url);
+    }
+
+    /**
+     * 新建一个DELETE请求
+     *
+     * @param url 请求url
+     * @return DELETE请求
+     */
+    public static XRequest DELETE(String url) {
+        return new XRequest(METHOD_DELETE, url);
     }
 
     /**
@@ -209,6 +230,9 @@ public final class XRequest {
      */
     public XRequest content(String key, Object value, boolean clear) {
         Objects.requireNonNull(key);
+        if (METHOD_GET.equals(requestMethod) || METHOD_DELETE.equals(requestMethod)) {
+            throw new IllegalArgumentException(String.format("%s方法不能添加请求体", requestMethod));
+        }
         if (this.requestContent == null) {
             this.requestContent = new UrlencodedContent();
         }
@@ -287,7 +311,7 @@ public final class XRequest {
      * @return HTTP请求的请求头列表
      */
     List<KeyValue> requestHeaders() throws IOException {
-        if (this.requestMethod.equals(METHOD_POST) && this.requestContent != null) {
+        if ((this.requestMethod.equals(METHOD_POST) || this.requestMethod.equals(METHOD_PUT)) && this.requestContent != null) {
             header("Content-Type", this.requestContent.contentType(), true);
             long contentLength = requestContent.contentLength();
             if (contentLength > 0) {
@@ -473,7 +497,7 @@ public final class XRequest {
             public String[] headers() throws IOException {
                 if (value instanceof File) {
                     String disposition = String.format("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"", name, URLEncoder.encode(((File) value).getName(), CHARSET_UTF8));
-                    String type = String.format("Content-Type: %s", URLConnection.getFileNameMap().getContentTypeFor(((File) value).getAbsolutePath()));
+                    String type = String.format("Content-Type: %s", Files.probeContentType(Paths.get(((File) value).getAbsolutePath())));
                     return new String[]{disposition, type};
                 } else {
                     return new String[]{String.format("Content-Disposition: form-data; name=\"%s\"", name)};

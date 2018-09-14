@@ -16,6 +16,8 @@ XTools类对XCodeTools、XHttpTools、XTimeTools等进行了再一次封装。
 #### HTTP相关
 * http get请求
 * http post请求
+* http put请求
+* http delete请求
 #### IOC相关
 * 生成某个类的实例（需要注册工厂）
 * 为某个类的实例注入数据

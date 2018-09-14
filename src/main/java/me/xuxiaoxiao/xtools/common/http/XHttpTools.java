@@ -41,8 +41,8 @@ public final class XHttpTools {
                     connection.addRequestProperty(keyValue.key, String.valueOf(keyValue.value));
                 }
             }
-            //如果为POST方法则输出请求体
-            if (XRequest.METHOD_POST.equals(request.requestMethod())) {
+            //如果为POST或PUT方法则输出请求体
+            if (XRequest.METHOD_POST.equals(request.requestMethod()) || XRequest.METHOD_PUT.equals(request.requestMethod())) {
                 connection.setDoOutput(true);
                 connection.setUseCaches(false);
                 XRequest.Content content = request.requestContent();
