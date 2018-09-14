@@ -60,6 +60,19 @@ XTools类对XCodeTools、XHttpTools、XTimeTools等进行了再一次封装。
 * 判断是否是MacOSX
 
 ### Demo
+* maven依赖
+```xml
+<dependency>
+    <groupId>me.xuxiaoxiao</groupId>
+    <artifactId>xtools-common</artifactId>
+    <version>1.1.3</version>
+</dependency>
+```
+* gradle依赖
+```gradle
+implementation 'me.xuxiaoxiao:xtools-common:1.1.3'
+```
+使用示例
 ```java
 public class Test {
     public static void main(String[] args) {
