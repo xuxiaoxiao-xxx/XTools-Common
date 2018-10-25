@@ -1,12 +1,11 @@
 package me.xuxiaoxiao.xtools.common;
 
 import me.xuxiaoxiao.xtools.common.code.XCodeTools;
+import me.xuxiaoxiao.xtools.common.config.XConfigTools;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.XOption;
 import me.xuxiaoxiao.xtools.common.http.XRequest;
 import me.xuxiaoxiao.xtools.common.http.XResponse;
-import me.xuxiaoxiao.xtools.common.ioc.XIocTools;
-import me.xuxiaoxiao.xtools.common.ioc.injector.XInjector;
 import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
 import java.io.*;
@@ -97,62 +96,6 @@ public final class XTools {
      */
     public static XResponse http(XOption option, XRequest request) {
         return XHttpTools.http(option, request);
-    }
-
-
-    /**
-     * 提供某个类的实例，需要通过XIocTools注册工厂
-     *
-     * @param clazz 类对象
-     * @param <T>   类模板
-     * @return 生成的类实例
-     */
-    public static <T> T supply(Class<T> clazz) {
-        try {
-            return XIocTools.supply(clazz, null);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(String.format("生成 %s 类的实例时发生异常", clazz.getName()));
-        }
-    }
-
-    /**
-     * 为类的实例注入数据
-     *
-     * @param target    类的实例
-     * @param injectors 注入器
-     * @param <T>       类模板
-     * @return 注入数据后的类的实例
-     */
-    public static <T> T inject(T target, XInjector... injectors) {
-        try {
-            return XIocTools.inject(target, injectors);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(String.format("为类 %s 的实例注入数据时发生异常", target.getClass()));
-        }
-    }
-
-    /**
-     * 回收类的实例，需要通过XIocTools注册工厂
-     *
-     * @param target 待回收的类的实例
-     * @param <T>    类模板
-     * @return 被回收后的类的实例
-     */
-    public static <T> T recycle(T target) {
-        try {
-            return XIocTools.recycle(target, null);
-        } catch (RuntimeException e) {
-            throw e;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException(String.format("回收类 %s 的实例时发生异常", target.getClass()));
-        }
     }
 
     /**
@@ -320,16 +263,6 @@ public final class XTools {
     }
 
     /**
-     * 获取任意时间当天00:00:00时刻的date对象
-     *
-     * @param date 任意时间的date对象
-     * @return 任意时间当天00:00:00时刻的date对象
-     */
-    public static Date date(Date date) {
-        return XTimeTools.date(date);
-    }
-
-    /**
      * 获取任意一天的类型
      *
      * @param date 任意一天的date对象
@@ -359,6 +292,17 @@ public final class XTools {
      */
     public static Date dateParse(String format, String dateStr) {
         return XTimeTools.dateParse(format, dateStr);
+    }
+
+    /**
+     * 获取以任意时间所在的那一天为基准偏移若干天的00:00:00时刻的date对象
+     *
+     * @param base   任意时间的date对象，如果为null则以当前时间为基准
+     * @param offset 偏移的天数
+     * @return 以base所在的那一天为基准偏移offset天00:00:00时刻的date对象
+     */
+    public static Date date(Date base, int offset) {
+        return XTimeTools.date(base, offset);
     }
 
     /**
@@ -638,5 +582,17 @@ public final class XTools {
     public static boolean sysLinux() {
         String osName = System.getProperties().getProperty("os.name").toLowerCase();
         return osName.contains("linux");
+    }
+
+    public static void confSet(String key, String val) {
+        XConfigTools.confSet(key, val);
+    }
+
+    public static String confGet(String key) {
+        return XConfigTools.confGet(key);
+    }
+
+    public static String confGet(String key, String def) {
+        return XConfigTools.confGet(key, def);
     }
 }

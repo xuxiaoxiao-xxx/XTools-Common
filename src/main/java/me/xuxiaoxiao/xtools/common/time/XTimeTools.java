@@ -87,16 +87,6 @@ public final class XTimeTools {
     private static final TLDateFormatMap DATE_FORMATS = new TLDateFormatMap();
 
     /**
-     * 获取任意时间当天00:00:00时刻的date对象
-     *
-     * @param date 任意时间的date对象
-     * @return 任意时间当天00:00:00时刻的date对象
-     */
-    public static Date date(Date date) {
-        return dateParse(FORMAT_YMD, dateFormat(FORMAT_YMD, date));
-    }
-
-    /**
      * 将date对象转换成相应格式的字符串，线程安全
      *
      * @param format 格式字符串
@@ -149,6 +139,7 @@ public final class XTimeTools {
      * @see #HOLIDAY
      */
     public static int dateType(Date date) {
+        Objects.requireNonNull(date);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         int year = calendar.get(Calendar.YEAR);
@@ -168,6 +159,18 @@ public final class XTimeTools {
     }
 
     /**
+     * 获取以任意时间所在的那一天为基准偏移若干天的00:00:00时刻的date对象
+     *
+     * @param base   任意时间的date对象，如果为null则以当前时间为基准
+     * @param offset 偏移的天数
+     * @return 以base所在的那一天为基准偏移offset天00:00:00时刻的date对象
+     */
+    public static Date date(Date base, int offset) {
+        long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
+        return dateParse(FORMAT_YMD, dateFormat(FORMAT_YMD, new Date(baseTime + offset * DAY_MILLIS)));
+    }
+
+    /**
      * 获取以某天所在的那一周为基准偏移若干周的某天00:00:00时刻的date对象
      *
      * @param base       基准时间的date对象，如果为null则以当前时间为基准
@@ -180,10 +183,10 @@ public final class XTimeTools {
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime + weekOffset * WEEK_MILLIS);
         if (calendar.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY) {
-            return XTimeTools.date(new Date(calendar.getTimeInMillis() - (6 - dayIndex) * DAY_MILLIS));
+            return XTimeTools.date(calendar.getTime(), dayIndex - 6);
         } else {
             calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
-            return XTimeTools.date(new Date(calendar.getTimeInMillis() + dayIndex * DAY_MILLIS));
+            return XTimeTools.date(calendar.getTime(), dayIndex);
         }
     }
 
@@ -201,7 +204,7 @@ public final class XTimeTools {
         calendar.setTimeInMillis(baseTime);
         calendar.add(Calendar.MONTH, monthOffset);
         calendar.set(Calendar.DAY_OF_MONTH, dayIndex + 1);
-        return XTimeTools.date(calendar.getTime());
+        return XTimeTools.date(calendar.getTime(), 0);
     }
 
     /**
@@ -218,7 +221,7 @@ public final class XTimeTools {
         calendar.setTimeInMillis(baseTime);
         calendar.set(Calendar.MONTH, (calendar.get(Calendar.MONTH) / 3 + seasonOffset) * 3);
         calendar.set(Calendar.DAY_OF_MONTH, dayIndex + 1);
-        return XTimeTools.date(calendar.getTime());
+        return XTimeTools.date(calendar.getTime(), 0);
     }
 
     /**
@@ -235,7 +238,7 @@ public final class XTimeTools {
         calendar.setTimeInMillis(baseTime);
         calendar.add(Calendar.YEAR, yearOffset);
         calendar.set(Calendar.DAY_OF_YEAR, dayIndex + 1);
-        return XTimeTools.date(calendar.getTime());
+        return XTimeTools.date(calendar.getTime(), 0);
     }
 
     /**
@@ -300,7 +303,7 @@ public final class XTimeTools {
         calendar.setTimeInMillis(baseTime);
         calendar.set(Calendar.MONTH, (calendar.get(Calendar.MONTH) / 3 + seasonOffset) * 3 + monthIndex);
         calendar.set(Calendar.DAY_OF_MONTH, 1);
-        return XTimeTools.date(calendar.getTime());
+        return XTimeTools.date(calendar.getTime(), 0);
     }
 
     /**
@@ -318,7 +321,7 @@ public final class XTimeTools {
         calendar.add(Calendar.YEAR, yearOffset);
         calendar.set(Calendar.MONTH, monthIndex);
         calendar.set(Calendar.DAY_OF_MONTH, 1);
-        return XTimeTools.date(calendar.getTime());
+        return XTimeTools.date(calendar.getTime(), 0);
     }
 
     /**
@@ -336,7 +339,7 @@ public final class XTimeTools {
         calendar.add(Calendar.YEAR, yearOffset);
         calendar.set(Calendar.MONTH, seasonIndex * 3);
         calendar.set(Calendar.DAY_OF_MONTH, 1);
-        return XTimeTools.date(calendar.getTime());
+        return XTimeTools.date(calendar.getTime(), 0);
     }
 
     /**
@@ -394,7 +397,7 @@ public final class XTimeTools {
         calendar.setTimeInMillis(baseTime);
         calendar.set(Calendar.MONTH, (calendar.get(Calendar.MONTH) / 3) * 3);
         calendar.set(Calendar.DAY_OF_MONTH, 1);
-        return (int) ((date(new Date(baseTime)).getTime() - date(calendar.getTime()).getTime()) / DAY_MILLIS);
+        return (int) ((XTimeTools.date(new Date(baseTime), 0).getTime() - XTimeTools.date(calendar.getTime(), 0).getTime()) / DAY_MILLIS);
     }
 
     /**
