@@ -6,6 +6,7 @@ import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.XOption;
 import me.xuxiaoxiao.xtools.common.http.XRequest;
 import me.xuxiaoxiao.xtools.common.http.XResponse;
+import me.xuxiaoxiao.xtools.common.log.XLogTools;
 import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
 import java.io.*;
@@ -584,15 +585,70 @@ public final class XTools {
         return osName.contains("linux");
     }
 
-    public static void confSet(String key, String val) {
-        XConfigTools.confSet(key, val);
-    }
-
+    /**
+     * 获取配置信息值
+     *
+     * @param key 配置信息键名
+     * @return 配置信息值
+     */
     public static String confGet(String key) {
         return XConfigTools.confGet(key);
     }
 
-    public static String confGet(String key, String def) {
-        return XConfigTools.confGet(key, def);
+    /**
+     * 获取或设置配置信息
+     *
+     * @param key 配置信息键名
+     * @param def 配置信息为null时设置的默认值
+     * @return 当配置信息值为null时，将def设置为配置信息的值并返回，否则返回原有的配置信息值
+     */
+    public static String confDef(String key, String def) {
+        return XConfigTools.confDef(key, def);
+    }
+
+    /**
+     * 设置配置信息
+     *
+     * @param key 配置信息键名
+     * @param val 配置信息值
+     */
+    public static void confSet(String key, String val) {
+        XConfigTools.confSet(key, val);
+    }
+
+    /**
+     * 打印错误日志
+     *
+     * @param error 错误日志信息
+     */
+    public static void logE(String error) {
+        XLogTools.logError(error);
+    }
+
+    /**
+     * 打印警告日志
+     *
+     * @param warning 警告日志信息
+     */
+    public static void logW(String warning) {
+        XLogTools.logWarning(warning);
+    }
+
+    /**
+     * 打印提示日志
+     *
+     * @param notice 提示日志信息
+     */
+    public static void logN(String notice) {
+        XLogTools.logNotice(notice);
+    }
+
+    /**
+     * 打印详细日志
+     *
+     * @param detail 详细日志信息
+     */
+    public static void logD(String detail) {
+        XLogTools.logDetail(detail);
     }
 }
