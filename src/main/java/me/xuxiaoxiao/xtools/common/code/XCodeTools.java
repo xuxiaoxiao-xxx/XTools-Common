@@ -1,5 +1,7 @@
 package me.xuxiaoxiao.xtools.common.code;
 
+import me.xuxiaoxiao.xtools.common.XTools;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,6 +13,8 @@ import java.security.NoSuchAlgorithmException;
  * 常用的基本的关于编码和解码的函数的集合
  */
 public final class XCodeTools {
+    public static final String CONF_BUFFER = "me.xuxiaoxiao$xtools-common$code.buffer";
+    public static final String CONF_BUFFER_DEFAULT = "131072";
     /**
      * 散列算法-MD5
      */
@@ -55,7 +59,7 @@ public final class XCodeTools {
     public static String hash(String algorithm, File file) throws IOException, NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
         try (FileInputStream fileInputStream = new FileInputStream(file); DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)) {
-            byte[] buffer = new byte[128 * 1024];
+            byte[] buffer = new byte[Integer.valueOf(XTools.confDef(CONF_BUFFER, CONF_BUFFER_DEFAULT))];
             while (true) {
                 if (digestInputStream.read(buffer) <= 0) {
                     break;

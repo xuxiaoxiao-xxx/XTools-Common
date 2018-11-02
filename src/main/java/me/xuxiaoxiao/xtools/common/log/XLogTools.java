@@ -8,56 +8,59 @@ import java.util.Date;
 import java.util.logging.*;
 
 public class XLogTools {
-    private static final String LEVEL_ERROR = "error";
-    private static final String LEVEL_WARNING = "warning";
-    private static final String LEVEL_NOTICE = "notice";
-    private static final String LEVEL_DETAIL = "detail";
+    public static final String LEVEL_ERROR = "error";
+    public static final String LEVEL_WARNING = "warning";
+    public static final String LEVEL_NOTICE = "notice";
+    public static final String LEVEL_DETAIL = "detail";
 
-    private static final String LOGGABLE_CONF = "me.xuxiaoxiao$xtools-common$log.loggable";
-    private static final String LOGGABLE_DEFAULT = "true";
-    private static final String CONSOLE_LEVEL_CONF = "me.xuxiaoxiao$xtools-common$log.console.level";
-    private static final String CONSOLE_LEVEL_DEFAULT = LEVEL_NOTICE;
-    private static final String CONSOLE_FORMATTER_CONF = "me.xuxiaoxiao$xtools-common$log.console.formatter";
-    private static final String CONSOLE_FORMATTER_DEFAULT = LogFormatter.class.getName();
-    private static final String FILE_PATH_CONF = "me.xuxiaoxiao$xtools-common$log.file.path";
-    private static final String FILE_PATH_DEFAULT = "";
-    private static final String FILE_LEVEL_CONF = "me.xuxiaoxiao$xtools-common$log.file.level";
-    private static final String FILE_LEVEL_DEFAULT = LEVEL_DETAIL;
-    private static final String FILE_FORMATTER_CONF = "me.xuxiaoxiao$xtools-common$log.file.formatter";
-    private static final String FILE_FORMATTER_DEFAULT = LogFormatter.class.getName();
+    public static final String CONF_LOGGABLE = "me.xuxiaoxiao$xtools-common$log.loggable";
+    public static final String CONF_LOGGABLE_DEFAULT = "true";
+
+    public static final String CONF_CONSOLE_LEVEL = "me.xuxiaoxiao$xtools-common$log.console.level";
+    public static final String CONF_CONSOLE_LEVEL_DEFAULT = LEVEL_NOTICE;
+    public static final String CONF_CONSOLE_FORMATTER = "me.xuxiaoxiao$xtools-common$log.console.formatter";
+    public static final String CONF_CONSOLE_FORMATTER_DEFAULT = LogFormatter.class.getName();
+
+    public static final String CONF_FILE_PATH = "me.xuxiaoxiao$xtools-common$log.file.path";
+    public static final String CONF_FILE_PATH_DEFAULT = "";
+    public static final String CONF_FILE_LEVEL = "me.xuxiaoxiao$xtools-common$log.file.level";
+    public static final String CONF_FILE_LEVEL_DEFAULT = LEVEL_DETAIL;
+    public static final String CONF_FILE_FORMATTER = "me.xuxiaoxiao$xtools-common$log.file.formatter";
+    public static final String CONF_FILE_FORMATTER_DEFAULT = LogFormatter.class.getName();
 
     private static final Logger LOGGER = Logger.getLogger(XLogTools.class.getPackage().getName());
 
     private static boolean loggable;
 
     static {
-        LOGGER.setUseParentHandlers(false);
         LOGGER.setLevel(Level.ALL);
-        XLogTools.loggable = Boolean.valueOf(XConfigTools.confDef(LOGGABLE_CONF, LOGGABLE_DEFAULT));
+        LOGGER.setUseParentHandlers(false);
 
-        Level level = strToLevel(XTools.confDef(CONSOLE_LEVEL_CONF, CONSOLE_LEVEL_DEFAULT).toLowerCase());
-        Formatter formatter;
+        XLogTools.loggable = Boolean.valueOf(XConfigTools.confDef(CONF_LOGGABLE, CONF_LOGGABLE_DEFAULT));
+
+        Level consoleLevel = strToLevel(XTools.confDef(CONF_CONSOLE_LEVEL, CONF_CONSOLE_LEVEL_DEFAULT).toLowerCase());
+        Formatter consoleFormatter;
         try {
-            formatter = (Formatter) Class.forName(XTools.confDef(CONSOLE_FORMATTER_CONF, CONSOLE_FORMATTER_DEFAULT)).newInstance();
+            consoleFormatter = (Formatter) Class.forName(XTools.confDef(CONF_CONSOLE_FORMATTER, CONF_CONSOLE_FORMATTER_DEFAULT)).newInstance();
         } catch (Exception e) {
-            formatter = new LogFormatter();
+            consoleFormatter = new LogFormatter();
         }
 
         ConsoleHandler handler = new ConsoleHandler();
-        handler.setFormatter(formatter);
-        handler.setLevel(level);
+        handler.setFormatter(consoleFormatter);
+        handler.setLevel(consoleLevel);
         LOGGER.addHandler(handler);
 
-        String filePath = XTools.confDef(FILE_PATH_CONF, FILE_PATH_DEFAULT);
+        String filePath = XTools.confDef(CONF_FILE_PATH, CONF_FILE_PATH_DEFAULT);
         if (!XTools.strEmpty(filePath)) {
             try {
                 Formatter fileFormatter;
                 try {
-                    fileFormatter = (Formatter) Class.forName(XTools.confDef(FILE_FORMATTER_CONF, FILE_FORMATTER_DEFAULT)).newInstance();
+                    fileFormatter = (Formatter) Class.forName(XTools.confDef(CONF_FILE_FORMATTER, CONF_FILE_FORMATTER_DEFAULT)).newInstance();
                 } catch (Exception e) {
                     fileFormatter = new LogFormatter();
                 }
-                Level fileLevel = strToLevel(XTools.confDef(FILE_LEVEL_CONF, FILE_LEVEL_DEFAULT));
+                Level fileLevel = strToLevel(XTools.confDef(CONF_FILE_LEVEL, CONF_FILE_LEVEL_DEFAULT));
 
                 FileHandler fileHandler = new FileHandler(filePath);
                 fileHandler.setFormatter(fileFormatter);
@@ -73,10 +76,11 @@ public class XLogTools {
      * 打印错误日志
      *
      * @param error 错误日志信息
+     * @param args 信息的参数
      */
-    public static void logError(String error) {
+    public static void logError(String error, Object... args) {
         if (loggable) {
-            LOGGER.log(newRecord(Level.SEVERE, error));
+            LOGGER.log(newRecord(Level.SEVERE, String.format(error, args)));
         }
     }
 
@@ -84,10 +88,11 @@ public class XLogTools {
      * 打印警告日志
      *
      * @param warning 警告日志信息
+     * @param args 信息的参数
      */
-    public static void logWarning(String warning) {
+    public static void logWarning(String warning, Object... args) {
         if (loggable) {
-            LOGGER.log(newRecord(Level.WARNING, warning));
+            LOGGER.log(newRecord(Level.WARNING, String.format(warning, args)));
         }
     }
 
@@ -95,10 +100,11 @@ public class XLogTools {
      * 打印提示日志
      *
      * @param notice 提示日志信息
+     * @param args 信息的参数
      */
-    public static void logNotice(String notice) {
+    public static void logNotice(String notice, Object... args) {
         if (loggable) {
-            LOGGER.log(newRecord(Level.INFO, notice));
+            LOGGER.log(newRecord(Level.INFO, String.format(notice, args)));
         }
     }
 
@@ -106,10 +112,11 @@ public class XLogTools {
      * 打印详细日志
      *
      * @param detail 详细日志信息
+     * @param args 信息的参数
      */
-    public static void logDetail(String detail) {
+    public static void logDetail(String detail, Object... args) {
         if (loggable) {
-            LOGGER.log(newRecord(Level.CONFIG, detail));
+            LOGGER.log(newRecord(Level.CONFIG, String.format(detail, args)));
         }
     }
 

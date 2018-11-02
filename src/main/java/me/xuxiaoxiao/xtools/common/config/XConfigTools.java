@@ -4,9 +4,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.Arrays;
 import java.util.Properties;
 
+/**
+ * 配置工具，此工具被其他依赖，所以此工具不能使用其他工具
+ */
 public class XConfigTools {
     private static final Properties CONFIGS = new Properties();
 
@@ -29,8 +31,9 @@ public class XConfigTools {
      * 清除所有配置，并设置配置文件
      *
      * @param configs 配置文件的classpath路径
+     * @throws IOException 设置配置文件时可能会发生异常
      */
-    public static void setConfigs(String... configs) {
+    public static void setConfigs(String... configs) throws IOException {
         clearConfigs();
         addConfigs(configs);
     }
@@ -39,18 +42,15 @@ public class XConfigTools {
      * 追加新的配置文件
      *
      * @param configs 配置文件的classpath路径
+     * @throws IOException 追加配置文件时可能会发生异常
      */
-    public static void addConfigs(String... configs) {
-        try {
-            if (configs != null && configs.length > 0) {
-                for (String config : configs) {
-                    try (FileInputStream finStream = new FileInputStream(config)) {
-                        CONFIGS.load(finStream);
-                    }
+    public static void addConfigs(String... configs) throws IOException {
+        if (configs != null && configs.length > 0) {
+            for (String config : configs) {
+                try (FileInputStream finStream = new FileInputStream(config)) {
+                    CONFIGS.load(finStream);
                 }
             }
-        } catch (IOException e) {
-            throw new RuntimeException(String.format("配置文件%s读取失败", Arrays.toString(configs)));
         }
     }
 
@@ -76,7 +76,7 @@ public class XConfigTools {
      *
      * @param key 配置信息键名
      * @param def 配置信息为null时设置的默认值
-     * @return 当配置信息值为null时，将def设置为配置信息的值并返回，否则返回原有的配置信息值
+     * @return 当配置信息值为null时，将def设置为配置信息的值并返回，否则返回原有的配置信息值并且不做任何更改
      */
     public static String confDef(String key, String def) {
         if (CONFIGS.getProperty(key) == null) {

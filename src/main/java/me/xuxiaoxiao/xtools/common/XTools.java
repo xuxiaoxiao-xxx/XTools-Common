@@ -3,9 +3,9 @@ package me.xuxiaoxiao.xtools.common;
 import me.xuxiaoxiao.xtools.common.code.XCodeTools;
 import me.xuxiaoxiao.xtools.common.config.XConfigTools;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
-import me.xuxiaoxiao.xtools.common.http.XOption;
 import me.xuxiaoxiao.xtools.common.http.XRequest;
 import me.xuxiaoxiao.xtools.common.http.XResponse;
+import me.xuxiaoxiao.xtools.common.http.option.XHttpOption;
 import me.xuxiaoxiao.xtools.common.log.XLogTools;
 import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
@@ -95,7 +95,7 @@ public final class XTools {
      *
      * @return 请求的响应体
      */
-    public static XResponse http(XOption option, XRequest request) {
+    public static XResponse http(XHttpOption option, XRequest request) {
         return XHttpTools.http(option, request);
     }
 
@@ -600,7 +600,7 @@ public final class XTools {
      *
      * @param key 配置信息键名
      * @param def 配置信息为null时设置的默认值
-     * @return 当配置信息值为null时，将def设置为配置信息的值并返回，否则返回原有的配置信息值
+     * @return 当配置信息值为null时，将def设置为配置信息的值并返回，否则返回原有的配置信息值并且不做任何更改
      */
     public static String confDef(String key, String def) {
         return XConfigTools.confDef(key, def);
@@ -620,35 +620,44 @@ public final class XTools {
      * 打印错误日志
      *
      * @param error 错误日志信息
+     * @param args  信息的参数
      */
-    public static void logE(String error) {
-        XLogTools.logError(error);
+    public static void logE(String error, Object... args) {
+        XLogTools.logError(error, args);
     }
 
     /**
      * 打印警告日志
      *
      * @param warning 警告日志信息
+     * @param args    信息的参数
      */
-    public static void logW(String warning) {
-        XLogTools.logWarning(warning);
+    public static void logW(String warning, Object... args) {
+        XLogTools.logWarning(warning, args);
     }
 
     /**
      * 打印提示日志
      *
      * @param notice 提示日志信息
+     * @param args   信息的参数
      */
-    public static void logN(String notice) {
-        XLogTools.logNotice(notice);
+    public static void logN(String notice, Object... args) {
+        XLogTools.logNotice(notice, args);
     }
 
     /**
      * 打印详细日志
      *
      * @param detail 详细日志信息
+     * @param args   信息的参数
      */
-    public static void logD(String detail) {
-        XLogTools.logDetail(detail);
+    public static void logD(String detail, Object... args) {
+        XLogTools.logDetail(detail, args);
+    }
+
+
+    public static void main(String[] args) {
+        System.out.println(XTools.http(XRequest.GET("https://www.baidu.com")).string());
     }
 }
