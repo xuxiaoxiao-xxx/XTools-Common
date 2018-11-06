@@ -280,11 +280,20 @@ public final class XRequest {
     }
 
     /**
+     * 获得HTTP请求的请求方法
+     *
+     * @return HTTP请求的请求方法
+     */
+    public String requestMethod() {
+        return this.requestMethod;
+    }
+
+    /**
      * 获得HTTP请求的请求url，如果有请求地址参数则自动拼接成带参数的url
      *
      * @return HTTP请求的请求url
      */
-    String requestUrl() {
+    public String requestUrl() {
         try {
             if (this.requestQueries != null) {
                 return String.format("%s?%s", this.requestUrl, kvJoin(this.requestQueries));
@@ -297,20 +306,11 @@ public final class XRequest {
     }
 
     /**
-     * 获得HTTP请求的请求方法
-     *
-     * @return HTTP请求的请求方法
-     */
-    String requestMethod() {
-        return this.requestMethod;
-    }
-
-    /**
      * 获得HTTP请求的请求头列表
      *
      * @return HTTP请求的请求头列表
      */
-    List<KeyValue> requestHeaders() throws IOException {
+    public List<KeyValue> requestHeaders() throws IOException {
         if ((this.requestMethod.equals(METHOD_POST) || this.requestMethod.equals(METHOD_PUT)) && this.requestContent != null) {
             header("Content-Type", this.requestContent.contentType(), true);
             long contentLength = requestContent.contentLength();
@@ -328,7 +328,7 @@ public final class XRequest {
      *
      * @return HTTP请求的请求体
      */
-    Content requestContent() {
+    public Content requestContent() {
         return this.requestContent;
     }
 

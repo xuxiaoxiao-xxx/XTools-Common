@@ -1,16 +1,15 @@
 package me.xuxiaoxiao.xtools.common.http;
 
-import me.xuxiaoxiao.xtools.common.http.interceptior.ConfigInterceptor;
-import me.xuxiaoxiao.xtools.common.http.interceptior.CookieInterceptor;
-import me.xuxiaoxiao.xtools.common.http.interceptior.XHttpInterceptor;
+import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
+import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutorImpl;
 import me.xuxiaoxiao.xtools.common.http.option.XHttpOption;
 
 import javax.net.ssl.HttpsURLConnection;
-import java.io.DataOutputStream;
-import java.io.InputStream;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.List;
 
 /**
  * 常用的基本的关于HTTP的函数的集合
@@ -47,7 +46,7 @@ public final class XHttpTools {
     public static final String CONF_COOKIE_MANAGER_DEFAULT = XHttpOption.XCookieManager.class.getName();
 
     public static final String CONF_INTERCEPTORS = "me.xuxiaoxiao$xtools-common$http.interceptors";
-    public static final String CONF_INTERCEPTORS_DEFAULT = ConfigInterceptor.class.getName() + ", " + CookieInterceptor.class.getName();
+    public static final String CONF_INTERCEPTORS_DEFAULT = XHttpExecutorImpl.CookieInterceptor.class.getName();
     /**
      * 默认的请求配置
      */
@@ -65,48 +64,7 @@ public final class XHttpTools {
      */
     public static XResponse http(XHttpOption option, XRequest request) {
         try {
-            //根据请求url获取连接
-            HttpURLConnection connection = connect(option, request.requestUrl());
-            //配置HTTP请求
-            if (option.interceptors != null && option.interceptors.length > 0) {
-                for (XHttpInterceptor interceptor : option.interceptors) {
-                    interceptor.onReq(option, connection, request);
-                }
-            }
-            //设置请求方法
-            connection.setRequestMethod(request.requestMethod());
-            //设置请求头
-            List<XRequest.KeyValue> headers = request.requestHeaders();
-            if (headers != null) {
-                for (XRequest.KeyValue keyValue : headers) {
-                    connection.addRequestProperty(keyValue.key, String.valueOf(keyValue.value));
-                }
-            }
-            //如果为POST或PUT方法则输出请求体
-            if (XRequest.METHOD_POST.equals(request.requestMethod()) || XRequest.METHOD_PUT.equals(request.requestMethod())) {
-                connection.setDoOutput(true);
-                connection.setUseCaches(false);
-                XRequest.Content content = request.requestContent();
-                if (content != null) {
-                    if (content.contentLength() < 0) {
-                        connection.setChunkedStreamingMode(option.chunkLength);
-                    }
-                    try (DataOutputStream dOutStream = new DataOutputStream(connection.getOutputStream())) {
-                        content.contentWrite(dOutStream);
-                    }
-                }
-            }
-            //获取输入流
-            InputStream inStream = connection.getInputStream();
-            XResponse response = new XResponse(connection, inStream);
-            //解析HTTP请求
-            if (option.interceptors != null && option.interceptors.length > 0) {
-                for (XHttpInterceptor interceptor : option.interceptors) {
-                    interceptor.onRsp(option, connection, response);
-                }
-            }
-            //返回请求结果
-            return response;
+            return execute(option, config(option, connect(option, request.requestUrl())), request);
         } catch (Exception e) {
             // 请求异常结束，返回空的请求结果
             e.printStackTrace();
@@ -132,6 +90,40 @@ public final class XHttpTools {
             return connection;
         } else {
             throw new IllegalArgumentException("XHttpTools仅支持HTTP协议和HTTPS协议");
+        }
+    }
+
+    private static HttpURLConnection config(XHttpOption option, HttpURLConnection connection) throws Exception {
+        //根据请求选项进行连接配置
+        connection.setConnectTimeout(option.connectTimeout);
+        connection.setReadTimeout(option.readTimeout);
+        connection.setInstanceFollowRedirects(option.followRedirect);
+        return connection;
+    }
+
+    private static XResponse execute(XHttpOption option, HttpURLConnection connection, XRequest request) throws Exception {
+        XHttpExecutor executor = new XHttpExecutorImpl();
+        if (option.interceptors != null && option.interceptors.length > 0) {
+            for (XHttpExecutor.Interceptor interceptor : option.interceptors) {
+                executor = (XHttpExecutor) Proxy.newProxyInstance(XHttpTools.class.getClassLoader(), new Class[]{XHttpExecutor.class}, new ExecuteHandler(executor, interceptor));
+            }
+        }
+        return executor.execute(option, connection, request);
+    }
+
+    private static class ExecuteHandler implements InvocationHandler {
+
+        XHttpExecutor target;
+        XHttpExecutor.Interceptor interceptor;
+
+        public ExecuteHandler(XHttpExecutor target, XHttpExecutor.Interceptor interceptor) {
+            this.target = target;
+            this.interceptor = interceptor;
+        }
+
+        @Override
+        public XResponse invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            return interceptor.intercept(target, (XHttpOption) args[0], (HttpURLConnection) args[1], (XRequest) args[2]);
         }
     }
 }

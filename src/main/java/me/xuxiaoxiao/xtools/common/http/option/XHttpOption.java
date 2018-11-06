@@ -2,7 +2,7 @@ package me.xuxiaoxiao.xtools.common.http.option;
 
 import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
-import me.xuxiaoxiao.xtools.common.http.interceptior.XHttpInterceptor;
+import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 
 import javax.net.ssl.*;
 import java.net.CookieManager;
@@ -46,7 +46,7 @@ public class XHttpOption {
     /**
      * http拦截器
      */
-    public final XHttpInterceptor[] interceptors = interceptors();
+    public final XHttpExecutor.Interceptor[] interceptors = interceptors();
 
     /**
      * 新建一个配置对象，指定10秒连接超时、10秒读取超时
@@ -169,20 +169,20 @@ public class XHttpOption {
         }
     }
 
-    public XHttpInterceptor[] interceptors() {
-        XHttpInterceptor[] interceptors = null;
+    public XHttpExecutor.Interceptor[] interceptors() {
+        XHttpExecutor.Interceptor[] interceptors = null;
         String interceptorsStr = XTools.confDef(XHttpTools.CONF_INTERCEPTORS, XHttpTools.CONF_INTERCEPTORS_DEFAULT);
         if (!XTools.strEmpty(interceptorsStr)) {
-            List<XHttpInterceptor> interceptorList = new LinkedList<>();
+            List<XHttpExecutor.Interceptor> interceptorList = new LinkedList<>();
             for (String str : interceptorsStr.split(",")) {
                 try {
-                    interceptorList.add((XHttpInterceptor) Class.forName(str.trim()).newInstance());
+                    interceptorList.add((XHttpExecutor.Interceptor) Class.forName(str.trim()).newInstance());
                 } catch (Exception e) {
                     XTools.logW("XHttpInterceptor:%s初始化失败", str);
                     e.printStackTrace();
                 }
             }
-            interceptors = interceptorList.toArray(new XHttpInterceptor[0]);
+            interceptors = interceptorList.toArray(new XHttpExecutor.Interceptor[0]);
         }
         return interceptors;
     }

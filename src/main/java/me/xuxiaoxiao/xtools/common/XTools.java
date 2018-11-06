@@ -655,9 +655,4 @@ public final class XTools {
     public static void logD(String detail, Object... args) {
         XLogTools.logDetail(detail, args);
     }
-
-
-    public static void main(String[] args) {
-        System.out.println(XTools.http(XRequest.GET("https://www.baidu.com")).string());
-    }
 }

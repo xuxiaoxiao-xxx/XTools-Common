@@ -13,7 +13,7 @@ public class XResponse implements AutoCloseable {
     private final HttpURLConnection connection;
     private final InputStream inStream;
 
-    XResponse(HttpURLConnection connection, InputStream inStream) {
+    public XResponse(HttpURLConnection connection, InputStream inStream) {
         this.connection = connection;
         this.inStream = inStream;
     }

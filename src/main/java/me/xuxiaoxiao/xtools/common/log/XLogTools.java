@@ -76,7 +76,7 @@ public class XLogTools {
      * 打印错误日志
      *
      * @param error 错误日志信息
-     * @param args 信息的参数
+     * @param args  信息的参数
      */
     public static void logError(String error, Object... args) {
         if (loggable) {
@@ -88,7 +88,7 @@ public class XLogTools {
      * 打印警告日志
      *
      * @param warning 警告日志信息
-     * @param args 信息的参数
+     * @param args    信息的参数
      */
     public static void logWarning(String warning, Object... args) {
         if (loggable) {
@@ -100,7 +100,7 @@ public class XLogTools {
      * 打印提示日志
      *
      * @param notice 提示日志信息
-     * @param args 信息的参数
+     * @param args   信息的参数
      */
     public static void logNotice(String notice, Object... args) {
         if (loggable) {
@@ -112,7 +112,7 @@ public class XLogTools {
      * 打印详细日志
      *
      * @param detail 详细日志信息
-     * @param args 信息的参数
+     * @param args   信息的参数
      */
     public static void logDetail(String detail, Object... args) {
         if (loggable) {
