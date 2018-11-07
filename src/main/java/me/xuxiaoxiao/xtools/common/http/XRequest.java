@@ -25,8 +25,7 @@ public final class XRequest {
     public static final String METHOD_PUT = "PUT";
     public static final String METHOD_DELETE = "DELETE";
 
-    private static final String CHARSET_UTF8 = "utf-8";
-
+    private final String charset = XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
     /**
      * 请求方法
      */
@@ -61,11 +60,12 @@ public final class XRequest {
                     if (eqIndex < 0) {
                         throw new IllegalArgumentException("请求的url格式有误");
                     } else {
-                        query(URLDecoder.decode(keyValue.substring(0, eqIndex), CHARSET_UTF8), URLDecoder.decode(keyValue.substring(eqIndex + 1), CHARSET_UTF8));
+                        query(URLDecoder.decode(keyValue.substring(0, eqIndex), charset), URLDecoder.decode(keyValue.substring(eqIndex + 1), charset));
                     }
                 }
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();
+                throw new IllegalArgumentException(String.format("不支持编码方式：%s", charset));
             }
         } else {
             this.requestUrl = url;
@@ -118,13 +118,13 @@ public final class XRequest {
      * @return 连接后的字符串
      * @throws UnsupportedEncodingException 给定的编码格式不支持时抛出异常
      */
-    private static String kvJoin(List<KeyValue> keyValues) throws UnsupportedEncodingException {
+    private static String kvJoin(List<KeyValue> keyValues, String charset) throws UnsupportedEncodingException {
         StringBuilder sbStr = new StringBuilder();
         for (KeyValue keyValue : keyValues) {
             if (sbStr.length() > 0) {
                 sbStr.append('&');
             }
-            sbStr.append(URLEncoder.encode(keyValue.key, CHARSET_UTF8)).append('=').append(URLEncoder.encode(String.valueOf(keyValue.value), CHARSET_UTF8));
+            sbStr.append(URLEncoder.encode(keyValue.key, charset)).append('=').append(URLEncoder.encode(String.valueOf(keyValue.value), charset));
         }
         return sbStr.toString();
     }
@@ -296,7 +296,7 @@ public final class XRequest {
     public String requestUrl() {
         try {
             if (this.requestQueries != null) {
-                return String.format("%s?%s", this.requestUrl, kvJoin(this.requestQueries));
+                return String.format("%s?%s", this.requestUrl, kvJoin(this.requestQueries, charset));
             } else {
                 return this.requestUrl;
             }
@@ -336,6 +336,8 @@ public final class XRequest {
      * HTTP请求体，需要提供请求体的类型、请求体的长度、请求体写出到输出流的方法
      */
     public interface Content {
+        String charset();
+
         /**
          * 请求体的MIME类型
          *
@@ -363,6 +365,7 @@ public final class XRequest {
      * urlencoded类型请求体
      */
     public static class UrlencodedContent implements Content {
+        private final String charset = charset();
         private final List<KeyValue> params = new LinkedList<>();
         private byte[] urlencoded;
 
@@ -389,14 +392,19 @@ public final class XRequest {
         }
 
         @Override
+        public String charset() {
+            return XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
+        }
+
+        @Override
         public String contentType() {
-            return MIME_URLENCODED + "; charset=" + CHARSET_UTF8;
+            return MIME_URLENCODED + "; charset=" + charset;
         }
 
         @Override
         public long contentLength() throws IOException {
             if (urlencoded == null) {
-                urlencoded = kvJoin(params).getBytes(CHARSET_UTF8);
+                urlencoded = kvJoin(params, charset).getBytes(charset);
             }
             return urlencoded.length;
         }
@@ -404,7 +412,7 @@ public final class XRequest {
         @Override
         public void contentWrite(DataOutputStream doStream) throws IOException {
             if (urlencoded == null) {
-                urlencoded = kvJoin(params).getBytes(CHARSET_UTF8);
+                urlencoded = kvJoin(params, charset).getBytes(charset);
             }
             doStream.write(urlencoded);
         }
@@ -417,15 +425,16 @@ public final class XRequest {
         public static final String HYPHENS = "--";
         public static final String CRLF = "\r\n";
 
+        private final String charset = charset();
         private final List<Part> parts = new LinkedList<>();
         private String boundary = XTools.md5(String.format("multipart-%d-%d", System.currentTimeMillis(), new Random().nextInt()));
 
         public MultipartContent part(String key, Object value) {
-            return this.part(new Part(key, value), false);
+            return this.part(new Part(charset, key, value), false);
         }
 
         public MultipartContent part(String key, Object value, boolean clear) {
-            return this.part(new Part(key, value), clear);
+            return this.part(new Part(charset, key, value), clear);
         }
 
         public MultipartContent part(Part part) {
@@ -451,6 +460,11 @@ public final class XRequest {
         }
 
         @Override
+        public String charset() {
+            return XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
+        }
+
+        @Override
         public String contentType() {
             return MIME_MULTIPART + "; boundary=" + boundary;
         }
@@ -459,44 +473,46 @@ public final class XRequest {
         public long contentLength() throws IOException {
             long contentLength = 0;
             for (Part part : parts) {
-                contentLength += (HYPHENS + boundary + CRLF).getBytes(CHARSET_UTF8).length;
+                contentLength += (HYPHENS + boundary + CRLF).getBytes(charset).length;
                 for (String header : part.headers()) {
-                    contentLength += String.format("%s%s", header, CRLF).getBytes(CHARSET_UTF8).length;
+                    contentLength += String.format("%s%s", header, CRLF).getBytes(charset).length;
                 }
-                contentLength += CRLF.getBytes(CHARSET_UTF8).length;
+                contentLength += CRLF.getBytes(charset).length;
                 contentLength += part.partLength();
-                contentLength += CRLF.getBytes(CHARSET_UTF8).length;
+                contentLength += CRLF.getBytes(charset).length;
             }
-            contentLength = contentLength + (HYPHENS + boundary + HYPHENS + CRLF).getBytes(CHARSET_UTF8).length;
+            contentLength = contentLength + (HYPHENS + boundary + HYPHENS + CRLF).getBytes(charset).length;
             return contentLength;
         }
 
         @Override
         public void contentWrite(DataOutputStream doStream) throws IOException {
             for (Part part : parts) {
-                doStream.write((HYPHENS + boundary + CRLF).getBytes(CHARSET_UTF8));
+                doStream.write((HYPHENS + boundary + CRLF).getBytes(charset));
                 for (String header : part.headers()) {
-                    doStream.write(String.format("%s%s", header, CRLF).getBytes(CHARSET_UTF8));
+                    doStream.write(String.format("%s%s", header, CRLF).getBytes(charset));
                 }
-                doStream.write(CRLF.getBytes(CHARSET_UTF8));
+                doStream.write(CRLF.getBytes(charset));
                 part.partWrite(doStream);
-                doStream.write(CRLF.getBytes(CHARSET_UTF8));
+                doStream.write(CRLF.getBytes(charset));
             }
-            doStream.write((HYPHENS + boundary + HYPHENS + CRLF).getBytes(CHARSET_UTF8));
+            doStream.write((HYPHENS + boundary + HYPHENS + CRLF).getBytes(charset));
         }
 
         public static class Part {
+            public final String charset;
             public final String name;
             public final Object value;
 
-            public Part(String name, Object value) {
+            public Part(String charset, String name, Object value) {
+                this.charset = charset;
                 this.name = name;
                 this.value = value;
             }
 
             public String[] headers() throws IOException {
                 if (value instanceof File) {
-                    String disposition = String.format("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"", name, URLEncoder.encode(((File) value).getName(), CHARSET_UTF8));
+                    String disposition = String.format("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"", name, URLEncoder.encode(((File) value).getName(), charset));
                     String type = String.format("Content-Type: %s", Files.probeContentType(Paths.get(((File) value).getAbsolutePath())));
                     return new String[]{disposition, type};
                 } else {
@@ -508,7 +524,7 @@ public final class XRequest {
                 if (value instanceof File) {
                     return ((File) value).length();
                 } else {
-                    return String.valueOf(value).getBytes(CHARSET_UTF8).length;
+                    return String.valueOf(value).getBytes(charset).length;
                 }
             }
 
@@ -518,7 +534,7 @@ public final class XRequest {
                         XTools.streamToStream(fiStream, doStream);
                     }
                 } else {
-                    doStream.write(String.valueOf(value).getBytes(CHARSET_UTF8));
+                    doStream.write(String.valueOf(value).getBytes(charset));
                 }
             }
         }
@@ -529,6 +545,7 @@ public final class XRequest {
      */
     public static class StringContent implements Content {
         private static Pattern P_CHARSET = Pattern.compile("charset\\s*=\\s*\"?(.+)\"?\\s*;?");
+        public final String charset = charset();
         public final String mime;
         public final byte[] bytes;
 
@@ -543,12 +560,17 @@ public final class XRequest {
                 }
             } else {
                 try {
-                    this.mime = mime + "; charset=" + CHARSET_UTF8;
-                    this.bytes = str.getBytes(CHARSET_UTF8);
+                    this.mime = mime + "; charset=" + charset;
+                    this.bytes = str.getBytes(charset);
                 } catch (UnsupportedEncodingException e) {
-                    throw new IllegalStateException(String.format("无法将字符串以指定的编码方式【%s】进行编码", CHARSET_UTF8));
+                    throw new IllegalStateException(String.format("无法将字符串以指定的编码方式【%s】进行编码", charset));
                 }
             }
+        }
+
+        @Override
+        public String charset() {
+            return XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
         }
 
         @Override
@@ -575,6 +597,11 @@ public final class XRequest {
 
         public FileContent(File file) {
             this.file = file;
+        }
+
+        @Override
+        public String charset() {
+            return XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
         }
 
         @Override

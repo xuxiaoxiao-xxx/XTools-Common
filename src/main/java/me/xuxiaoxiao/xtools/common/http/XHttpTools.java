@@ -1,5 +1,6 @@
 package me.xuxiaoxiao.xtools.common.http;
 
+import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutorImpl;
 import me.xuxiaoxiao.xtools.common.http.option.XHttpOption;
@@ -15,6 +16,13 @@ import java.net.URL;
  * 常用的基本的关于HTTP的函数的集合
  */
 public final class XHttpTools {
+
+    public static final String CONF_REQ_CHARSET = "me.xuxiaoxiao$xtools-common$http.reqCharset";
+    public static final String CONF_REQ_CHARSET_DEFAULT = "utf-8";
+
+    public static final String CONF_RSP_CHARSET = "me.xuxiaoxiao$xtools-common$http.rspCharset";
+    public static final String CONF_RSP_CHARSET_DEFAULT = "utf-8";
+
     public static final String CONF_CONNECT_TIMEOUT = "me.xuxiaoxiao$xtools-common$http.connectTimeout";
     public static final String CONF_CONNECT_TIMEOUT_DEFAULT = "10000";
 
@@ -45,12 +53,16 @@ public final class XHttpTools {
     public static final String CONF_COOKIE_MANAGER = "me.xuxiaoxiao$xtools-common$http.cookieManager";
     public static final String CONF_COOKIE_MANAGER_DEFAULT = XHttpOption.XCookieManager.class.getName();
 
+    public static final String CONF_EXECUTOR = "me.xuxiaoxiao$xtools-common$http.executor";
+    public static final String CONF_EXECUTOR_DEFAULT = XHttpExecutorImpl.class.getName();
+
     public static final String CONF_INTERCEPTORS = "me.xuxiaoxiao$xtools-common$http.interceptors";
     public static final String CONF_INTERCEPTORS_DEFAULT = XHttpExecutorImpl.CookieInterceptor.class.getName();
+
     /**
      * 默认的请求配置
      */
-    public static XHttpOption DEFAULT_OPTION = new XHttpOption();
+    public static final XHttpOption DEFAULT_OPTION = new XHttpOption();
 
     private XHttpTools() {
     }
@@ -102,7 +114,7 @@ public final class XHttpTools {
     }
 
     private static XResponse execute(XHttpOption option, HttpURLConnection connection, XRequest request) throws Exception {
-        XHttpExecutor executor = new XHttpExecutorImpl();
+        XHttpExecutor executor = (XHttpExecutor) Class.forName(XTools.confDef(CONF_EXECUTOR, CONF_EXECUTOR_DEFAULT)).newInstance();
         if (option.interceptors != null && option.interceptors.length > 0) {
             for (XHttpExecutor.Interceptor interceptor : option.interceptors) {
                 executor = (XHttpExecutor) Proxy.newProxyInstance(XHttpTools.class.getClassLoader(), new Class[]{XHttpExecutor.class}, new ExecuteHandler(executor, interceptor));

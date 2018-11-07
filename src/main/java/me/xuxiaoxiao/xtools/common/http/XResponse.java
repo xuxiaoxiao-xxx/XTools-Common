@@ -33,7 +33,7 @@ public class XResponse implements AutoCloseable {
      * @return 转化后的字符串
      */
     public final String string() {
-        return string("utf-8");
+        return string(XTools.confDef(XHttpTools.CONF_RSP_CHARSET, XHttpTools.CONF_RSP_CHARSET_DEFAULT));
     }
 
     /**

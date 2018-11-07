@@ -655,4 +655,8 @@ public final class XTools {
     public static void logD(String detail, Object... args) {
         XLogTools.logDetail(detail, args);
     }
+
+    public static void main(String[] args) {
+        System.out.println(XRequest.GET("http://www.baidu.com").query("aaa", "cccs").header("Content-Type", XRequest.MIME_MULTIPART));
+    }
 }
