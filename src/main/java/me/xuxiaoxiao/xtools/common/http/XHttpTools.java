@@ -1,6 +1,5 @@
 package me.xuxiaoxiao.xtools.common.http;
 
-import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutorImpl;
 import me.xuxiaoxiao.xtools.common.http.option.XHttpOption;
@@ -76,7 +75,7 @@ public final class XHttpTools {
      */
     public static XResponse http(XHttpOption option, XRequest request) {
         try {
-            return execute(option, config(option, connect(option, request.requestUrl())), request);
+            return execute(option, connect(option, request.requestUrl()), request);
         } catch (Exception e) {
             // 请求异常结束，返回空的请求结果
             e.printStackTrace();
@@ -85,36 +84,46 @@ public final class XHttpTools {
     }
 
     /**
-     * 根据请求的url获取请求的连接
+     * 获取http请求的连接
      *
-     * @param option 请求配置
+     * @param option http配置项
      * @param url    请求的地址
-     * @return 请求的连接
+     * @return 请求的连接，配置了连接超时时间、读取超时时间、自动重定向
      * @throws Exception 当url不属于HTTP协议或HTTPS协议时抛出异常
      */
-    private static HttpURLConnection connect(XHttpOption option, String url) throws Exception {
+    public static HttpURLConnection connect(XHttpOption option, String url) throws Exception {
         if (url.toLowerCase().startsWith("http://")) {
-            return (HttpURLConnection) new URL(url).openConnection();
+            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+            //根据请求选项进行连接配置
+            connection.setConnectTimeout(option.connectTimeout);
+            connection.setReadTimeout(option.readTimeout);
+            connection.setInstanceFollowRedirects(option.followRedirect);
+            return connection;
         } else if (url.toLowerCase().startsWith("https://")) {
             HttpsURLConnection connection = (HttpsURLConnection) new URL(url).openConnection();
             connection.setSSLSocketFactory(option.sslContext.getSocketFactory());
             connection.setHostnameVerifier(option.hostnameVerifier);
+            //根据请求选项进行连接配置
+            connection.setConnectTimeout(option.connectTimeout);
+            connection.setReadTimeout(option.readTimeout);
+            connection.setInstanceFollowRedirects(option.followRedirect);
             return connection;
         } else {
             throw new IllegalArgumentException("XHttpTools仅支持HTTP协议和HTTPS协议");
         }
     }
 
-    private static HttpURLConnection config(XHttpOption option, HttpURLConnection connection) throws Exception {
-        //根据请求选项进行连接配置
-        connection.setConnectTimeout(option.connectTimeout);
-        connection.setReadTimeout(option.readTimeout);
-        connection.setInstanceFollowRedirects(option.followRedirect);
-        return connection;
-    }
-
-    private static XResponse execute(XHttpOption option, HttpURLConnection connection, XRequest request) throws Exception {
-        XHttpExecutor executor = (XHttpExecutor) Class.forName(XTools.confDef(CONF_EXECUTOR, CONF_EXECUTOR_DEFAULT)).newInstance();
+    /**
+     * 执行http请求
+     *
+     * @param option     http配置项
+     * @param connection http连接
+     * @param request    请求参数
+     * @return 请求结果
+     * @throws Exception 请求过程中可能会发生异常
+     */
+    public static XResponse execute(XHttpOption option, HttpURLConnection connection, XRequest request) throws Exception {
+        XHttpExecutor executor = option.executor;
         if (option.interceptors != null && option.interceptors.length > 0) {
             for (XHttpExecutor.Interceptor interceptor : option.interceptors) {
                 executor = (XHttpExecutor) Proxy.newProxyInstance(XHttpTools.class.getClassLoader(), new Class[]{XHttpExecutor.class}, new ExecuteHandler(executor, interceptor));

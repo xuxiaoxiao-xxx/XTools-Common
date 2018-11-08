@@ -3,6 +3,7 @@ package me.xuxiaoxiao.xtools.common.http.option;
 import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
+import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutorImpl;
 
 import javax.net.ssl.*;
 import java.net.CookieManager;
@@ -44,19 +45,23 @@ public class XHttpOption {
      */
     public final CookieManager cookieManager = cookieManager();
     /**
+     * http执行器
+     */
+    public final XHttpExecutor executor = executor();
+    /**
      * http拦截器
      */
     public final XHttpExecutor.Interceptor[] interceptors = interceptors();
 
     /**
-     * 新建一个配置对象，指定10秒连接超时、10秒读取超时
+     * 新建一个配置对象, 指定10秒连接超时、10秒读取超时
      */
     public XHttpOption() {
         this(Integer.valueOf(XTools.confDef(XHttpTools.CONF_CONNECT_TIMEOUT, XHttpTools.CONF_CONNECT_TIMEOUT_DEFAULT)), Integer.valueOf(XTools.confDef(XHttpTools.CONF_READ_TIMEOUT, XHttpTools.CONF_READ_TIMEOUT_DEFAULT)));
     }
 
     /**
-     * 新建一个配置对象，并指定连接超时、读取超时
+     * 新建一个配置对象, 并指定连接超时、读取超时
      *
      * @param connectTimeout 　指定的连接超时时间
      * @param readTimeout    　指定的读取超时时间
@@ -100,7 +105,7 @@ public class XHttpOption {
                     try {
                         keyManagerList.add((KeyManager) Class.forName(str.trim()).newInstance());
                     } catch (Exception e) {
-                        XTools.logW("KeyManager:%s初始化失败", str);
+                        XTools.logW("KeyManager:%s 初始化失败", str);
                         e.printStackTrace();
                     }
                 }
@@ -115,7 +120,7 @@ public class XHttpOption {
                     try {
                         trustManagerList.add((TrustManager) Class.forName(str.trim()).newInstance());
                     } catch (Exception e) {
-                        XTools.logW("TrustManager:%s初始化失败", str);
+                        XTools.logW("TrustManager:%s 初始化失败", str);
                         e.printStackTrace();
                     }
                 }
@@ -129,7 +134,7 @@ public class XHttpOption {
                     secureRandom = (SecureRandom) Class.forName(secureRandomStr.trim()).newInstance();
                 }
             } catch (Exception e) {
-                XTools.logW("SecureRandom初始化失败");
+                XTools.logW("SecureRandom:%s 初始化失败, 将使用默认的SecureRandom", secureRandomStr);
                 e.printStackTrace();
             }
             sslContext.init(keyManagers, trustManagers, secureRandom);
@@ -147,10 +152,11 @@ public class XHttpOption {
      * @return 默认不进行主机名验证
      */
     public HostnameVerifier hostnameVerifier() {
+        String hostnameVerifierStr = XTools.confDef(XHttpTools.CONF_HOSTNAME_VERIFIER, XHttpTools.CONF_HOSTNAME_VERIFIER_DEFAULT);
         try {
-            return (HostnameVerifier) Class.forName(XTools.confDef(XHttpTools.CONF_HOSTNAME_VERIFIER, XHttpTools.CONF_HOSTNAME_VERIFIER_DEFAULT)).newInstance();
+            return (HostnameVerifier) Class.forName(hostnameVerifierStr).newInstance();
         } catch (Exception e) {
-            XTools.logW("HostnameVerifier初始化失败");
+            XTools.logW("HostnameVerifier:%s初始化失败, 将使用默认的HostnameVerifier", hostnameVerifierStr);
             e.printStackTrace();
             return new XHostnameVerifier();
         }
@@ -165,10 +171,33 @@ public class XHttpOption {
         try {
             return (CookieManager) Class.forName(XTools.confDef(XHttpTools.CONF_COOKIE_MANAGER, XHttpTools.CONF_COOKIE_MANAGER_DEFAULT)).newInstance();
         } catch (Exception e) {
-            return new XCookieManager();
+            XTools.logW("CookieManager:%s初始化失败, 将不进行Cookie管理");
+            e.printStackTrace();
+            return null;
         }
     }
 
+    /**
+     * http执行器
+     *
+     * @return 默认是用的是自带的执行器
+     */
+    public XHttpExecutor executor() {
+        String executorStr = XTools.confDef(XHttpTools.CONF_EXECUTOR, XHttpTools.CONF_EXECUTOR_DEFAULT);
+        try {
+            return (XHttpExecutor) Class.forName(executorStr).newInstance();
+        } catch (Exception e) {
+            XTools.logW("XHttpExecutor:%s 初始化失败, 将使用默认的XHttpExecutor", executorStr);
+            e.printStackTrace();
+            return new XHttpExecutorImpl();
+        }
+    }
+
+    /**
+     * http拦截器
+     *
+     * @return 默认有一个Cookie拦截器，为每个请求设置和保存Cookie信息
+     */
     public XHttpExecutor.Interceptor[] interceptors() {
         XHttpExecutor.Interceptor[] interceptors = null;
         String interceptorsStr = XTools.confDef(XHttpTools.CONF_INTERCEPTORS, XHttpTools.CONF_INTERCEPTORS_DEFAULT);
@@ -178,7 +207,7 @@ public class XHttpOption {
                 try {
                     interceptorList.add((XHttpExecutor.Interceptor) Class.forName(str.trim()).newInstance());
                 } catch (Exception e) {
-                    XTools.logW("XHttpInterceptor:%s初始化失败", str);
+                    XTools.logW("XHttpInterceptor:%s 初始化失败", str);
                     e.printStackTrace();
                 }
             }
@@ -187,6 +216,9 @@ public class XHttpOption {
         return interceptors;
     }
 
+    /**
+     * 默认的主机名验证器，不进行主机名校验
+     */
     public static class XHostnameVerifier implements HostnameVerifier {
 
         @Override
@@ -195,6 +227,9 @@ public class XHttpOption {
         }
     }
 
+    /**
+     * 默认的Cookie管理器，接收所有Cookie信息并存储在内存中
+     */
     public static class XCookieManager extends CookieManager {
 
         public XCookieManager() {

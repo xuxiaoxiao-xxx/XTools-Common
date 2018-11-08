@@ -43,6 +43,7 @@ public class XLogTools {
         try {
             consoleFormatter = (Formatter) Class.forName(XTools.confDef(CONF_CONSOLE_FORMATTER, CONF_CONSOLE_FORMATTER_DEFAULT)).newInstance();
         } catch (Exception e) {
+            e.printStackTrace();
             consoleFormatter = new LogFormatter();
         }
 
@@ -58,6 +59,7 @@ public class XLogTools {
                 try {
                     fileFormatter = (Formatter) Class.forName(XTools.confDef(CONF_FILE_FORMATTER, CONF_FILE_FORMATTER_DEFAULT)).newInstance();
                 } catch (Exception e) {
+                    e.printStackTrace();
                     fileFormatter = new LogFormatter();
                 }
                 Level fileLevel = strToLevel(XTools.confDef(CONF_FILE_LEVEL, CONF_FILE_LEVEL_DEFAULT));
@@ -168,6 +170,9 @@ public class XLogTools {
         return logRecord;
     }
 
+    /**
+     * 日志格式化器
+     */
     public static class LogFormatter extends Formatter {
         private static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
 

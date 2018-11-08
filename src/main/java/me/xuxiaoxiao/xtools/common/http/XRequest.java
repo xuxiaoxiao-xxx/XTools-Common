@@ -25,6 +25,9 @@ public final class XRequest {
     public static final String METHOD_PUT = "PUT";
     public static final String METHOD_DELETE = "DELETE";
 
+    /**
+     * 请求编码方式
+     */
     private final String charset = XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
     /**
      * 请求方法
@@ -504,6 +507,10 @@ public final class XRequest {
             public final String name;
             public final Object value;
 
+            public Part(String name, Object value) {
+                this(XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT), name, value);
+            }
+
             public Part(String charset, String name, Object value) {
                 this.charset = charset;
                 this.name = name;
@@ -550,21 +557,17 @@ public final class XRequest {
         public final byte[] bytes;
 
         public StringContent(String mime, String str) {
-            Matcher matcher = P_CHARSET.matcher(mime);
-            if (matcher.find()) {
-                try {
+            try {
+                Matcher matcher = P_CHARSET.matcher(mime);
+                if (matcher.find()) {
                     this.mime = mime;
                     this.bytes = str.getBytes(matcher.group(1));
-                } catch (UnsupportedEncodingException e) {
-                    throw new IllegalStateException(String.format("无法将字符串以指定的编码方式【%s】进行编码", matcher.group(1)));
-                }
-            } else {
-                try {
+                } else {
                     this.mime = mime + "; charset=" + charset;
                     this.bytes = str.getBytes(charset);
-                } catch (UnsupportedEncodingException e) {
-                    throw new IllegalStateException(String.format("无法将字符串以指定的编码方式【%s】进行编码", charset));
                 }
+            } catch (UnsupportedEncodingException e) {
+                throw new IllegalStateException(String.format("无法将字符串以指定的编码方式【%s】进行编码", charset));
             }
         }
 
@@ -626,7 +629,13 @@ public final class XRequest {
      * 键值对
      */
     public static class KeyValue {
+        /**
+         * 键
+         */
         public final String key;
+        /**
+         * 值
+         */
         public final Object value;
 
         public KeyValue(String key, Object value) {

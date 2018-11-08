@@ -10,6 +10,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * http执行器的默认实现类
+ */
 public class XHttpExecutorImpl implements XHttpExecutor {
 
     @Override
@@ -41,26 +44,43 @@ public class XHttpExecutorImpl implements XHttpExecutor {
         return new XResponse(connection, connection.getInputStream());
     }
 
+    /**
+     * 默认的Cookie拦截器，拦截每个http请求，自动解析和添加Cookie信息
+     */
     public static class CookieInterceptor implements XHttpExecutor.Interceptor {
 
+        /**
+         * 拦截每个http请求，自动解析和添加Cookie信息
+         *
+         * @param executor   http执行器
+         * @param option     http配置项
+         * @param connection http连接
+         * @param request    请求参数
+         * @return 请求结果
+         * @throws Exception 拦截过程中可能会发生异常
+         */
         @Override
         public XResponse intercept(XHttpExecutor executor, XHttpOption option, HttpURLConnection connection, XRequest request) throws Exception {
-            Map<String, List<String>> cookiesList = option.cookieManager.get(connection.getURL().toURI(), new HashMap<String, List<String>>());
-            for (String cookieType : cookiesList.keySet()) {
-                StringBuilder sbCookie = new StringBuilder();
-                for (String cookieStr : cookiesList.get(cookieType)) {
-                    if (sbCookie.length() > 0) {
-                        sbCookie.append(';');
+            if (option.cookieManager == null) {
+                return executor.execute(option, connection, request);
+            } else {
+                Map<String, List<String>> cookiesList = option.cookieManager.get(connection.getURL().toURI(), new HashMap<String, List<String>>());
+                for (String cookieType : cookiesList.keySet()) {
+                    StringBuilder sbCookie = new StringBuilder();
+                    for (String cookieStr : cookiesList.get(cookieType)) {
+                        if (sbCookie.length() > 0) {
+                            sbCookie.append(';');
+                        }
+                        sbCookie.append(cookieStr);
                     }
-                    sbCookie.append(cookieStr);
+                    if (sbCookie.length() > 0) {
+                        connection.setRequestProperty(cookieType, sbCookie.toString());
+                    }
                 }
-                if (sbCookie.length() > 0) {
-                    connection.setRequestProperty(cookieType, sbCookie.toString());
-                }
+                XResponse response = executor.execute(option, connection, request);
+                option.cookieManager.put(connection.getURL().toURI(), connection.getHeaderFields());
+                return response;
             }
-            XResponse response = executor.execute(option, connection, request);
-            option.cookieManager.put(connection.getURL().toURI(), connection.getHeaderFields());
-            return response;
         }
     }
 }
