@@ -18,10 +18,6 @@ XTools类对XCodeTools、XHttpTools、XTimeTools等进行了再一次封装。
 * http post请求
 * http put请求
 * http delete请求
-#### IOC相关
-* 生成某个类的实例（需要注册工厂）
-* 为某个类的实例注入数据
-* 回收某个类的实例（需要注册工厂）
 #### 字符串相关
 * 判断字符串是否为null或空
 * 判断字符串是否为空白串
@@ -58,6 +54,14 @@ XTools类对XCodeTools、XHttpTools、XTimeTools等进行了再一次封装。
 * 判断是否是Linux
 * 判断是否是MacOS
 * 判断是否是MacOSX
+#### 配置相关
+* 设置配置信息
+* 读取配置信息
+#### 日志相关
+* 记录详细日志
+* 记录调试日志
+* 记录警告日志
+* 记录错误日志
 
 ### Demo
 * maven依赖
@@ -65,12 +69,12 @@ XTools类对XCodeTools、XHttpTools、XTimeTools等进行了再一次封装。
 <dependency>
     <groupId>me.xuxiaoxiao</groupId>
     <artifactId>xtools-common</artifactId>
-    <version>1.1.3</version>
+    <version>1.1.4</version>
 </dependency>
 ```
 * gradle依赖
 ```gradle
-implementation 'me.xuxiaoxiao:xtools-common:1.1.3'
+implementation 'me.xuxiaoxiao:xtools-common:1.1.4'
 ```
 使用示例
 ```java

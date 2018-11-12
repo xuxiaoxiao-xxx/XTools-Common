@@ -9,7 +9,7 @@ import java.util.Properties;
 /**
  * 配置工具，此工具被其他依赖，所以此工具不能使用其他工具
  */
-public class XConfigTools {
+public final class XConfigTools {
     private static final Properties CONFIGS = new Properties();
 
     static {
@@ -20,6 +20,7 @@ public class XConfigTools {
                 setConfigs(URLDecoder.decode(configURL.getFile(), "UTF-8"));
             } catch (Exception e) {
                 System.err.println(String.format("读取默认的配置文件出错:%s", configURL));
+                e.printStackTrace();
             }
         }
     }

@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * http执行器的默认实现类
  */
-public class XHttpExecutorImpl implements XHttpExecutor {
+public final class XHttpExecutorImpl implements XHttpExecutor {
 
     @Override
     public XResponse execute(XHttpOption option, HttpURLConnection connection, XRequest request) throws Exception {
@@ -47,7 +47,7 @@ public class XHttpExecutorImpl implements XHttpExecutor {
     /**
      * 默认的Cookie拦截器，拦截每个http请求，自动解析和添加Cookie信息
      */
-    public static class CookieInterceptor implements XHttpExecutor.Interceptor {
+    public final static class CookieInterceptor implements XHttpExecutor.Interceptor {
 
         /**
          * 拦截每个http请求，自动解析和添加Cookie信息

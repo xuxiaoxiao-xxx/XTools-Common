@@ -339,6 +339,11 @@ public final class XRequest {
      * HTTP请求体，需要提供请求体的类型、请求体的长度、请求体写出到输出流的方法
      */
     public interface Content {
+        /**
+         * 请求体的编码方式
+         *
+         * @return 请求体的编码方式
+         */
         String charset();
 
         /**
@@ -433,11 +438,11 @@ public final class XRequest {
         private String boundary = XTools.md5(String.format("multipart-%d-%d", System.currentTimeMillis(), new Random().nextInt()));
 
         public MultipartContent part(String key, Object value) {
-            return this.part(new Part(charset, key, value), false);
+            return this.part(new Part(key, value, charset), false);
         }
 
         public MultipartContent part(String key, Object value, boolean clear) {
-            return this.part(new Part(charset, key, value), clear);
+            return this.part(new Part(key, value, charset), clear);
         }
 
         public MultipartContent part(Part part) {
@@ -503,18 +508,18 @@ public final class XRequest {
         }
 
         public static class Part {
-            public final String charset;
             public final String name;
             public final Object value;
+            public final String charset;
 
             public Part(String name, Object value) {
-                this(XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT), name, value);
+                this(name, value, XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT));
             }
 
-            public Part(String charset, String name, Object value) {
-                this.charset = charset;
+            public Part(String name, Object value, String charset) {
                 this.name = name;
                 this.value = value;
+                this.charset = charset;
             }
 
             public String[] headers() throws IOException {
@@ -552,6 +557,7 @@ public final class XRequest {
      */
     public static class StringContent implements Content {
         private static Pattern P_CHARSET = Pattern.compile("charset\\s*=\\s*\"?(.+)\"?\\s*;?");
+
         public final String charset = charset();
         public final String mime;
         public final byte[] bytes;

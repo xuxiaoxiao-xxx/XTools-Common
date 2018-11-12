@@ -84,7 +84,7 @@ public final class XTimeTools {
     /**
      * 存储SimpleDateFormat映射的ThreadLocal
      */
-    private static final TLDateFormatMap DATE_FORMATS = new TLDateFormatMap();
+    private static final ThreadLocal<HashMap<String, SimpleDateFormat>> DATE_FORMATS = new ThreadLocal<>();
 
     /**
      * 将date对象转换成相应格式的字符串，线程安全
@@ -96,11 +96,15 @@ public final class XTimeTools {
     public static String dateFormat(String format, Date date) {
         Objects.requireNonNull(format);
         Objects.requireNonNull(date);
-        HashMap<String, SimpleDateFormat> formatMap = DATE_FORMATS.get();
-        SimpleDateFormat dateFormat = formatMap.get(format);
+        HashMap<String, SimpleDateFormat> formats = DATE_FORMATS.get();
+        if (formats == null) {
+            formats = new HashMap<>();
+            DATE_FORMATS.set(formats);
+        }
+        SimpleDateFormat dateFormat = formats.get(format);
         if (dateFormat == null) {
             dateFormat = new SimpleDateFormat(format);
-            formatMap.put(format, dateFormat);
+            formats.put(format, dateFormat);
         }
         return dateFormat.format(date);
     }
@@ -115,11 +119,15 @@ public final class XTimeTools {
     public static Date dateParse(String format, String dateStr) {
         Objects.requireNonNull(format);
         Objects.requireNonNull(dateStr);
-        HashMap<String, SimpleDateFormat> formatMap = DATE_FORMATS.get();
-        SimpleDateFormat dateFormat = formatMap.get(format);
+        HashMap<String, SimpleDateFormat> formats = DATE_FORMATS.get();
+        if (formats == null) {
+            formats = new HashMap<>();
+            DATE_FORMATS.set(formats);
+        }
+        SimpleDateFormat dateFormat = formats.get(format);
         if (dateFormat == null) {
             dateFormat = new SimpleDateFormat(format);
-            formatMap.put(format, dateFormat);
+            formats.put(format, dateFormat);
         }
         try {
             return dateFormat.parse(dateStr);
@@ -607,7 +615,7 @@ public final class XTimeTools {
                 case 1:
                     sbLunar.append("十");
                     break;
-                case 2:
+                default:
                     sbLunar.append("廿");
                     break;
             }
@@ -643,7 +651,7 @@ public final class XTimeTools {
             }
         }
         // 解析农历日，1代表初一
-        int lunarDay = 0;
+        int lunarDay;
         if ("初十".equals(strDay)) {
             lunarDay = 10;
         } else if ("二十".equals(strDay)) {
@@ -660,7 +668,7 @@ public final class XTimeTools {
                 case "十":
                     lunarDay = 10;
                     break;
-                case "廿":
+                default:
                     lunarDay = 20;
                     break;
             }
@@ -698,17 +706,6 @@ public final class XTimeTools {
             return new Date(minDate.getTime() + dayBetween * DAY_MILLIS);
         } catch (ParseException e) {
             throw new RuntimeException("解析日期出错");
-        }
-    }
-
-    /**
-     * 存储SimpleDateFormat映射的ThreadLocal类
-     */
-    private static class TLDateFormatMap extends ThreadLocal<HashMap<String, SimpleDateFormat>> {
-
-        @Override
-        protected HashMap<String, SimpleDateFormat> initialValue() {
-            return new HashMap<>();
         }
     }
 }

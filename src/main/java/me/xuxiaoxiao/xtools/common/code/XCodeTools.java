@@ -75,7 +75,7 @@ public final class XCodeTools {
      * @param bytes 要转换的字节数组
      * @return 转换后的字符串，全小写字母
      */
-    private static String bytesToHex(byte[] bytes) {
+    public static String bytesToHex(byte[] bytes) {
         char chars[] = new char[bytes.length * 2];
         for (int i = 0; i < bytes.length; i++) {
             byte b = bytes[i];
