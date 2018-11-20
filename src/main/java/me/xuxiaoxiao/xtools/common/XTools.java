@@ -5,7 +5,7 @@ import me.xuxiaoxiao.xtools.common.config.XConfigTools;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.XRequest;
 import me.xuxiaoxiao.xtools.common.http.XResponse;
-import me.xuxiaoxiao.xtools.common.http.option.XHttpOption;
+import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.log.XLogTools;
 import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
@@ -81,22 +81,25 @@ public final class XTools {
     }
 
     /**
-     * 使用默认的请求配置进行HTTP请求，
+     * 使用默认的请求执行器进行HTTP请求，
      * 如需对HTTP请求进行更复杂的配置，请移步XTools.http(XOption option, XRequest request);方法
      *
+     * @param request http请求
      * @return 请求的响应体
      */
     public static XResponse http(XRequest request) {
-        return XHttpTools.http(XHttpTools.DEFAULT_OPTION, request);
+        return XHttpTools.http(XHttpTools.EXECUTOR, request);
     }
 
     /**
-     * 使用自定义的配置的请求选项进行HTTP请求
+     * 使用自定义的请求执行器进行HTTP请求
      *
+     * @param executor http请求执行器
+     * @param request  http请求
      * @return 请求的响应体
      */
-    public static XResponse http(XHttpOption option, XRequest request) {
-        return XHttpTools.http(option, request);
+    public static XResponse http(XHttpExecutor executor, XRequest request) {
+        return XHttpTools.http(executor, request);
     }
 
     /**
