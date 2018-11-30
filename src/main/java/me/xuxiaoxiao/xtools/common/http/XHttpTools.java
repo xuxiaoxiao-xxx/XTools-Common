@@ -64,7 +64,7 @@ public final class XHttpTools {
     public static final XHttpExecutor EXECUTOR;
 
     static {
-        String executorStr = XTools.confDef(XHttpTools.CONF_EXECUTOR, XHttpTools.CONF_EXECUTOR_DEFAULT);
+        String executorStr = XTools.cfgDef(XHttpTools.CONF_EXECUTOR, XHttpTools.CONF_EXECUTOR_DEFAULT);
         XHttpExecutor executor;
         try {
             if (!XTools.strEmpty(executorStr)) {
@@ -110,7 +110,7 @@ public final class XHttpTools {
      * @throws Exception 当url不属于HTTP协议或HTTPS协议时抛出异常
      */
     public static HttpURLConnection connect(XHttpExecutor executor, String url) throws Exception {
-        XHttpExecutor.Option option = executor.option();
+        XHttpExecutor.Option option = executor.supply();
         if (url.toLowerCase().startsWith("http://")) {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             //根据请求选项进行连接配置
@@ -141,7 +141,7 @@ public final class XHttpTools {
      * @throws Exception 请求过程中可能会发生异常
      */
     public static XResponse execute(XHttpExecutor executor, HttpURLConnection connection, XRequest request) throws Exception {
-        XHttpExecutor.Interceptor[] interceptors = executor.interceptors();
+        XHttpExecutor.Interceptor[] interceptors = executor.supply().interceptors();
         if (interceptors != null && interceptors.length > 0) {
             for (XHttpExecutor.Interceptor interceptor : interceptors) {
                 executor = (XHttpExecutor) Proxy.newProxyInstance(XHttpTools.class.getClassLoader(), new Class[]{XHttpExecutor.class}, new ExecuteHandler(executor, interceptor));

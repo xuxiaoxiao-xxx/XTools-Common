@@ -59,7 +59,7 @@ XTools类对XCodeTools、XHttpTools、XTimeTools等进行了再一次封装。
 * 读取配置信息
 #### 日志相关
 * 记录详细日志
-* 记录调试日志
+* 记录提醒日志
 * 记录警告日志
 * 记录错误日志
 
@@ -69,12 +69,12 @@ XTools类对XCodeTools、XHttpTools、XTimeTools等进行了再一次封装。
 <dependency>
     <groupId>me.xuxiaoxiao</groupId>
     <artifactId>xtools-common</artifactId>
-    <version>1.1.4</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 * gradle依赖
 ```gradle
-implementation 'me.xuxiaoxiao:xtools-common:1.1.4'
+implementation 'me.xuxiaoxiao:xtools-common:1.2.0'
 ```
 使用示例
 ```java

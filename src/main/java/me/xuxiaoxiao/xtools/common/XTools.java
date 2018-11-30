@@ -594,8 +594,8 @@ public final class XTools {
      * @param key 配置信息键名
      * @return 配置信息值
      */
-    public static String confGet(String key) {
-        return XConfigTools.confGet(key);
+    public static String cfgGet(String key) {
+        return XConfigTools.cfgGet(key);
     }
 
     /**
@@ -605,8 +605,8 @@ public final class XTools {
      * @param def 配置信息为null时设置的默认值
      * @return 当配置信息值为null时，将def设置为配置信息的值并返回，否则返回原有的配置信息值并且不做任何更改
      */
-    public static String confDef(String key, String def) {
-        return XConfigTools.confDef(key, def);
+    public static String cfgDef(String key, String def) {
+        return XConfigTools.cfgDef(key, def);
     }
 
     /**
@@ -615,8 +615,8 @@ public final class XTools {
      * @param key 配置信息键名
      * @param val 配置信息值
      */
-    public static void confSet(String key, String val) {
-        XConfigTools.confSet(key, val);
+    public static void cfgSet(String key, String val) {
+        XConfigTools.cfgSet(key, val);
     }
 
     /**
@@ -626,7 +626,7 @@ public final class XTools {
      * @param args  信息的参数
      */
     public static void logE(String error, Object... args) {
-        XLogTools.logError(error, args);
+        XLogTools.LOGGER.logE(error, args);
     }
 
     /**
@@ -636,7 +636,7 @@ public final class XTools {
      * @param args    信息的参数
      */
     public static void logW(String warning, Object... args) {
-        XLogTools.logWarning(warning, args);
+        XLogTools.LOGGER.logW(warning, args);
     }
 
     /**
@@ -646,7 +646,7 @@ public final class XTools {
      * @param args   信息的参数
      */
     public static void logN(String notice, Object... args) {
-        XLogTools.logNotice(notice, args);
+        XLogTools.LOGGER.logN(notice, args);
     }
 
     /**
@@ -656,6 +656,6 @@ public final class XTools {
      * @param args   信息的参数
      */
     public static void logD(String detail, Object... args) {
-        XLogTools.logDetail(detail, args);
+        XLogTools.LOGGER.logD(detail, args);
     }
 }

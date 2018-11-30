@@ -1,7 +1,5 @@
 package me.xuxiaoxiao.xtools.common.http.executor;
 
-import me.xuxiaoxiao.xtools.common.XTools;
-import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.XRequest;
 import me.xuxiaoxiao.xtools.common.http.XResponse;
 
@@ -9,7 +7,6 @@ import java.io.DataOutputStream;
 import java.net.CookieManager;
 import java.net.HttpURLConnection;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,10 +19,6 @@ public class XHttpExecutorImpl implements XHttpExecutor {
      * 请求执行选项
      */
     protected Option option;
-    /**
-     * 请求拦截器
-     */
-    protected Interceptor[] interceptors;
 
     @Override
     public XResponse execute(HttpURLConnection connection, XRequest request) throws Exception {
@@ -57,38 +50,11 @@ public class XHttpExecutorImpl implements XHttpExecutor {
     }
 
     @Override
-    public Option option() {
+    public Option supply() {
         if (option == null) {
             option = new Option();
         }
         return option;
-    }
-
-    /**
-     * http拦截器
-     *
-     * @return 默认有一个Cookie拦截器，为每个请求设置和保存Cookie信息
-     */
-    @Override
-    public Interceptor[] interceptors() {
-        if (interceptors == null) {
-            String interceptorsStr = XTools.confDef(XHttpTools.CONF_INTERCEPTORS, XHttpTools.CONF_INTERCEPTORS_DEFAULT);
-            if (!XTools.strEmpty(interceptorsStr)) {
-                List<XHttpExecutor.Interceptor> interceptorList = new LinkedList<>();
-                for (String str : interceptorsStr.split(",")) {
-                    try {
-                        interceptorList.add((XHttpExecutor.Interceptor) Class.forName(str.trim()).newInstance());
-                    } catch (Exception e) {
-                        XTools.logW("XHttpInterceptor:%s 初始化失败", str);
-                        e.printStackTrace();
-                    }
-                }
-                interceptors = interceptorList.toArray(new XHttpExecutor.Interceptor[0]);
-            } else {
-                interceptors = new Interceptor[0];
-            }
-        }
-        return interceptors;
     }
 
     /**
@@ -107,7 +73,7 @@ public class XHttpExecutorImpl implements XHttpExecutor {
          */
         @Override
         public XResponse intercept(XHttpExecutor executor, HttpURLConnection connection, XRequest request) throws Exception {
-            CookieManager cookieManager = executor.option().cookieManager();
+            CookieManager cookieManager = executor.supply().cookieManager();
             if (cookieManager == null) {
                 return executor.execute(connection, request);
             } else {

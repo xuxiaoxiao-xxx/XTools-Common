@@ -1,6 +1,7 @@
 package me.xuxiaoxiao.xtools.common.http.executor;
 
 import me.xuxiaoxiao.xtools.common.XTools;
+import me.xuxiaoxiao.xtools.common.config.XSupplier;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.XRequest;
 import me.xuxiaoxiao.xtools.common.http.XResponse;
@@ -16,19 +17,7 @@ import java.util.List;
 /**
  * http执行器，根据请求的参数，执行http请求，获取请求的结果
  */
-public interface XHttpExecutor {
-
-    /**
-     * 获取http配置项
-     *
-     * @return http配置项
-     */
-    Option option();
-
-    /**
-     * 获取http拦截器
-     */
-    Interceptor[] interceptors();
+public interface XHttpExecutor extends XSupplier<XHttpExecutor.Option> {
 
     /**
      * 执行http请求
@@ -91,13 +80,18 @@ public interface XHttpExecutor {
         protected CookieManager cookieManager;
 
         /**
+         * 获取http拦截器
+         */
+        protected Interceptor[] interceptors;
+
+        /**
          * 获取连接超时时间，毫秒
          *
          * @return 连接超时时间，毫秒
          */
         public Integer connectTimeout() {
             if (connectTimeout == null) {
-                connectTimeout = Integer.valueOf(XTools.confDef(XHttpTools.CONF_CONNECT_TIMEOUT, XHttpTools.CONF_CONNECT_TIMEOUT_DEFAULT));
+                connectTimeout = Integer.valueOf(XTools.cfgDef(XHttpTools.CONF_CONNECT_TIMEOUT, XHttpTools.CONF_CONNECT_TIMEOUT_DEFAULT));
             }
             return connectTimeout;
         }
@@ -109,7 +103,7 @@ public interface XHttpExecutor {
          */
         public Integer readTimeout() {
             if (readTimeout == null) {
-                readTimeout = Integer.valueOf(XTools.confDef(XHttpTools.CONF_READ_TIMEOUT, XHttpTools.CONF_READ_TIMEOUT_DEFAULT));
+                readTimeout = Integer.valueOf(XTools.cfgDef(XHttpTools.CONF_READ_TIMEOUT, XHttpTools.CONF_READ_TIMEOUT_DEFAULT));
             }
             return readTimeout;
         }
@@ -121,7 +115,7 @@ public interface XHttpExecutor {
          */
         public boolean followRedirect() {
             if (followRedirect == null) {
-                followRedirect = Boolean.valueOf(XTools.confDef(XHttpTools.CONF_FOLLOW_REDIRECT, XHttpTools.CONF_FOLLOW_REDIRECT_DEFAULT));
+                followRedirect = Boolean.valueOf(XTools.cfgDef(XHttpTools.CONF_FOLLOW_REDIRECT, XHttpTools.CONF_FOLLOW_REDIRECT_DEFAULT));
             }
             return followRedirect;
         }
@@ -133,7 +127,7 @@ public interface XHttpExecutor {
          */
         public int chunkLength() {
             if (chunkLength == null) {
-                chunkLength = Integer.valueOf(XTools.confDef(XHttpTools.CONF_CHUNK_LENGTH, XHttpTools.CONF_CHUNK_LENGTH_DEFAULT));
+                chunkLength = Integer.valueOf(XTools.cfgDef(XHttpTools.CONF_CHUNK_LENGTH, XHttpTools.CONF_CHUNK_LENGTH_DEFAULT));
             }
             return chunkLength;
         }
@@ -146,9 +140,9 @@ public interface XHttpExecutor {
         public SSLContext sslContext() {
             if (sslContext == null) {
                 try {
-                    sslContext = SSLContext.getInstance(XTools.confDef(XHttpTools.CONF_SSL_PROVIDER, XHttpTools.CONF_SSL_PROVIDER_DEFAULT));
+                    sslContext = SSLContext.getInstance(XTools.cfgDef(XHttpTools.CONF_SSL_PROVIDER, XHttpTools.CONF_SSL_PROVIDER_DEFAULT));
                     KeyManager[] keyManagers = null;
-                    String keyManagersStr = XTools.confDef(XHttpTools.CONF_KEY_MANAGERS, XHttpTools.CONF_KEY_MANAGERS_DEFAULT);
+                    String keyManagersStr = XTools.cfgDef(XHttpTools.CONF_KEY_MANAGERS, XHttpTools.CONF_KEY_MANAGERS_DEFAULT);
                     if (!XTools.strEmpty(keyManagersStr)) {
                         List<KeyManager> keyManagerList = new LinkedList<>();
                         for (String str : keyManagersStr.split(",")) {
@@ -163,7 +157,7 @@ public interface XHttpExecutor {
                     }
 
                     TrustManager[] trustManagers = null;
-                    String trustManagersStr = XTools.confDef(XHttpTools.CONF_TRUST_MANAGERS, XHttpTools.CONF_TRUST_MANAGERS_DEFAULT);
+                    String trustManagersStr = XTools.cfgDef(XHttpTools.CONF_TRUST_MANAGERS, XHttpTools.CONF_TRUST_MANAGERS_DEFAULT);
                     if (!XTools.strEmpty(trustManagersStr)) {
                         List<TrustManager> trustManagerList = new LinkedList<>();
                         for (String str : trustManagersStr.split(",")) {
@@ -178,7 +172,7 @@ public interface XHttpExecutor {
                     }
 
                     SecureRandom secureRandom = null;
-                    String secureRandomStr = XTools.confDef(XHttpTools.CONF_SECURE_RANDOM, XHttpTools.CONF_SECURE_RANDOM_DEFAULT);
+                    String secureRandomStr = XTools.cfgDef(XHttpTools.CONF_SECURE_RANDOM, XHttpTools.CONF_SECURE_RANDOM_DEFAULT);
                     try {
                         if (!XTools.strEmpty(secureRandomStr)) {
                             secureRandom = (SecureRandom) Class.forName(secureRandomStr.trim()).newInstance();
@@ -204,7 +198,7 @@ public interface XHttpExecutor {
          */
         public HostnameVerifier hostnameVerifier() {
             if (hostnameVerifier == null) {
-                String hostnameVerifierStr = XTools.confDef(XHttpTools.CONF_HOSTNAME_VERIFIER, XHttpTools.CONF_HOSTNAME_VERIFIER_DEFAULT);
+                String hostnameVerifierStr = XTools.cfgDef(XHttpTools.CONF_HOSTNAME_VERIFIER, XHttpTools.CONF_HOSTNAME_VERIFIER_DEFAULT);
                 try {
                     hostnameVerifier = (HostnameVerifier) Class.forName(hostnameVerifierStr).newInstance();
                 } catch (Exception e) {
@@ -224,7 +218,7 @@ public interface XHttpExecutor {
         public CookieManager cookieManager() {
             if (cookieManager == null) {
                 try {
-                    cookieManager = (CookieManager) Class.forName(XTools.confDef(XHttpTools.CONF_COOKIE_MANAGER, XHttpTools.CONF_COOKIE_MANAGER_DEFAULT)).newInstance();
+                    cookieManager = (CookieManager) Class.forName(XTools.cfgDef(XHttpTools.CONF_COOKIE_MANAGER, XHttpTools.CONF_COOKIE_MANAGER_DEFAULT)).newInstance();
                 } catch (Exception e) {
                     XTools.logW("CookieManager:%s初始化失败, 将使用默认的CookieManager");
                     e.printStackTrace();
@@ -232,6 +226,32 @@ public interface XHttpExecutor {
                 }
             }
             return cookieManager;
+        }
+
+        /**
+         * http拦截器
+         *
+         * @return 默认有一个Cookie拦截器，为每个请求设置和保存Cookie信息
+         */
+        public Interceptor[] interceptors() {
+            if (interceptors == null) {
+                String interceptorsStr = XTools.cfgDef(XHttpTools.CONF_INTERCEPTORS, XHttpTools.CONF_INTERCEPTORS_DEFAULT);
+                if (!XTools.strEmpty(interceptorsStr)) {
+                    List<XHttpExecutor.Interceptor> interceptorList = new LinkedList<>();
+                    for (String str : interceptorsStr.split(",")) {
+                        try {
+                            interceptorList.add((XHttpExecutor.Interceptor) Class.forName(str.trim()).newInstance());
+                        } catch (Exception e) {
+                            XTools.logW("XHttpInterceptor:%s 初始化失败", str);
+                            e.printStackTrace();
+                        }
+                    }
+                    interceptors = interceptorList.toArray(new XHttpExecutor.Interceptor[0]);
+                } else {
+                    interceptors = new Interceptor[0];
+                }
+            }
+            return interceptors;
         }
 
         /**

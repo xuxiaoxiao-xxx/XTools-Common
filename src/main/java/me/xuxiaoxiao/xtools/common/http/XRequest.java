@@ -28,7 +28,7 @@ public final class XRequest {
     /**
      * 请求编码方式
      */
-    private final String charset = XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
+    private final String charset = XTools.cfgDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
     /**
      * 请求方法
      */
@@ -401,7 +401,7 @@ public final class XRequest {
 
         @Override
         public String charset() {
-            return XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
+            return XTools.cfgDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
         }
 
         @Override
@@ -469,7 +469,7 @@ public final class XRequest {
 
         @Override
         public String charset() {
-            return XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
+            return XTools.cfgDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
         }
 
         @Override
@@ -513,7 +513,7 @@ public final class XRequest {
             public final String charset;
 
             public Part(String name, Object value) {
-                this(name, value, XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT));
+                this(name, value, XTools.cfgDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT));
             }
 
             public Part(String name, Object value, String charset) {
@@ -579,7 +579,7 @@ public final class XRequest {
 
         @Override
         public String charset() {
-            return XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
+            return XTools.cfgDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
         }
 
         @Override
@@ -610,7 +610,7 @@ public final class XRequest {
 
         @Override
         public String charset() {
-            return XTools.confDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
+            return XTools.cfgDef(XHttpTools.CONF_REQ_CHARSET, XHttpTools.CONF_REQ_CHARSET_DEFAULT);
         }
 
         @Override

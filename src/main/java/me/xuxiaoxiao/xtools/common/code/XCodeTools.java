@@ -59,7 +59,7 @@ public final class XCodeTools {
     public static String hash(String algorithm, File file) throws IOException, NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
         try (FileInputStream fileInputStream = new FileInputStream(file); DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)) {
-            byte[] buffer = new byte[Integer.valueOf(XTools.confDef(CONF_BUFFER, CONF_BUFFER_DEFAULT))];
+            byte[] buffer = new byte[Integer.valueOf(XTools.cfgDef(CONF_BUFFER, CONF_BUFFER_DEFAULT))];
             while (true) {
                 if (digestInputStream.read(buffer) <= 0) {
                     break;

@@ -68,7 +68,7 @@ public final class XConfigTools {
      * @param key 配置信息键名
      * @return 配置信息值
      */
-    public static String confGet(String key) {
+    public static String cfgGet(String key) {
         return CONFIGS.getProperty(key);
     }
 
@@ -79,7 +79,7 @@ public final class XConfigTools {
      * @param def 配置信息为null时设置的默认值
      * @return 当配置信息值为null时，将def设置为配置信息的值并返回，否则返回原有的配置信息值并且不做任何更改
      */
-    public static String confDef(String key, String def) {
+    public static String cfgDef(String key, String def) {
         if (CONFIGS.getProperty(key) == null) {
             CONFIGS.setProperty(key, def);
             return def;
@@ -94,7 +94,7 @@ public final class XConfigTools {
      * @param key 配置信息键名
      * @param val 配置信息值
      */
-    public static void confSet(String key, String val) {
+    public static void cfgSet(String key, String val) {
         CONFIGS.setProperty(key, val);
     }
 }
