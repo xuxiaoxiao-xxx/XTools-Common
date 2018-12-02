@@ -7,6 +7,9 @@ import me.xuxiaoxiao.xtools.common.log.logger.XLoggerImpl;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
+/**
+ * 日志工具类
+ */
 public class XLogTools {
     public static final String LEVEL_ERROR = "error";
     public static final String LEVEL_WARNING = "warning";
@@ -56,6 +59,12 @@ public class XLogTools {
         LOGGER = logger;
     }
 
+    /**
+     * 将jdk日志等级转换成日志工具中的等级
+     *
+     * @param level jdk日志等级
+     * @return 日志工具中的等级
+     */
     public static String levelToStr(Level level) {
         if (Level.SEVERE.equals(level)) {
             return LEVEL_ERROR;
@@ -68,6 +77,13 @@ public class XLogTools {
         }
     }
 
+    /**
+     * /**
+     * 将日志工具中的等级转换成jdk日志等级
+     *
+     * @param str 日志工具中的等级
+     * @return jdk日志等级
+     */
     public static Level strToLevel(String str) {
         if (LEVEL_ERROR.equals(str)) {
             return Level.SEVERE;
@@ -80,6 +96,13 @@ public class XLogTools {
         }
     }
 
+    /**
+     * 根据jdk日志等级和日志信息生成日志记录对象
+     *
+     * @param level jdk日志等级
+     * @param msg   日志信息
+     * @return 日志记录对象
+     */
     public static LogRecord newRecord(Level level, String msg) {
         LogRecord logRecord = new LogRecord(level, msg);
         StackTraceElement[] stack = Thread.currentThread().getStackTrace();

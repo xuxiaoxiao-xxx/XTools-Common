@@ -49,6 +49,11 @@ public class XHttpExecutorImpl implements XHttpExecutor {
         return new XResponse(connection, connection.getInputStream());
     }
 
+    /**
+     * 获得配置信息
+     *
+     * @return 配置信息对象
+     */
     @Override
     public Option supply() {
         if (option == null) {

@@ -60,7 +60,7 @@ XTools类对XCodeTools、XHttpTools、XTimeTools等进行了再一次封装。
 #### 日志相关
 * 记录详细日志
 * 记录提醒日志
-* 记录警告日志
+* 记录告警日志
 * 记录错误日志
 
 ### Demo

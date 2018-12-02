@@ -12,7 +12,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 /**
- * 常用的基本的关于HTTP的函数的集合
+ * HTTP工具类
  */
 public final class XHttpTools {
 

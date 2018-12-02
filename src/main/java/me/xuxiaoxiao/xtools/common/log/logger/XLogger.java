@@ -9,22 +9,62 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.*;
 
+/**
+ * 日志记录器，底层使用jdk的日志工具。
+ * 能够记录四种不同等级的日志（详细，提醒，告警，错误）。
+ * 并且能够添加不同的处理器，来将日志输出到控制台或文件中
+ */
 public interface XLogger extends XSupplier<XLogger.Option> {
 
+    /**
+     * 记录错误信息的日志
+     *
+     * @param error 错误信息
+     * @param args  错误信息中的参数
+     */
     void logE(String error, Object... args);
 
+    /**
+     * 记录告警信息的日志
+     *
+     * @param warning 告警信息
+     * @param args    告警信息中的参数
+     */
     void logW(String warning, Object... args);
 
+    /**
+     * 记录提示信息的日志
+     *
+     * @param notice 提示信息
+     * @param args   提示信息中的参数
+     */
     void logN(String notice, Object... args);
 
+    /**
+     * 记录详细信息的日志
+     *
+     * @param detail 详细信息
+     * @param args   详细信息中的参数
+     */
     void logD(String detail, Object... args);
 
     class Option {
 
+        /**
+         * 是否记录日志
+         */
         protected Boolean loggable;
 
+        /**
+         * 日志处理器，可以指定多个日志处理器，来将日志输出到文件和控制台或其他地方
+         */
         protected Handler[] handlers;
 
+        /**
+         * 是否记录日志，默认记录日志
+         *
+         * @return 是否记录日志
+         */
         public boolean loggable() {
             if (loggable == null) {
                 loggable = Boolean.valueOf(XTools.cfgDef(XLogTools.CONF_LOGGABLE, XLogTools.CONF_LOGGABLE_DEFAULT));
@@ -32,6 +72,11 @@ public interface XLogger extends XSupplier<XLogger.Option> {
             return loggable;
         }
 
+        /**
+         * 日志处理器，默认使用控制台日志处理器，和文件日志处理器
+         *
+         * @return 日志处理器
+         */
         public Handler[] handlers() {
             if (handlers == null) {
                 String handlersStr = XTools.cfgDef(XLogTools.CONF_HANDLERS_SUPPLIER, XLogTools.CONF_HANDLERS_SUPPLIER_DEFAULT);
@@ -65,6 +110,9 @@ public interface XLogger extends XSupplier<XLogger.Option> {
             }
         }
 
+        /**
+         * 默认的日志处理器提供者，提供记录详细及以上的控制台日志处理器，和记录提醒及以上的文件日志处理器
+         */
         public static class XHandlersSupplier implements XSupplier<Handler[]> {
 
             @Override
