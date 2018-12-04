@@ -18,7 +18,11 @@ public class XHttpExecutorImpl implements XHttpExecutor {
     /**
      * 请求执行选项
      */
-    protected Option option;
+    private final Option option;
+
+    public XHttpExecutorImpl(Option option) {
+        this.option = option;
+    }
 
     @Override
     public XResponse execute(HttpURLConnection connection, XRequest request) throws Exception {
@@ -49,16 +53,8 @@ public class XHttpExecutorImpl implements XHttpExecutor {
         return new XResponse(connection, connection.getInputStream());
     }
 
-    /**
-     * 获得配置信息
-     *
-     * @return 配置信息对象
-     */
     @Override
-    public Option supply() {
-        if (option == null) {
-            option = new Option();
-        }
+    public Option config() {
         return option;
     }
 
@@ -78,7 +74,7 @@ public class XHttpExecutorImpl implements XHttpExecutor {
          */
         @Override
         public XResponse intercept(XHttpExecutor executor, HttpURLConnection connection, XRequest request) throws Exception {
-            CookieManager cookieManager = executor.supply().cookieManager();
+            CookieManager cookieManager = executor.config().cookieManager();
             if (cookieManager == null) {
                 return executor.execute(connection, request);
             } else {

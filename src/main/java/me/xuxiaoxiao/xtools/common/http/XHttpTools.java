@@ -3,6 +3,7 @@ package me.xuxiaoxiao.xtools.common.http;
 import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutorImpl;
+import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutorSupplier;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.lang.reflect.InvocationHandler;
@@ -52,8 +53,8 @@ public final class XHttpTools {
     public static final String CONF_COOKIE_MANAGER = "me.xuxiaoxiao$xtools-common$http.cookieManager";
     public static final String CONF_COOKIE_MANAGER_DEFAULT = XHttpExecutor.Option.XCookieManager.class.getName();
 
-    public static final String CONF_EXECUTOR = "me.xuxiaoxiao$xtools-common$http.executor";
-    public static final String CONF_EXECUTOR_DEFAULT = XHttpExecutorImpl.class.getName();
+    public static final String CONF_EXECUTOR_SUPPLIER = "me.xuxiaoxiao$xtools-common$http.executorSupplier";
+    public static final String CONF_EXECUTOR_SUPPLIER_DEFAULT = XHttpExecutorSupplier.class.getName();
 
     public static final String CONF_INTERCEPTORS = "me.xuxiaoxiao$xtools-common$http.interceptors";
     public static final String CONF_INTERCEPTORS_DEFAULT = XHttpExecutorImpl.CookieInterceptor.class.getName();
@@ -64,18 +65,14 @@ public final class XHttpTools {
     public static final XHttpExecutor EXECUTOR;
 
     static {
-        String executorStr = XTools.cfgDef(XHttpTools.CONF_EXECUTOR, XHttpTools.CONF_EXECUTOR_DEFAULT);
+        String executorSupplierStr = XTools.cfgDef(XHttpTools.CONF_EXECUTOR_SUPPLIER, XHttpTools.CONF_EXECUTOR_SUPPLIER_DEFAULT);
         XHttpExecutor executor;
         try {
-            if (!XTools.strEmpty(executorStr)) {
-                executor = (XHttpExecutor) Class.forName(executorStr.trim()).newInstance();
-            } else {
-                executor = new XHttpExecutorImpl();
-            }
+            executor = ((XHttpExecutorSupplier) Class.forName(executorSupplierStr.trim()).newInstance()).supply();
         } catch (Exception e) {
-            XTools.logW("XHttpExecutor:%s 初始化失败, 将使用默认的XHttpExecutor", executorStr);
+            XTools.logW("XHttpExecutor:%s 初始化失败, 将使用默认的XHttpExecutor", executorSupplierStr);
             e.printStackTrace();
-            executor = new XHttpExecutorImpl();
+            executor = new XHttpExecutorSupplier().supply();
         }
         EXECUTOR = executor;
     }
@@ -110,7 +107,7 @@ public final class XHttpTools {
      * @throws Exception 当url不属于HTTP协议或HTTPS协议时抛出异常
      */
     public static HttpURLConnection connect(XHttpExecutor executor, String url) throws Exception {
-        XHttpExecutor.Option option = executor.supply();
+        XHttpExecutor.Option option = executor.config();
         if (url.toLowerCase().startsWith("http://")) {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             //根据请求选项进行连接配置
@@ -141,7 +138,7 @@ public final class XHttpTools {
      * @throws Exception 请求过程中可能会发生异常
      */
     public static XResponse execute(XHttpExecutor executor, HttpURLConnection connection, XRequest request) throws Exception {
-        XHttpExecutor.Interceptor[] interceptors = executor.supply().interceptors();
+        XHttpExecutor.Interceptor[] interceptors = executor.config().interceptors();
         if (interceptors != null && interceptors.length > 0) {
             for (XHttpExecutor.Interceptor interceptor : interceptors) {
                 executor = (XHttpExecutor) Proxy.newProxyInstance(XHttpTools.class.getClassLoader(), new Class[]{XHttpExecutor.class}, new ExecuteHandler(executor, interceptor));

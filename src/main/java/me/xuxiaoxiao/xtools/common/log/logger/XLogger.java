@@ -1,6 +1,7 @@
 package me.xuxiaoxiao.xtools.common.log.logger;
 
 import me.xuxiaoxiao.xtools.common.XTools;
+import me.xuxiaoxiao.xtools.common.config.XConfigurable;
 import me.xuxiaoxiao.xtools.common.config.XSupplier;
 import me.xuxiaoxiao.xtools.common.log.XLogTools;
 
@@ -14,7 +15,7 @@ import java.util.logging.*;
  * 能够记录四种不同等级的日志（详细，提醒，告警，错误）。
  * 并且能够添加不同的处理器，来将日志输出到控制台或文件中
  */
-public interface XLogger extends XSupplier<XLogger.Option> {
+public interface XLogger extends XConfigurable<XLogger.Option> {
 
     /**
      * 记录错误信息的日志

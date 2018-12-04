@@ -16,31 +16,20 @@ public class XLoggerImpl implements XLogger {
     /**
      * jdk日志工具
      */
-    protected Logger logger = Logger.getLogger(XTools.md5(String.valueOf(System.nanoTime() + new Random().nextInt())));
+    private Logger logger = Logger.getLogger(XTools.md5(String.valueOf(System.nanoTime() + new Random().nextInt())));
+
     /**
      * 配置信息类
      */
-    protected Option option;
+    private Option option;
 
-    {
+    public XLoggerImpl(Option option) {
+        this.option = option;
         logger.setLevel(Level.ALL);
         logger.setUseParentHandlers(false);
-        for (Handler handler : supply().handlers()) {
+        for (Handler handler : config().handlers()) {
             logger.addHandler(handler);
         }
-    }
-
-    /**
-     * 获得配置信息
-     *
-     * @return 配置信息对象
-     */
-    @Override
-    public Option supply() {
-        if (this.option == null) {
-            this.option = new Option();
-        }
-        return this.option;
     }
 
     /**
@@ -51,7 +40,7 @@ public class XLoggerImpl implements XLogger {
      */
     @Override
     public void logE(String error, Object... args) {
-        if (supply().loggable()) {
+        if (config().loggable()) {
             logger.log(XLogTools.newRecord(Level.SEVERE, String.format(error, args)));
         }
     }
@@ -64,7 +53,7 @@ public class XLoggerImpl implements XLogger {
      */
     @Override
     public void logW(String warning, Object... args) {
-        if (supply().loggable()) {
+        if (config().loggable()) {
             logger.log(XLogTools.newRecord(Level.WARNING, String.format(warning, args)));
         }
     }
@@ -77,7 +66,7 @@ public class XLoggerImpl implements XLogger {
      */
     @Override
     public void logN(String notice, Object... args) {
-        if (supply().loggable()) {
+        if (config().loggable()) {
             logger.log(XLogTools.newRecord(Level.INFO, String.format(notice, args)));
         }
     }
@@ -90,8 +79,18 @@ public class XLoggerImpl implements XLogger {
      */
     @Override
     public void logD(String detail, Object... args) {
-        if (supply().loggable()) {
+        if (config().loggable()) {
             logger.log(XLogTools.newRecord(Level.CONFIG, String.format(detail, args)));
         }
+    }
+
+    /**
+     * 获得配置信息
+     *
+     * @return 配置信息对象
+     */
+    @Override
+    public Option config() {
+        return this.option;
     }
 }

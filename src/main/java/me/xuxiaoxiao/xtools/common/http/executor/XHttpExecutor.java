@@ -1,7 +1,7 @@
 package me.xuxiaoxiao.xtools.common.http.executor;
 
 import me.xuxiaoxiao.xtools.common.XTools;
-import me.xuxiaoxiao.xtools.common.config.XSupplier;
+import me.xuxiaoxiao.xtools.common.config.XConfigurable;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.XRequest;
 import me.xuxiaoxiao.xtools.common.http.XResponse;
@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * http执行器，根据请求的参数，执行http请求，获取请求的结果
  */
-public interface XHttpExecutor extends XSupplier<XHttpExecutor.Option> {
+public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
 
     /**
      * 执行http请求
