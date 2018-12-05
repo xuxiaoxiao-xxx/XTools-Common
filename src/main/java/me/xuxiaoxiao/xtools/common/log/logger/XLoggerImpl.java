@@ -23,6 +23,10 @@ public class XLoggerImpl implements XLogger {
      */
     private Option option;
 
+    public XLoggerImpl() {
+        this(new Option());
+    }
+
     public XLoggerImpl(Option option) {
         this.option = option;
         logger.setLevel(Level.ALL);

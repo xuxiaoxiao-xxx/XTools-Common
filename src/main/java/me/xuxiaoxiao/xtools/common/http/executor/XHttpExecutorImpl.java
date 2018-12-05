@@ -20,6 +20,10 @@ public class XHttpExecutorImpl implements XHttpExecutor {
      */
     private final Option option;
 
+    public XHttpExecutorImpl() {
+        this(new Option());
+    }
+
     public XHttpExecutorImpl(Option option) {
         this.option = option;
     }

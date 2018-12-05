@@ -3,7 +3,6 @@ package me.xuxiaoxiao.xtools.common.http;
 import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutorImpl;
-import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutorSupplier;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.lang.reflect.InvocationHandler;
@@ -53,8 +52,8 @@ public final class XHttpTools {
     public static final String CONF_COOKIE_MANAGER = "me.xuxiaoxiao$xtools-common$http.cookieManager";
     public static final String CONF_COOKIE_MANAGER_DEFAULT = XHttpExecutor.Option.XCookieManager.class.getName();
 
-    public static final String CONF_EXECUTOR_SUPPLIER = "me.xuxiaoxiao$xtools-common$http.executorSupplier";
-    public static final String CONF_EXECUTOR_SUPPLIER_DEFAULT = XHttpExecutorSupplier.class.getName();
+    public static final String CONF_EXECUTOR = "me.xuxiaoxiao$xtools-common$http.executor";
+    public static final String CONF_EXECUTOR_DEFAULT = XHttpExecutorImpl.class.getName();
 
     public static final String CONF_INTERCEPTORS = "me.xuxiaoxiao$xtools-common$http.interceptors";
     public static final String CONF_INTERCEPTORS_DEFAULT = XHttpExecutorImpl.CookieInterceptor.class.getName();
@@ -65,14 +64,14 @@ public final class XHttpTools {
     public static final XHttpExecutor EXECUTOR;
 
     static {
-        String executorSupplierStr = XTools.cfgDef(XHttpTools.CONF_EXECUTOR_SUPPLIER, XHttpTools.CONF_EXECUTOR_SUPPLIER_DEFAULT);
+        String executorStr = XTools.cfgDef(XHttpTools.CONF_EXECUTOR, XHttpTools.CONF_EXECUTOR_DEFAULT);
         XHttpExecutor executor;
         try {
-            executor = ((XHttpExecutorSupplier) Class.forName(executorSupplierStr.trim()).newInstance()).supply();
+            executor = (XHttpExecutor) Class.forName(executorStr.trim()).newInstance();
         } catch (Exception e) {
-            XTools.logW("XHttpExecutor:%s 初始化失败, 将使用默认的XHttpExecutor", executorSupplierStr);
+            XTools.logW("XHttpExecutor:%s 初始化失败, 将使用默认的XHttpExecutor", executorStr);
             e.printStackTrace();
-            executor = new XHttpExecutorSupplier().supply();
+            executor = new XHttpExecutorImpl();
         }
         EXECUTOR = executor;
     }

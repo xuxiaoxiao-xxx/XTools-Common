@@ -80,10 +80,10 @@ public interface XLogger extends XConfigurable<XLogger.Option> {
          */
         public Handler[] handlers() {
             if (handlers == null) {
-                String handlersStr = XTools.cfgDef(XLogTools.CONF_HANDLERS_SUPPLIER, XLogTools.CONF_HANDLERS_SUPPLIER_DEFAULT);
+                String handlersStr = XTools.cfgDef(XLogTools.CONF_HANDLER_SUPPLIER, XLogTools.CONF_HANDLER_SUPPLIER_DEFAULT);
                 if (!XTools.strEmpty(handlersStr)) {
                     try {
-                        XHandlersSupplier handlersSupplier = (XHandlersSupplier) Class.forName(handlersStr.trim()).newInstance();
+                        XHandlerSupplier handlersSupplier = (XHandlerSupplier) Class.forName(handlersStr.trim()).newInstance();
                         handlers = handlersSupplier.supply();
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -114,7 +114,7 @@ public interface XLogger extends XConfigurable<XLogger.Option> {
         /**
          * 默认的日志处理器提供者，提供记录详细及以上的控制台日志处理器，和记录提醒及以上的文件日志处理器
          */
-        public static class XHandlersSupplier implements XSupplier<Handler[]> {
+        public static class XHandlerSupplier implements XSupplier<Handler[]> {
 
             @Override
             public Handler[] supply() {

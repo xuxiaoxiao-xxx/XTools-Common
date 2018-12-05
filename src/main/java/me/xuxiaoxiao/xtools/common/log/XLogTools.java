@@ -2,7 +2,7 @@ package me.xuxiaoxiao.xtools.common.log;
 
 import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.log.logger.XLogger;
-import me.xuxiaoxiao.xtools.common.log.logger.XLoggerSupplier;
+import me.xuxiaoxiao.xtools.common.log.logger.XLoggerImpl;
 
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -16,14 +16,14 @@ public class XLogTools {
     public static final String LEVEL_NOTICE = "notice";
     public static final String LEVEL_DETAIL = "detail";
 
-    public static final String CONF_LOGGER_SUPPLIER = "me.xuxiaoxiao$xtools-common$log.loggerSupplier";
-    public static final String CONF_LOGGER_SUPPLIER_DEFAULT = XLoggerSupplier.class.getName();
+    public static final String CONF_LOGGER = "me.xuxiaoxiao$xtools-common$log.logger";
+    public static final String CONF_LOGGER_DEFAULT = XLoggerImpl.class.getName();
 
     public static final String CONF_LOGGABLE = "me.xuxiaoxiao$xtools-common$log.loggable";
     public static final String CONF_LOGGABLE_DEFAULT = "true";
 
-    public static final String CONF_HANDLERS_SUPPLIER = "me.xuxiaoxiao$xtools-common$log.handlersSupplier";
-    public static final String CONF_HANDLERS_SUPPLIER_DEFAULT = XLogger.Option.XHandlersSupplier.class.getName();
+    public static final String CONF_HANDLER_SUPPLIER = "me.xuxiaoxiao$xtools-common$log.handlerSupplier";
+    public static final String CONF_HANDLER_SUPPLIER_DEFAULT = XLogger.Option.XHandlerSupplier.class.getName();
 
     public static final String CONF_CONSOLE_LEVEL = "me.xuxiaoxiao$xtools-common$log.console.level";
     public static final String CONF_CONSOLE_LEVEL_DEFAULT = LEVEL_DETAIL;
@@ -43,14 +43,14 @@ public class XLogTools {
     public static final XLogger LOGGER;
 
     static {
-        String loggerStr = XTools.cfgDef(XLogTools.CONF_LOGGER_SUPPLIER, XLogTools.CONF_LOGGER_SUPPLIER_DEFAULT);
+        String loggerStr = XTools.cfgDef(XLogTools.CONF_LOGGER, XLogTools.CONF_LOGGER_DEFAULT);
         XLogger logger;
         try {
-            logger = ((XLoggerSupplier) Class.forName(loggerStr.trim()).newInstance()).supply();
+            logger = (XLogger) Class.forName(loggerStr.trim()).newInstance();
         } catch (Exception e) {
             e.printStackTrace();
             XTools.logW("XLogger:%s 初始化失败, 将使用默认的XLogger", loggerStr);
-            logger = new XLoggerSupplier().supply();
+            logger = new XLoggerImpl();
         }
         LOGGER = logger;
     }

@@ -84,15 +84,21 @@ public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
          */
         protected Interceptor[] interceptors;
 
+        public Option() {
+            this(Integer.valueOf(XTools.cfgDef(XHttpTools.CONF_CONNECT_TIMEOUT, XHttpTools.CONF_CONNECT_TIMEOUT_DEFAULT)), Integer.valueOf(XTools.cfgDef(XHttpTools.CONF_READ_TIMEOUT, XHttpTools.CONF_READ_TIMEOUT_DEFAULT)));
+        }
+
+        public Option(int connectTimeout, int readTimeout) {
+            this.connectTimeout = connectTimeout;
+            this.readTimeout = readTimeout;
+        }
+
         /**
          * 获取连接超时时间，毫秒
          *
          * @return 连接超时时间，毫秒
          */
         public Integer connectTimeout() {
-            if (connectTimeout == null) {
-                connectTimeout = Integer.valueOf(XTools.cfgDef(XHttpTools.CONF_CONNECT_TIMEOUT, XHttpTools.CONF_CONNECT_TIMEOUT_DEFAULT));
-            }
             return connectTimeout;
         }
 
@@ -102,9 +108,6 @@ public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
          * @return 读取超时时间，毫秒
          */
         public Integer readTimeout() {
-            if (readTimeout == null) {
-                readTimeout = Integer.valueOf(XTools.cfgDef(XHttpTools.CONF_READ_TIMEOUT, XHttpTools.CONF_READ_TIMEOUT_DEFAULT));
-            }
             return readTimeout;
         }
 
