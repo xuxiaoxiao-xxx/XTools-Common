@@ -14,14 +14,13 @@ import java.util.logging.Logger;
 public class XLoggerImpl implements XLogger {
 
     /**
-     * jdk日志工具
-     */
-    private Logger logger = Logger.getLogger(XTools.md5(String.valueOf(System.nanoTime() + new Random().nextInt())));
-
-    /**
      * 配置信息类
      */
-    private Option option;
+    private final Option option;
+    /**
+     * jdk日志工具
+     */
+    private final Logger logger = Logger.getLogger(XTools.md5(String.valueOf(System.nanoTime() + new Random().nextInt())));
 
     public XLoggerImpl() {
         this(new Option());
@@ -29,10 +28,10 @@ public class XLoggerImpl implements XLogger {
 
     public XLoggerImpl(Option option) {
         this.option = option;
-        logger.setLevel(Level.ALL);
-        logger.setUseParentHandlers(false);
+        this.logger.setLevel(Level.ALL);
+        this.logger.setUseParentHandlers(false);
         for (Handler handler : config().handlers()) {
-            logger.addHandler(handler);
+            this.logger.addHandler(handler);
         }
     }
 

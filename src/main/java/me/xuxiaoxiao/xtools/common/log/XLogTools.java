@@ -16,26 +16,26 @@ public class XLogTools {
     public static final String LEVEL_NOTICE = "notice";
     public static final String LEVEL_DETAIL = "detail";
 
-    public static final String CONF_LOGGER = "me.xuxiaoxiao$xtools-common$log.logger";
-    public static final String CONF_LOGGER_DEFAULT = XLoggerImpl.class.getName();
+    public static final String CFG_PRIFIX = "me.xuxiaoxiao$xtools-common$";
 
-    public static final String CONF_LOGGABLE = "me.xuxiaoxiao$xtools-common$log.loggable";
-    public static final String CONF_LOGGABLE_DEFAULT = "true";
+    public static final String CFG_LOGGER = CFG_PRIFIX + "log.logger";
+    public static final String CFG_LOGGER_DEFAULT = XLoggerImpl.class.getName();
+    public static final String CFG_LOGGABLE = CFG_PRIFIX + "log.loggable";
+    public static final String CFG_LOGGABLE_DEFAULT = "true";
+    public static final String CFG_HANDLER_SUPPLIER = CFG_PRIFIX + "log.handlerSupplier";
+    public static final String CFG_HANDLER_SUPPLIER_DEFAULT = XLogger.Option.XHandlerSupplier.class.getName();
 
-    public static final String CONF_HANDLER_SUPPLIER = "me.xuxiaoxiao$xtools-common$log.handlerSupplier";
-    public static final String CONF_HANDLER_SUPPLIER_DEFAULT = XLogger.Option.XHandlerSupplier.class.getName();
+    public static final String CFG_CONSOLE_LEVEL = CFG_PRIFIX + "log.consoleLevel";
+    public static final String CFG_CONSOLE_LEVEL_DEFAULT = LEVEL_DETAIL;
+    public static final String CFG_CONSOLE_FORMATTER = CFG_PRIFIX + "log.consoleFormatter";
+    public static final String CFG_CONSOLE_FORMATTER_DEFAULT = XLogger.Option.XLogFormatter.class.getName();
 
-    public static final String CONF_CONSOLE_LEVEL = "me.xuxiaoxiao$xtools-common$log.console.level";
-    public static final String CONF_CONSOLE_LEVEL_DEFAULT = LEVEL_DETAIL;
-    public static final String CONF_CONSOLE_FORMATTER = "me.xuxiaoxiao$xtools-common$log.console.formatter";
-    public static final String CONF_CONSOLE_FORMATTER_DEFAULT = XLogger.Option.XLogFormatter.class.getName();
-
-    public static final String CONF_FILE_PATTERN = "me.xuxiaoxiao$xtools-common$log.file.pattern";
-    public static final String CONF_FILE_PATTERN_DEFAULT = "xlogger%u.log";
-    public static final String CONF_FILE_LEVEL = "me.xuxiaoxiao$xtools-common$log.file.level";
-    public static final String CONF_FILE_LEVEL_DEFAULT = LEVEL_NOTICE;
-    public static final String CONF_FILE_FORMATTER = "me.xuxiaoxiao$xtools-common$log.file.formatter";
-    public static final String CONF_FILE_FORMATTER_DEFAULT = XLogger.Option.XLogFormatter.class.getName();
+    public static final String CFG_FILE_PATTERN = CFG_PRIFIX + "log.filePattern";
+    public static final String CFG_FILE_PATTERN_DEFAULT = "xlogger%u.log";
+    public static final String CFG_FILE_LEVEL = CFG_PRIFIX + "log.fileLevel";
+    public static final String CFG_FILE_LEVEL_DEFAULT = LEVEL_NOTICE;
+    public static final String CFG_FILE_FORMATTER = CFG_PRIFIX + "log.fileFormatter";
+    public static final String CFG_FILE_FORMATTER_DEFAULT = XLogger.Option.XLogFormatter.class.getName();
 
     /**
      * 默认日志
@@ -43,13 +43,12 @@ public class XLogTools {
     public static final XLogger LOGGER;
 
     static {
-        String loggerStr = XTools.cfgDef(XLogTools.CONF_LOGGER, XLogTools.CONF_LOGGER_DEFAULT);
+        String loggerStr = XTools.cfgDef(XLogTools.CFG_LOGGER, XLogTools.CFG_LOGGER_DEFAULT);
         XLogger logger;
         try {
             logger = (XLogger) Class.forName(loggerStr.trim()).newInstance();
         } catch (Exception e) {
             e.printStackTrace();
-            XTools.logW("XLogger:%s 初始化失败, 将使用默认的XLogger", loggerStr);
             logger = new XLoggerImpl();
         }
         LOGGER = logger;

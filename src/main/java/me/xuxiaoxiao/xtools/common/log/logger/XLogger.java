@@ -68,7 +68,7 @@ public interface XLogger extends XConfigurable<XLogger.Option> {
          */
         public boolean loggable() {
             if (loggable == null) {
-                loggable = Boolean.valueOf(XTools.cfgDef(XLogTools.CONF_LOGGABLE, XLogTools.CONF_LOGGABLE_DEFAULT));
+                loggable = Boolean.valueOf(XTools.cfgDef(XLogTools.CFG_LOGGABLE, XLogTools.CFG_LOGGABLE_DEFAULT));
             }
             return loggable;
         }
@@ -80,7 +80,7 @@ public interface XLogger extends XConfigurable<XLogger.Option> {
          */
         public Handler[] handlers() {
             if (handlers == null) {
-                String handlersStr = XTools.cfgDef(XLogTools.CONF_HANDLER_SUPPLIER, XLogTools.CONF_HANDLER_SUPPLIER_DEFAULT);
+                String handlersStr = XTools.cfgDef(XLogTools.CFG_HANDLER_SUPPLIER, XLogTools.CFG_HANDLER_SUPPLIER_DEFAULT);
                 if (!XTools.strEmpty(handlersStr)) {
                     try {
                         XHandlerSupplier handlersSupplier = (XHandlerSupplier) Class.forName(handlersStr.trim()).newInstance();
@@ -107,7 +107,7 @@ public interface XLogger extends XConfigurable<XLogger.Option> {
                 String time = XTools.dateFormat(TIME_FORMAT, new Date(record.getMillis()));
                 char level = Character.toUpperCase(XLogTools.levelToStr(record.getLevel()).charAt(0));
                 int line = (record.getParameters() != null && record.getParameters().length > 0) ? (int) record.getParameters()[0] : 0;
-                return String.format("%s | %s | %s.%s L%d: %s\n", time, level, record.getSourceClassName(), record.getSourceMethodName(), line, record.getMessage());
+                return String.format("%s | %s | %s.%s() L%d: %s\n", time, level, record.getSourceClassName().substring(record.getSourceClassName().lastIndexOf('.') + 1), record.getSourceMethodName(), line, record.getMessage());
             }
         }
 
@@ -121,16 +121,16 @@ public interface XLogger extends XConfigurable<XLogger.Option> {
                 List<Handler> handlerList = new LinkedList<>();
                 try {
                     Handler consoleHandler = new ConsoleHandler();
-                    consoleHandler.setLevel(XLogTools.strToLevel(XTools.cfgDef(XLogTools.CONF_CONSOLE_LEVEL, XLogTools.CONF_CONSOLE_LEVEL_DEFAULT).toLowerCase()));
-                    consoleHandler.setFormatter((Formatter) Class.forName(XTools.cfgDef(XLogTools.CONF_CONSOLE_FORMATTER, XLogTools.CONF_CONSOLE_FORMATTER_DEFAULT)).newInstance());
+                    consoleHandler.setLevel(XLogTools.strToLevel(XTools.cfgDef(XLogTools.CFG_CONSOLE_LEVEL, XLogTools.CFG_CONSOLE_LEVEL_DEFAULT).toLowerCase()));
+                    consoleHandler.setFormatter((Formatter) Class.forName(XTools.cfgDef(XLogTools.CFG_CONSOLE_FORMATTER, XLogTools.CFG_CONSOLE_FORMATTER_DEFAULT)).newInstance());
                     handlerList.add(consoleHandler);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
                 try {
-                    Handler fileHandler = new FileHandler(XTools.cfgDef(XLogTools.CONF_FILE_PATTERN, XLogTools.CONF_FILE_PATTERN_DEFAULT));
-                    fileHandler.setLevel(XLogTools.strToLevel(XTools.cfgDef(XLogTools.CONF_FILE_LEVEL, XLogTools.CONF_FILE_LEVEL_DEFAULT)));
-                    fileHandler.setFormatter((Formatter) Class.forName(XTools.cfgDef(XLogTools.CONF_FILE_FORMATTER, XLogTools.CONF_FILE_FORMATTER_DEFAULT)).newInstance());
+                    Handler fileHandler = new FileHandler(XTools.cfgDef(XLogTools.CFG_FILE_PATTERN, XLogTools.CFG_FILE_PATTERN_DEFAULT));
+                    fileHandler.setLevel(XLogTools.strToLevel(XTools.cfgDef(XLogTools.CFG_FILE_LEVEL, XLogTools.CFG_FILE_LEVEL_DEFAULT)));
+                    fileHandler.setFormatter((Formatter) Class.forName(XTools.cfgDef(XLogTools.CFG_FILE_FORMATTER, XLogTools.CFG_FILE_FORMATTER_DEFAULT)).newInstance());
                     handlerList.add(fileHandler);
                 } catch (Exception e) {
                     e.printStackTrace();

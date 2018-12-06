@@ -16,47 +16,44 @@ import java.net.URL;
  */
 public final class XHttpTools {
 
-    public static final String CONF_REQ_CHARSET = "me.xuxiaoxiao$xtools-common$http.reqCharset";
-    public static final String CONF_REQ_CHARSET_DEFAULT = "utf-8";
+    public static final String CFG_PRIFIX = "me.xuxiaoxiao$xtools-common$";
 
-    public static final String CONF_RSP_CHARSET = "me.xuxiaoxiao$xtools-common$http.rspCharset";
-    public static final String CONF_RSP_CHARSET_DEFAULT = "utf-8";
+    public static final String CFG_REQ_CHARSET = CFG_PRIFIX + "http.reqCharset";
+    public static final String CFG_REQ_CHARSET_DEFAULT = "utf-8";
+    public static final String CFG_RSP_CHARSET = CFG_PRIFIX + "http.rspCharset";
+    public static final String CFG_RSP_CHARSET_DEFAULT = "utf-8";
 
-    public static final String CONF_CONNECT_TIMEOUT = "me.xuxiaoxiao$xtools-common$http.connectTimeout";
-    public static final String CONF_CONNECT_TIMEOUT_DEFAULT = "10000";
+    public static final String CFG_CONNECT_TIMEOUT = CFG_PRIFIX + "http.connectTimeout";
+    public static final String CFG_CONNECT_TIMEOUT_DEFAULT = "10000";
+    public static final String CFG_READ_TIMEOUT = CFG_PRIFIX + "http.readTimeout";
+    public static final String CFG_READ_TIMEOUT_DEFAULT = "30000";
 
-    public static final String CONF_READ_TIMEOUT = "me.xuxiaoxiao$xtools-common$http.readTimeout";
-    public static final String CONF_READ_TIMEOUT_DEFAULT = "10000";
+    public static final String CFG_FOLLOW_REDIRECT = CFG_PRIFIX + "http.followRedirect";
+    public static final String CFG_FOLLOW_REDIRECT_DEFAULT = "false";
 
-    public static final String CONF_FOLLOW_REDIRECT = "me.xuxiaoxiao$xtools-common$http.followRedirect";
-    public static final String CONF_FOLLOW_REDIRECT_DEFAULT = "false";
+    public static final String CFG_CHUNK_LENGTH = CFG_PRIFIX + "http.chunkLength";
+    public static final String CFG_CHUNK_LENGTH_DEFAULT = "262144";
 
-    public static final String CONF_CHUNK_LENGTH = "me.xuxiaoxiao$xtools-common$http.chunkLength";
-    public static final String CONF_CHUNK_LENGTH_DEFAULT = "262144";
+    public static final String CFG_SSL_PROVIDER = CFG_PRIFIX + "http.sslProvider";
+    public static final String CFG_SSL_PROVIDER_DEFAULT = "TLS";
+    public static final String CFG_KEY_MANAGERS = CFG_PRIFIX + "http.keyManagers";
+    public static final String CFG_KEY_MANAGERS_DEFAULT = "";
+    public static final String CFG_TRUST_MANAGERS = CFG_PRIFIX + "http.trustManagers";
+    public static final String CFG_TRUST_MANAGERS_DEFAULT = "";
+    public static final String CFG_SECURE_RANDOM = CFG_PRIFIX + "http.secureRandom";
+    public static final String CFG_SECURE_RANDOM_DEFAULT = "";
 
-    public static final String CONF_SSL_PROVIDER = "me.xuxiaoxiao$xtools-common$http.sslProvider";
-    public static final String CONF_SSL_PROVIDER_DEFAULT = "TLS";
+    public static final String CFG_HOSTNAME_VERIFIER = CFG_PRIFIX + "http.hostnameVerifier";
+    public static final String CFG_HOSTNAME_VERIFIER_DEFAULT = XHttpExecutor.Option.XHostnameVerifier.class.getName();
 
-    public static final String CONF_KEY_MANAGERS = "me.xuxiaoxiao$xtools-common$http.keyManagers";
-    public static final String CONF_KEY_MANAGERS_DEFAULT = "";
+    public static final String CFG_COOKIE_MANAGER = CFG_PRIFIX + "http.cookieManager";
+    public static final String CFG_COOKIE_MANAGER_DEFAULT = XHttpExecutor.Option.XCookieManager.class.getName();
 
-    public static final String CONF_TRUST_MANAGERS = "me.xuxiaoxiao$xtools-common$http.trustManagers";
-    public static final String CONF_TRUST_MANAGERS_DEFAULT = "";
+    public static final String CFG_EXECUTOR = CFG_PRIFIX + "http.executor";
+    public static final String CFG_EXECUTOR_DEFAULT = XHttpExecutorImpl.class.getName();
 
-    public static final String CONF_SECURE_RANDOM = "me.xuxiaoxiao$xtools-common$http.secureRandom";
-    public static final String CONF_SECURE_RANDOM_DEFAULT = "";
-
-    public static final String CONF_HOSTNAME_VERIFIER = "me.xuxiaoxiao$xtools-common$http.hostnameVerifier";
-    public static final String CONF_HOSTNAME_VERIFIER_DEFAULT = XHttpExecutor.Option.XHostnameVerifier.class.getName();
-
-    public static final String CONF_COOKIE_MANAGER = "me.xuxiaoxiao$xtools-common$http.cookieManager";
-    public static final String CONF_COOKIE_MANAGER_DEFAULT = XHttpExecutor.Option.XCookieManager.class.getName();
-
-    public static final String CONF_EXECUTOR = "me.xuxiaoxiao$xtools-common$http.executor";
-    public static final String CONF_EXECUTOR_DEFAULT = XHttpExecutorImpl.class.getName();
-
-    public static final String CONF_INTERCEPTORS = "me.xuxiaoxiao$xtools-common$http.interceptors";
-    public static final String CONF_INTERCEPTORS_DEFAULT = XHttpExecutorImpl.CookieInterceptor.class.getName();
+    public static final String CFG_INTERCEPTORS = CFG_PRIFIX + "http.interceptors";
+    public static final String CFG_INTERCEPTORS_DEFAULT = XHttpExecutorImpl.CookieInterceptor.class.getName();
 
     /**
      * 默认的请求执行器
@@ -64,7 +61,7 @@ public final class XHttpTools {
     public static final XHttpExecutor EXECUTOR;
 
     static {
-        String executorStr = XTools.cfgDef(XHttpTools.CONF_EXECUTOR, XHttpTools.CONF_EXECUTOR_DEFAULT);
+        String executorStr = XTools.cfgDef(XHttpTools.CFG_EXECUTOR, XHttpTools.CFG_EXECUTOR_DEFAULT);
         XHttpExecutor executor;
         try {
             executor = (XHttpExecutor) Class.forName(executorStr.trim()).newInstance();

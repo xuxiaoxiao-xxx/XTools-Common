@@ -78,14 +78,13 @@ public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
          * cookie管理器
          */
         protected CookieManager cookieManager;
-
         /**
          * 获取http拦截器
          */
         protected Interceptor[] interceptors;
 
         public Option() {
-            this(Integer.valueOf(XTools.cfgDef(XHttpTools.CONF_CONNECT_TIMEOUT, XHttpTools.CONF_CONNECT_TIMEOUT_DEFAULT)), Integer.valueOf(XTools.cfgDef(XHttpTools.CONF_READ_TIMEOUT, XHttpTools.CONF_READ_TIMEOUT_DEFAULT)));
+            this(Integer.valueOf(XTools.cfgDef(XHttpTools.CFG_CONNECT_TIMEOUT, XHttpTools.CFG_CONNECT_TIMEOUT_DEFAULT)), Integer.valueOf(XTools.cfgDef(XHttpTools.CFG_READ_TIMEOUT, XHttpTools.CFG_READ_TIMEOUT_DEFAULT)));
         }
 
         public Option(int connectTimeout, int readTimeout) {
@@ -118,7 +117,7 @@ public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
          */
         public boolean followRedirect() {
             if (followRedirect == null) {
-                followRedirect = Boolean.valueOf(XTools.cfgDef(XHttpTools.CONF_FOLLOW_REDIRECT, XHttpTools.CONF_FOLLOW_REDIRECT_DEFAULT));
+                followRedirect = Boolean.valueOf(XTools.cfgDef(XHttpTools.CFG_FOLLOW_REDIRECT, XHttpTools.CFG_FOLLOW_REDIRECT_DEFAULT));
             }
             return followRedirect;
         }
@@ -130,7 +129,7 @@ public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
          */
         public int chunkLength() {
             if (chunkLength == null) {
-                chunkLength = Integer.valueOf(XTools.cfgDef(XHttpTools.CONF_CHUNK_LENGTH, XHttpTools.CONF_CHUNK_LENGTH_DEFAULT));
+                chunkLength = Integer.valueOf(XTools.cfgDef(XHttpTools.CFG_CHUNK_LENGTH, XHttpTools.CFG_CHUNK_LENGTH_DEFAULT));
             }
             return chunkLength;
         }
@@ -143,9 +142,9 @@ public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
         public SSLContext sslContext() {
             if (sslContext == null) {
                 try {
-                    sslContext = SSLContext.getInstance(XTools.cfgDef(XHttpTools.CONF_SSL_PROVIDER, XHttpTools.CONF_SSL_PROVIDER_DEFAULT));
+                    sslContext = SSLContext.getInstance(XTools.cfgDef(XHttpTools.CFG_SSL_PROVIDER, XHttpTools.CFG_SSL_PROVIDER_DEFAULT));
                     KeyManager[] keyManagers = null;
-                    String keyManagersStr = XTools.cfgDef(XHttpTools.CONF_KEY_MANAGERS, XHttpTools.CONF_KEY_MANAGERS_DEFAULT);
+                    String keyManagersStr = XTools.cfgDef(XHttpTools.CFG_KEY_MANAGERS, XHttpTools.CFG_KEY_MANAGERS_DEFAULT);
                     if (!XTools.strEmpty(keyManagersStr)) {
                         List<KeyManager> keyManagerList = new LinkedList<>();
                         for (String str : keyManagersStr.split(",")) {
@@ -160,7 +159,7 @@ public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
                     }
 
                     TrustManager[] trustManagers = null;
-                    String trustManagersStr = XTools.cfgDef(XHttpTools.CONF_TRUST_MANAGERS, XHttpTools.CONF_TRUST_MANAGERS_DEFAULT);
+                    String trustManagersStr = XTools.cfgDef(XHttpTools.CFG_TRUST_MANAGERS, XHttpTools.CFG_TRUST_MANAGERS_DEFAULT);
                     if (!XTools.strEmpty(trustManagersStr)) {
                         List<TrustManager> trustManagerList = new LinkedList<>();
                         for (String str : trustManagersStr.split(",")) {
@@ -175,7 +174,7 @@ public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
                     }
 
                     SecureRandom secureRandom = null;
-                    String secureRandomStr = XTools.cfgDef(XHttpTools.CONF_SECURE_RANDOM, XHttpTools.CONF_SECURE_RANDOM_DEFAULT);
+                    String secureRandomStr = XTools.cfgDef(XHttpTools.CFG_SECURE_RANDOM, XHttpTools.CFG_SECURE_RANDOM_DEFAULT);
                     try {
                         if (!XTools.strEmpty(secureRandomStr)) {
                             secureRandom = (SecureRandom) Class.forName(secureRandomStr.trim()).newInstance();
@@ -201,7 +200,7 @@ public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
          */
         public HostnameVerifier hostnameVerifier() {
             if (hostnameVerifier == null) {
-                String hostnameVerifierStr = XTools.cfgDef(XHttpTools.CONF_HOSTNAME_VERIFIER, XHttpTools.CONF_HOSTNAME_VERIFIER_DEFAULT);
+                String hostnameVerifierStr = XTools.cfgDef(XHttpTools.CFG_HOSTNAME_VERIFIER, XHttpTools.CFG_HOSTNAME_VERIFIER_DEFAULT);
                 try {
                     hostnameVerifier = (HostnameVerifier) Class.forName(hostnameVerifierStr).newInstance();
                 } catch (Exception e) {
@@ -221,7 +220,7 @@ public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
         public CookieManager cookieManager() {
             if (cookieManager == null) {
                 try {
-                    cookieManager = (CookieManager) Class.forName(XTools.cfgDef(XHttpTools.CONF_COOKIE_MANAGER, XHttpTools.CONF_COOKIE_MANAGER_DEFAULT)).newInstance();
+                    cookieManager = (CookieManager) Class.forName(XTools.cfgDef(XHttpTools.CFG_COOKIE_MANAGER, XHttpTools.CFG_COOKIE_MANAGER_DEFAULT)).newInstance();
                 } catch (Exception e) {
                     XTools.logW("CookieManager:%s初始化失败, 将使用默认的CookieManager");
                     e.printStackTrace();
@@ -238,7 +237,7 @@ public interface XHttpExecutor extends XConfigurable<XHttpExecutor.Option> {
          */
         public Interceptor[] interceptors() {
             if (interceptors == null) {
-                String interceptorsStr = XTools.cfgDef(XHttpTools.CONF_INTERCEPTORS, XHttpTools.CONF_INTERCEPTORS_DEFAULT);
+                String interceptorsStr = XTools.cfgDef(XHttpTools.CFG_INTERCEPTORS, XHttpTools.CFG_INTERCEPTORS_DEFAULT);
                 if (!XTools.strEmpty(interceptorsStr)) {
                     List<XHttpExecutor.Interceptor> interceptorList = new LinkedList<>();
                     for (String str : interceptorsStr.split(",")) {
