@@ -5,6 +5,7 @@ import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutorImpl;
 
 import javax.net.ssl.HttpsURLConnection;
+import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -85,7 +86,7 @@ public final class XHttpTools {
     public static XResponse http(XHttpExecutor executor, XRequest request) {
         HttpURLConnection connection = null;
         try {
-            connection = connect(executor, request.requestUrl());
+            connection = connect(executor.config(), request.requestUrl());
             return execute(executor, connection, request);
         } catch (Exception e) {
             // 请求异常结束，返回空的请求结果
@@ -97,13 +98,12 @@ public final class XHttpTools {
     /**
      * 获取http请求的连接
      *
-     * @param executor http配置项
-     * @param url      请求的地址
+     * @param option http配置项
+     * @param url    请求的地址
      * @return 请求的连接，配置了连接超时时间、读取超时时间、自动重定向
-     * @throws Exception 当url不属于HTTP协议或HTTPS协议时抛出异常
+     * @throws IOException 进行http连接时可能会发生IO异常
      */
-    public static HttpURLConnection connect(XHttpExecutor executor, String url) throws Exception {
-        XHttpExecutor.Option option = executor.config();
+    public static HttpURLConnection connect(XHttpExecutor.Option option, String url) throws IOException {
         if (url.toLowerCase().startsWith("http://")) {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
             //根据请求选项进行连接配置
@@ -154,8 +154,12 @@ public final class XHttpTools {
         }
 
         @Override
-        public XResponse invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            return interceptor.intercept(target, (HttpURLConnection) args[0], (XRequest) args[1]);
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            if (XHttpExecutor.class.equals(method.getDeclaringClass())) {
+                return interceptor.intercept(target, (HttpURLConnection) args[0], (XRequest) args[1]);
+            } else {
+                return method.invoke(target, args);
+            }
         }
     }
 }
