@@ -154,7 +154,7 @@ public final class XTimeTools {
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DATE) - 1;
         try {
-            int[] holidays = (int[]) XHolidayDb.class.getDeclaredField("HOLIDAY_" + year).get(null);
+            Integer[] holidays = (Integer[]) XHolidayDb.class.getDeclaredField("HOLIDAY_" + year).get(null);
             for (int typeMD : holidays) {
                 if ((month << 8 | day) == (typeMD & 0xfff)) {
                     return typeMD >> 12;

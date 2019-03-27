@@ -26,7 +26,7 @@ public interface XLogger extends XConfigurable<XLogger.Option> {
     void logE(String error, Object... args);
 
     /**
-     * 记录告警信息的日志
+     * 记录警告信息的日志
      *
      * @param warning 告警信息
      * @param args    告警信息中的参数

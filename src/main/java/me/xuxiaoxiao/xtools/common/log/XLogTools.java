@@ -33,7 +33,7 @@ public class XLogTools {
     public static final String CFG_FILE_PATTERN = CFG_PRIFIX + "log.filePattern";
     public static final String CFG_FILE_PATTERN_DEFAULT = "xlogger%u.log";
     public static final String CFG_FILE_LEVEL = CFG_PRIFIX + "log.fileLevel";
-    public static final String CFG_FILE_LEVEL_DEFAULT = LEVEL_NOTICE;
+    public static final String CFG_FILE_LEVEL_DEFAULT = LEVEL_DETAIL;
     public static final String CFG_FILE_FORMATTER = CFG_PRIFIX + "log.fileFormatter";
     public static final String CFG_FILE_FORMATTER_DEFAULT = XLogger.Option.XLogFormatter.class.getName();
 
