@@ -3,13 +3,12 @@ package me.xuxiaoxiao.xtools.common;
 import me.xuxiaoxiao.xtools.common.code.XCodeTools;
 import me.xuxiaoxiao.xtools.common.config.XConfigTools;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
-import me.xuxiaoxiao.xtools.common.http.XRequest;
-import me.xuxiaoxiao.xtools.common.http.XResponse;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.log.XLogTools;
 import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -18,6 +17,7 @@ import java.util.Map;
  * 常用的基本的函数的集合和索引
  */
 public final class XTools {
+    public static final String CFG_PREFIX = "me.xuxiaoxiao$xtools-common$";
 
     private XTools() {
     }
@@ -30,7 +30,7 @@ public final class XTools {
      */
     public static String md5(String str) {
         try {
-            return XCodeTools.hash(XCodeTools.HASH_MD5, str.getBytes("UTF-8"));
+            return XCodeTools.hash(XCodeTools.HASH_MD5, str.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             return null;
         }
@@ -59,7 +59,7 @@ public final class XTools {
      */
     public static String sha1(String str) {
         try {
-            return XCodeTools.hash(XCodeTools.HASH_SHA1, str.getBytes("UTF-8"));
+            return XCodeTools.hash(XCodeTools.HASH_SHA1, str.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
             return null;
         }
@@ -87,7 +87,7 @@ public final class XTools {
      * @param request http请求
      * @return 请求的响应体
      */
-    public static XResponse http(XRequest request) {
+    public static XHttpExecutor.Response http(XHttpExecutor.Request request) {
         return XHttpTools.http(XHttpTools.EXECUTOR, request);
     }
 
@@ -98,7 +98,7 @@ public final class XTools {
      * @param request  http请求
      * @return 请求的响应体
      */
-    public static XResponse http(XHttpExecutor executor, XRequest request) {
+    public static XHttpExecutor.Response http(XHttpExecutor executor, XHttpExecutor.Request request) {
         return XHttpTools.http(executor, request);
     }
 
@@ -154,7 +154,7 @@ public final class XTools {
             if (sbStr.length() > 0) {
                 sbStr.append(glueOuter);
             }
-            sbStr.append(String.valueOf(key)).append(glueInner).append(String.valueOf(strMap.get(key)));
+            sbStr.append(key).append(glueInner).append(strMap.get(key));
         }
         return sbStr.toString();
     }
@@ -620,42 +620,70 @@ public final class XTools {
     }
 
     /**
-     * 打印错误日志
+     * 记录错误信息的日志
      *
-     * @param error 错误日志信息
-     * @param args  信息的参数
+     * @param tag   日志tag
+     * @param error 错误信息
+     * @param args  错误信息中的参数
      */
-    public static void logE(String error, Object... args) {
-        XLogTools.LOGGER.logE(error, args);
+    public static void logE(String tag, String error, Object... args) {
+        XLogTools.LOGGER.logE(tag, error, args);
     }
 
     /**
-     * 打印警告日志
+     * 记录错误信息的日志
      *
-     * @param warning 警告日志信息
-     * @param args    信息的参数
+     * @param tag       日志tag
+     * @param throwable 异常对象
+     * @param error     错误信息
+     * @param args      错误信息中的参数
      */
-    public static void logW(String warning, Object... args) {
-        XLogTools.LOGGER.logW(warning, args);
+    public static void logE(String tag, Throwable throwable, String error, Object... args) {
+        XLogTools.LOGGER.logE(tag, throwable, error, args);
     }
 
     /**
-     * 打印提示日志
+     * 记录警告信息的日志
      *
-     * @param notice 提示日志信息
-     * @param args   信息的参数
+     * @param tag     日志tag
+     * @param warning 警告信息
+     * @param args    警告信息中的参数
      */
-    public static void logN(String notice, Object... args) {
-        XLogTools.LOGGER.logN(notice, args);
+    public static void logW(String tag, String warning, Object... args) {
+        XLogTools.LOGGER.logW(tag, warning, args);
     }
 
     /**
-     * 打印详细日志
+     * 记录警告信息的日志
      *
-     * @param detail 详细日志信息
-     * @param args   信息的参数
+     * @param tag       日志tag
+     * @param throwable 异常对象
+     * @param warning   告警信息
+     * @param args      告警信息中的参数
      */
-    public static void logD(String detail, Object... args) {
-        XLogTools.LOGGER.logD(detail, args);
+    public static void logW(String tag, Throwable throwable, String warning, Object... args) {
+        XLogTools.LOGGER.logW(tag, throwable, warning, args);
+    }
+
+    /**
+     * 记录提示信息的日志
+     *
+     * @param tag    日志tag
+     * @param notice 提示信息
+     * @param args   提示信息中的参数
+     */
+    public static void logN(String tag, String notice, Object... args) {
+        XLogTools.LOGGER.logN(tag, notice, args);
+    }
+
+    /**
+     * 记录详细信息的日志
+     *
+     * @param tag    日志tag
+     * @param detail 详细信息
+     * @param args   详细信息中的参数
+     */
+    public static void logD(String tag, String detail, Object... args) {
+        XLogTools.LOGGER.logD(tag, detail, args);
     }
 }

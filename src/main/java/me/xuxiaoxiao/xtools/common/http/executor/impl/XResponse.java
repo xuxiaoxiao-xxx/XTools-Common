@@ -1,6 +1,7 @@
-package me.xuxiaoxiao.xtools.common.http;
+package me.xuxiaoxiao.xtools.common.http.executor.impl;
 
 import me.xuxiaoxiao.xtools.common.XTools;
+import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 
 import java.io.File;
 import java.io.InputStream;
@@ -9,13 +10,13 @@ import java.net.HttpURLConnection;
 /**
  * HTTP响应类，提供了便捷的方法将输入流转换成字符串或文件
  */
-public class XResponse implements AutoCloseable {
+public class XResponse implements XHttpExecutor.Response, AutoCloseable {
     private final HttpURLConnection connection;
-    private final InputStream inStream;
+    private final InputStream stream;
 
-    public XResponse(HttpURLConnection connection, InputStream inStream) {
+    public XResponse(HttpURLConnection connection, InputStream stream) {
         this.connection = connection;
-        this.inStream = inStream;
+        this.stream = stream;
     }
 
     /**
@@ -23,17 +24,9 @@ public class XResponse implements AutoCloseable {
      *
      * @return 连接的输入流，记得使用XResponse实例的close()方法关闭输入流和连接
      */
-    public final InputStream inStream() {
-        return this.inStream;
-    }
-
-    /**
-     * 将连接返回的输入流中的数据转化成字符串，默认的使用utf-8的编码方式
-     *
-     * @return 转化后的字符串
-     */
-    public final String string() {
-        return string(XTools.cfgDef(XHttpTools.CFG_RSP_CHARSET, XHttpTools.CFG_RSP_CHARSET_DEFAULT));
+    @Override
+    public InputStream stream() {
+        return this.stream;
     }
 
     /**
@@ -41,9 +34,10 @@ public class XResponse implements AutoCloseable {
      *
      * @return 转化后的字符串
      */
+    @Override
     public final String string(String charset) {
         try {
-            return XTools.streamToStr(inStream(), charset);
+            return XTools.streamToStr(stream(), charset);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -62,9 +56,10 @@ public class XResponse implements AutoCloseable {
      * @param path 文件存储的路径
      * @return 转化后的文件
      */
+    @Override
     public final File file(String path) {
         try {
-            return XTools.streamToFile(inStream(), path);
+            return XTools.streamToFile(stream(), path);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -84,8 +79,8 @@ public class XResponse implements AutoCloseable {
      */
     @Override
     public void close() throws Exception {
-        if (inStream != null) {
-            inStream.close();
+        if (stream != null) {
+            stream.close();
         }
         if (connection != null) {
             connection.disconnect();
