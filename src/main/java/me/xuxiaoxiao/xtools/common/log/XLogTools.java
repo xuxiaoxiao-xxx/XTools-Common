@@ -23,7 +23,7 @@ public class XLogTools {
     public static final String CFG_FORMATTER = CFG_PREFIX + ".formatter";
     public static final String CFG_FORMATTER_DEFAULT = XLoggerImpl.XLogFormatter.class.getName();
 
-    private static final String TAG_LEVEL_PREFIX = CFG_PREFIX + ".tag.";
+    private static final String TAG_LEVEL_PREFIX = CFG_LEVEL + ".";
     /**
      * 默认日志记录器
      */
@@ -46,13 +46,14 @@ public class XLogTools {
         XConfigTools.cfgIterate(new XConfigTools.Iteration() {
 
             @Override
-            public void action(String key, String value) {
+            public boolean iterate(String key, String value) {
                 if (key.startsWith(TAG_LEVEL_PREFIX)) {
                     String tag = key.substring(TAG_LEVEL_PREFIX.length());
                     if (!XTools.strEmpty(tag)) {
                         LOGGER.setLevel(tag, value);
                     }
                 }
+                return false;
             }
         });
     }

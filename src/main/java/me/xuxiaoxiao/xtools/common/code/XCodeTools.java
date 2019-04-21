@@ -13,8 +13,8 @@ import java.security.NoSuchAlgorithmException;
  * 常用的基本的关于编码和解码的函数的集合
  */
 public final class XCodeTools {
-    public static final String CONF_BUFFER = "me.xuxiaoxiao$xtools-common$code.buffer";
-    public static final String CONF_BUFFER_DEFAULT = "131072";
+    public static final String CFG_BUFFER = XTools.CFG_PREFIX + "code.buffer";
+    public static final String CFG_BUFFER_DEFAULT = "131072";
     /**
      * 散列算法-MD5
      */
@@ -28,7 +28,7 @@ public final class XCodeTools {
      */
     public static final String HASH_SHA256 = "SHA-256";
 
-    private static final char HEX[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    private static final char[] HEX = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
     private XCodeTools() {
     }
@@ -59,7 +59,7 @@ public final class XCodeTools {
     public static String hash(String algorithm, File file) throws IOException, NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
         try (FileInputStream fileInputStream = new FileInputStream(file); DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)) {
-            byte[] buffer = new byte[Integer.valueOf(XTools.cfgDef(CONF_BUFFER, CONF_BUFFER_DEFAULT))];
+            byte[] buffer = new byte[Integer.valueOf(XTools.cfgDef(CFG_BUFFER, CFG_BUFFER_DEFAULT))];
             while (true) {
                 if (digestInputStream.read(buffer) <= 0) {
                     break;
@@ -76,7 +76,7 @@ public final class XCodeTools {
      * @return 转换后的字符串，全小写字母
      */
     public static String bytesToHex(byte[] bytes) {
-        char chars[] = new char[bytes.length * 2];
+        char[] chars = new char[bytes.length * 2];
         for (int i = 0; i < bytes.length; i++) {
             byte b = bytes[i];
             chars[i << 1] = HEX[b >>> 4 & 0xf];

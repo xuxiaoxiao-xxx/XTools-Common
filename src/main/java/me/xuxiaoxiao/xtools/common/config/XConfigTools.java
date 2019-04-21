@@ -4,9 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -14,8 +12,9 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * 配置工具，此工具被其他依赖，所以此工具不能使用其他工具
  */
 public final class XConfigTools {
-    private static final ReadWriteLock RW_LOCK = new ReentrantReadWriteLock();
     private static final Properties CONFIGS = new Properties();
+    private static final ReadWriteLock CONFIGS_LOCK = new ReentrantReadWriteLock();
+    private static final Observable ob = new Observable();
 
     static {
         //静默读取默认的配置文件
@@ -41,11 +40,11 @@ public final class XConfigTools {
      */
     public static void setConfigFiles(String... files) throws IOException {
         try {
-            RW_LOCK.writeLock().lock();
+            CONFIGS_LOCK.writeLock().lock();
             clearConfigs();
             addConfigFiles(files);
         } finally {
-            RW_LOCK.writeLock().unlock();
+            CONFIGS_LOCK.writeLock().unlock();
         }
     }
 
@@ -57,7 +56,7 @@ public final class XConfigTools {
      */
     public static void addConfigFiles(String... configs) throws IOException {
         try {
-            RW_LOCK.writeLock().lock();
+            CONFIGS_LOCK.writeLock().lock();
             if (configs != null && configs.length > 0) {
                 for (String config : configs) {
                     try (FileInputStream finStream = new FileInputStream(config)) {
@@ -66,50 +65,50 @@ public final class XConfigTools {
                 }
             }
         } finally {
-            RW_LOCK.writeLock().unlock();
+            CONFIGS_LOCK.writeLock().unlock();
         }
     }
 
     /**
-     * 清除所有配置文件
+     * 清除所有配置
      */
     public static void clearConfigs() {
         try {
-            RW_LOCK.writeLock().lock();
+            CONFIGS_LOCK.writeLock().lock();
             CONFIGS.clear();
         } finally {
-            RW_LOCK.writeLock().unlock();
+            CONFIGS_LOCK.writeLock().unlock();
         }
     }
 
     /**
-     * 获取配置信息值
+     * 获取配置信息
      *
-     * @param key 配置信息键名
-     * @return 配置信息值
+     * @param key 配置键
+     * @return 配置值
      */
     public static String cfgGet(String key) {
         Objects.requireNonNull(key, "配置键不能为null");
         try {
-            RW_LOCK.readLock().lock();
+            CONFIGS_LOCK.readLock().lock();
             return CONFIGS.getProperty(key);
         } finally {
-            RW_LOCK.readLock().unlock();
+            CONFIGS_LOCK.readLock().unlock();
         }
     }
 
     /**
      * 获取或设置配置信息
      *
-     * @param key 配置信息键名
-     * @param def 配置信息为null时设置的默认值
-     * @return 当配置信息值为null时，将def设置为配置信息的值并返回，否则返回原有的配置信息值并且不做任何更改
+     * @param key 配置键
+     * @param def 配置值为null时设置的默认值
+     * @return 当配置值为null时，将def设置为配置值并返回，否则返回原有的配置值并且不做任何更改
      */
     public static String cfgDef(String key, String def) {
         Objects.requireNonNull(key, "配置键不能为null");
         Objects.requireNonNull(def, "配置值不能为null");
         try {
-            RW_LOCK.writeLock().lock();
+            CONFIGS_LOCK.writeLock().lock();
             if (CONFIGS.getProperty(key) == null) {
                 CONFIGS.setProperty(key, def);
                 return def;
@@ -117,38 +116,55 @@ public final class XConfigTools {
                 return CONFIGS.getProperty(key, def);
             }
         } finally {
-            RW_LOCK.writeLock().unlock();
+            CONFIGS_LOCK.writeLock().unlock();
         }
     }
 
     /**
      * 设置配置信息
      *
-     * @param key 配置信息键名
-     * @param val 配置信息值
+     * @param key 配置键
+     * @param val 配置值
      */
     public static void cfgSet(String key, String val) {
         Objects.requireNonNull(key, "配置键不能为null");
         Objects.requireNonNull(val, "配置值不能为null");
         try {
-            RW_LOCK.writeLock().lock();
+            CONFIGS_LOCK.writeLock().lock();
             CONFIGS.setProperty(key, val);
         } finally {
-            RW_LOCK.writeLock().unlock();
+            CONFIGS_LOCK.writeLock().unlock();
         }
     }
 
+    /**
+     * 遍历配置信息，在迭代器中的iterate方法可以返回true，表示删除当前迭代的配置项
+     *
+     * @param iteration 迭代器
+     */
     public static void cfgIterate(Iteration iteration) {
         try {
-            RW_LOCK.readLock().lock();
-            for (Map.Entry<Object, Object> entry : CONFIGS.entrySet()) {
-                iteration.action(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+            CONFIGS_LOCK.writeLock().lock();
+            Iterator<Map.Entry<Object, Object>> iterator = CONFIGS.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<Object, Object> entry = iterator.next();
+                if (iteration.iterate(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()))) {
+                    //迭代器返回true，表示删除该配置
+                    iterator.remove();
+                }
             }
         } finally {
-            RW_LOCK.readLock().unlock();
+            CONFIGS_LOCK.writeLock().unlock();
         }
     }
 
+    /**
+     * 根据类名提供类的实例，自动判断是否为XSupplier，如果是，则调用其supply方法获取类的实例
+     *
+     * @param clazzName 类名
+     * @param <T>       实例类型
+     * @return 需求的类的实例
+     */
     public static <T> T supply(String clazzName) {
         try {
             Class<?> clazz = Class.forName(clazzName);
@@ -167,8 +183,18 @@ public final class XConfigTools {
         }
     }
 
+    /**
+     * 配置迭代操作类
+     */
     public interface Iteration {
 
-        void action(String key, String value);
+        /**
+         * 迭代操作方法
+         *
+         * @param key   当前配置键
+         * @param value 当前配置值
+         * @return 是否需要删除当前配置
+         */
+        boolean iterate(String key, String value);
     }
 }

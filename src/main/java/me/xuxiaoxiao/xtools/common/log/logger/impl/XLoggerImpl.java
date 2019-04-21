@@ -240,7 +240,7 @@ public class XLoggerImpl implements XLogger {
         public String format(LogRecord record) {
             String time = XTools.dateFormat(TIME_FORMAT, new Date(record.getMillis()));
             String tag = (record.getParameters() == null || record.getParameters()[0] == null) ? "xlog" : String.valueOf(record.getParameters()[0]);
-            return String.format("%s | %s | %s | %s\n", time, tag, levelChar(record.getLevel()), record.getMessage());
+            return String.format("%s | %s | %s | %s\n", time, levelChar(record.getLevel()), tag, record.getMessage());
         }
     }
 }

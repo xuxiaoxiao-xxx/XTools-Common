@@ -6,19 +6,22 @@ import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 
 import javax.net.ssl.*;
 import java.io.DataOutputStream;
+import java.io.InputStream;
 import java.net.*;
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * http执行器的默认实现类
  */
 public class XHttpExecutorImpl implements XHttpExecutor {
     public static final String CFG_CONNECT_TIMEOUT = XTools.CFG_PREFIX + "http.connectTimeout";
-    public static final String CFG_CONNECT_TIMEOUT_DEFAULT = "10000";
+    public static final String CFG_CONNECT_TIMEOUT_DEFAULT = "20000";
     public static final String CFG_READ_TIMEOUT = XTools.CFG_PREFIX + "http.readTimeout";
-    public static final String CFG_READ_TIMEOUT_DEFAULT = "30000";
+    public static final String CFG_READ_TIMEOUT_DEFAULT = "60000";
     public static final String CFG_FOLLOW_REDIRECT = XTools.CFG_PREFIX + "http.followRedirect";
     public static final String CFG_FOLLOW_REDIRECT_DEFAULT = "false";
     public static final String CFG_CHUNK_LENGTH = XTools.CFG_PREFIX + "http.chunkLength";
@@ -42,10 +45,6 @@ public class XHttpExecutorImpl implements XHttpExecutor {
     public static final String CFG_SSL_SECURE_RANDOM = XTools.CFG_PREFIX + "http.ssl.secureRandom";
     public static final String CFG_SSL_SECURE_RANDOM_DEFAULT = "";
 
-    public static final String CFG_RSP_CHARSET = XTools.CFG_PREFIX + "http.rspCharset";
-    public static final String CFG_RSP_CHARSET_DEFAULT = "utf-8";
-
-    private final ThreadLocal<HttpURLConnection> connections = new ThreadLocal<>();
     private int connectTimeout;
     private int readTimeout;
     private int chunkLength;
@@ -56,7 +55,13 @@ public class XHttpExecutorImpl implements XHttpExecutor {
     private SSLContext sslContext;
 
     static {
+        XTools.cfgDef(CFG_CONNECT_TIMEOUT, CFG_CONNECT_TIMEOUT_DEFAULT);
+        XTools.cfgDef(CFG_READ_TIMEOUT, CFG_READ_TIMEOUT_DEFAULT);
+        XTools.cfgDef(CFG_FOLLOW_REDIRECT, CFG_FOLLOW_REDIRECT_DEFAULT);
+        XTools.cfgDef(CFG_CHUNK_LENGTH, CFG_CHUNK_LENGTH_DEFAULT);
         XTools.cfgDef(CFG_COOKIE_MANAGER, CFG_COOKIE_MANAGER_DEFAULT);
+        XTools.cfgDef(CFG_INTERCEPTORS, CFG_INTERCEPTORS_DEFAULT);
+        XTools.cfgDef(CFG_HOSTNAME_VERIFIER, CFG_HOSTNAME_VERIFIER_DEFAULT);
         XTools.cfgDef(CFG_SSL_ALGORITHM, CFG_SSL_ALGORITHM_DEFAULT);
         XTools.cfgDef(CFG_SSL_KEY_MANAGERS, CFG_SSL_KEY_MANAGERS_DEFAULT);
         XTools.cfgDef(CFG_SSL_TRUST_MANAGERS, CFG_SSL_TRUST_MANAGERS_DEFAULT);
@@ -284,13 +289,32 @@ public class XHttpExecutorImpl implements XHttpExecutor {
         HttpURLConnection connection = connect(request);
         //设置请求方法
         connection.setRequestMethod(request.getMethod());
-        //设置请求头
+
         List<KeyValue> headers = request.getHeaders();
         if (headers != null) {
+            //设置请求头
             for (KeyValue keyValue : headers) {
                 connection.addRequestProperty(keyValue.key, String.valueOf(keyValue.value));
             }
         }
+
+        if (cookieManager != null) {
+            //添加cookie
+            Map<String, List<String>> cookiesList = cookieManager.get(connection.getURL().toURI(), new HashMap<String, List<String>>());
+            for (String cookieType : cookiesList.keySet()) {
+                StringBuilder sbCookie = new StringBuilder();
+                for (String cookieStr : cookiesList.get(cookieType)) {
+                    if (sbCookie.length() > 0) {
+                        sbCookie.append(';');
+                    }
+                    sbCookie.append(cookieStr);
+                }
+                if (sbCookie.length() > 0) {
+                    connection.setRequestProperty(cookieType, sbCookie.toString());
+                }
+            }
+        }
+
         //如果为POST或PUT方法则输出请求体
         if (XRequest.METHOD_POST.equals(request.getMethod()) || XRequest.METHOD_PUT.equals(request.getMethod())) {
             connection.setDoOutput(true);
@@ -305,8 +329,14 @@ public class XHttpExecutorImpl implements XHttpExecutor {
                 }
             }
         }
+
         //获取输入流
-        return new XResponse(connection, connection.getInputStream());
+        InputStream inStream = connection.getInputStream();
+        if (cookieManager != null) {
+            //读取cookie
+            cookieManager.put(connection.getURL().toURI(), connection.getHeaderFields());
+        }
+        return new XResponse(connection, inStream);
     }
 
     /**
