@@ -118,4 +118,47 @@ public interface XLogger {
      * @return 根节点日志等级
      */
     String getLevel(String tag);
+
+    /**
+     * 添加日志处理器
+     *
+     * @param handler 日志处理器
+     */
+    void addHandler(Handler handler);
+
+    /**
+     * 获取日志处理器
+     *
+     * @return 日志处理器
+     */
+    Handler[] getHandlers();
+
+    /**
+     * 日志处理器接口
+     */
+    interface Handler {
+
+        /**
+         * 设置处理器的处理等级
+         *
+         * @param level 处理等级
+         */
+        void setLevel(String level);
+
+        /**
+         * 获取处理器的处理等级
+         *
+         * @return 处理等级
+         */
+        String getLevel();
+
+        /**
+         * 日志处理方法
+         *
+         * @param level 日志等级
+         * @param tag   日志tag
+         * @param msg   日志信息
+         */
+        void record(String level, String tag, String msg);
+    }
 }

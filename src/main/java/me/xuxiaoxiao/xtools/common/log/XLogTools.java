@@ -9,19 +9,11 @@ import me.xuxiaoxiao.xtools.common.log.logger.impl.XLoggerImpl;
  * 日志工具类
  */
 public class XLogTools {
-    public static final String CFG_PREFIX = "me.xuxiaoxiao$xtools-common$log";
-
-    public static final String CFG_LOGGER = CFG_PREFIX + ".logger";
+    public static final String CFG_LOGGER = XTools.CFG_PREFIX + "log.logger";
     public static final String CFG_LOGGER_DEFAULT = XLoggerImpl.class.getName();
 
-    public static final String CFG_LEVEL = CFG_PREFIX + ".level";
+    public static final String CFG_LEVEL = XTools.CFG_PREFIX + "log.level";
     public static final String CFG_LEVEL_DEFAULT = "detail";
-
-    public static final String CFG_PATTERN = CFG_PREFIX + ".file";
-    public static final String CFG_PATTERN_DEFAULT = "xlogger.log";
-
-    public static final String CFG_FORMATTER = CFG_PREFIX + ".formatter";
-    public static final String CFG_FORMATTER_DEFAULT = XLoggerImpl.XLogFormatter.class.getName();
 
     private static final String TAG_LEVEL_PREFIX = CFG_LEVEL + ".";
     /**
@@ -31,18 +23,10 @@ public class XLogTools {
 
     static {
         XTools.cfgDef(XLogTools.CFG_LOGGER, XLogTools.CFG_LOGGER_DEFAULT);
-        XTools.cfgDef(XLogTools.CFG_FORMATTER, XLogTools.CFG_FORMATTER_DEFAULT);
-        XTools.cfgDef(XLogTools.CFG_PATTERN, XLogTools.CFG_PATTERN_DEFAULT);
         XTools.cfgDef(XLogTools.CFG_LEVEL, XLogTools.CFG_LEVEL_DEFAULT);
 
-        XLogger logger;
-        try {
-            logger = (XLogger) Class.forName(XTools.cfgGet(XLogTools.CFG_LOGGER).trim()).newInstance();
-        } catch (Exception e) {
-            e.printStackTrace();
-            logger = new XLoggerImpl();
-        }
-        LOGGER = logger;
+        LOGGER = XConfigTools.supply(XTools.cfgGet(CFG_LOGGER));
+        LOGGER.setLevel(XTools.cfgGet(CFG_LEVEL));
         XConfigTools.cfgIterate(new XConfigTools.Iteration() {
 
             @Override
