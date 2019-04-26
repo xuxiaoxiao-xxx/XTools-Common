@@ -12,26 +12,82 @@ import java.util.List;
  * http执行器，根据请求的参数，执行http请求，获取请求的结果
  */
 public interface XHttpExecutor {
+    /**
+     * 设置连接超时时间
+     *
+     * @param timeout 连接超时时间
+     */
     void setConnectTimeout(int timeout);
 
+    /**
+     * 获取连接超时时间
+     *
+     * @return 连接超时时间
+     */
     int getConnectTimeout();
 
+    /**
+     * 设置读取超时时间
+     *
+     * @param timeout 读取超时时间
+     */
     void setReadTimeout(int timeout);
 
+    /**
+     * 获取读取超时时间
+     *
+     * @return 读取超时时间
+     */
     int getReadTimeout();
 
+    /**
+     * 添加cookie
+     *
+     * @param uri    cookie的uri
+     * @param cookie cookie信息
+     */
     void addCookie(URI uri, HttpCookie cookie);
 
+    /**
+     * 获取cookie
+     *
+     * @param uri cookie的uri
+     * @return cookie信息
+     */
     List<HttpCookie> getCookies(URI uri);
 
+    /**
+     * 获取所有cookie
+     *
+     * @return cookie信息
+     */
     List<HttpCookie> getCookies();
 
+    /**
+     * 删除cookie信息
+     *
+     * @param uri    cookie的uri
+     * @param cookie cookie信息
+     */
     void rmvCookies(URI uri, HttpCookie cookie);
 
+    /**
+     * 删除所有cookie
+     */
     void rmvCookies();
 
+    /**
+     * 设置请求拦截器
+     *
+     * @param interceptors 拦截器
+     */
     void setInterceptors(Interceptor... interceptors);
 
+    /**
+     * 获取请求拦截器
+     *
+     * @return 请求拦截器
+     */
     Interceptor[] getInterceptors();
 
     /**
@@ -62,30 +118,102 @@ public interface XHttpExecutor {
         Response intercept(XHttpExecutor executor, Request request) throws Exception;
     }
 
+    /**
+     * http请求
+     */
     interface Request {
+        /**
+         * 设置请求方法
+         *
+         * @param method 请求方法
+         */
         void setMethod(String method);
 
+        /**
+         * 获取请求方法
+         *
+         * @return 请求方法
+         */
         String getMethod();
 
+        /**
+         * 设置请求url
+         *
+         * @param url 请求url
+         */
         void setUrl(String url);
 
+        /**
+         * 获取请求url
+         *
+         * @return 请求url
+         */
         String getUrl();
 
+        /**
+         * 设置请求头部
+         *
+         * @param key    请求头键
+         * @param value  请求头值
+         * @param append 重复请求头是否追加
+         */
         void setHeader(String key, String value, boolean append);
 
+        /**
+         * 获取请求头部
+         *
+         * @return 请求头部
+         */
         List<KeyValue> getHeaders();
 
+        /**
+         * 设置请求体
+         *
+         * @param content 请求体
+         */
         void setContent(Content content);
 
+        /**
+         * 获取请求体
+         *
+         * @return 请求体信息
+         */
         Content getContent();
     }
 
+    /**
+     * http响应
+     */
     interface Response {
 
+        /**
+         * 获取输入流
+         *
+         * @return 获取输入流
+         */
         InputStream stream();
 
+        /**
+         * 获取字符串结果(默认编码)
+         *
+         * @return 字符串结果
+         */
+        String string();
+
+        /**
+         * 获取字符串结果
+         *
+         * @param charset 字符串编码
+         * @return 字符串结果
+         */
         String string(String charset);
 
+        /**
+         * 获取文件结果
+         *
+         * @param path 文件路径
+         * @return 文件结果
+         */
         File file(String path);
     }
 

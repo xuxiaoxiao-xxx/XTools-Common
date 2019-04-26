@@ -2,6 +2,7 @@ package me.xuxiaoxiao.xtools.common.log;
 
 import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.config.XConfigTools;
+import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 import me.xuxiaoxiao.xtools.common.log.logger.XLogger;
 import me.xuxiaoxiao.xtools.common.log.logger.impl.XLoggerImpl;
 
@@ -22,12 +23,12 @@ public class XLogTools {
     public static final XLogger LOGGER;
 
     static {
-        XTools.cfgDef(XLogTools.CFG_LOGGER, XLogTools.CFG_LOGGER_DEFAULT);
-        XTools.cfgDef(XLogTools.CFG_LEVEL, XLogTools.CFG_LEVEL_DEFAULT);
+        XConfigTools.X_CONFIGS.cfgDef(XLogTools.CFG_LOGGER, XLogTools.CFG_LOGGER_DEFAULT);
+        XConfigTools.X_CONFIGS.cfgDef(XLogTools.CFG_LEVEL, XLogTools.CFG_LEVEL_DEFAULT);
 
         LOGGER = XConfigTools.supply(XTools.cfgGet(CFG_LOGGER));
         LOGGER.setLevel(XTools.cfgGet(CFG_LEVEL));
-        XConfigTools.cfgIterate(new XConfigTools.Iteration() {
+        XConfigTools.X_CONFIGS.cfgIterate(new XConfigs.Iteration() {
 
             @Override
             public boolean iterate(String key, String value) {
@@ -38,6 +39,30 @@ public class XLogTools {
                     }
                 }
                 return false;
+            }
+        });
+        XTools.cfgWatch(CFG_LEVEL, new XConfigs.Watcher() {
+            @Override
+            public void onCfgAdd(XConfigs configs, String key, String val) {
+                if (key.equals(CFG_LEVEL)) {
+                    LOGGER.setLevel(val);
+                } else {
+                    LOGGER.setLevel(key.substring(TAG_LEVEL_PREFIX.length()), val);
+                }
+            }
+
+            @Override
+            public void onCfgDel(XConfigs configs, String key, String val) {
+                LOGGER.setLevel(key.substring(TAG_LEVEL_PREFIX.length()), null);
+            }
+
+            @Override
+            public void onCfgChange(XConfigs configs, String key, String valOld, String valNew) {
+                if (key.equals(CFG_LEVEL)) {
+                    LOGGER.setLevel(valNew);
+                } else {
+                    LOGGER.setLevel(key.substring(TAG_LEVEL_PREFIX.length()), valNew);
+                }
             }
         });
     }

@@ -36,12 +36,12 @@ public class XLoggerImpl implements XLogger {
     public static final String CFG_FILE_LEVEL_DEFAULT = "warning";
 
     static {
-        XTools.cfgDef(CFG_HANDLERS, CFG_HANDLERS_DEFAULT);
-        XTools.cfgDef(CFG_FORMATTER, CFG_FORMATTER_DEFAULT);
-        XTools.cfgDef(CFG_CONSOLE_LEVEL, CFG_CONSOLE_LEVEL_DEFAULT);
-        XTools.cfgDef(CFG_FILE, CFG_FILE_DEFAULT);
-        XTools.cfgDef(CFG_FILE_APPEND, CFG_FILE_APPEND_DEFAULT);
-        XTools.cfgDef(CFG_FILE_LEVEL, CFG_FILE_LEVEL_DEFAULT);
+        XConfigTools.X_CONFIGS.cfgDef(CFG_HANDLERS, CFG_HANDLERS_DEFAULT);
+        XConfigTools.X_CONFIGS.cfgDef(CFG_FORMATTER, CFG_FORMATTER_DEFAULT);
+        XConfigTools.X_CONFIGS.cfgDef(CFG_CONSOLE_LEVEL, CFG_CONSOLE_LEVEL_DEFAULT);
+        XConfigTools.X_CONFIGS.cfgDef(CFG_FILE, CFG_FILE_DEFAULT);
+        XConfigTools.X_CONFIGS.cfgDef(CFG_FILE_APPEND, CFG_FILE_APPEND_DEFAULT);
+        XConfigTools.X_CONFIGS.cfgDef(CFG_FILE_LEVEL, CFG_FILE_LEVEL_DEFAULT);
     }
 
     /**
@@ -159,8 +159,12 @@ public class XLoggerImpl implements XLogger {
 
     @Override
     public void setLevel(String tag, String level) {
-        if (!XTools.strEmpty(tag) && !XTools.strEmpty(level)) {
-            levels.put(tag, strToLevel(level));
+        if (!XTools.strEmpty(tag)) {
+            if (!XTools.strEmpty(level)) {
+                levels.put(tag, strToLevel(level));
+            } else {
+                levels.remove(tag);
+            }
         }
     }
 
@@ -171,9 +175,7 @@ public class XLoggerImpl implements XLogger {
 
     @Override
     public void addHandler(Handler handler) {
-        if (handler instanceof JDKHandler) {
-            this.root.addHandler(((JDKHandler) handler).getHandler());
-        }
+        this.root.addHandler(new HHandler(handler));
     }
 
     @Override
@@ -181,8 +183,8 @@ public class XLoggerImpl implements XLogger {
         java.util.logging.Handler[] handlers = this.root.getHandlers();
         List<Handler> handlerList = new ArrayList<>(handlers.length);
         for (java.util.logging.Handler handler : handlers) {
-            if (handler instanceof Handler) {
-                handlerList.add((Handler) handler);
+            if (handler instanceof HHandler) {
+                handlerList.add(((HHandler) handler).handler);
             }
         }
         return handlerList.toArray(new Handler[0]);
@@ -195,6 +197,8 @@ public class XLoggerImpl implements XLogger {
         }
         if (levels.containsKey(tag)) {
             logger.setLevel(levels.get(tag));
+        } else {
+            logger.setLevel(Level.ALL);
         }
         return logger;
     }
@@ -271,13 +275,38 @@ public class XLoggerImpl implements XLogger {
         }
     }
 
-    public interface JDKHandler extends Handler {
-        void setHandler(java.util.logging.Handler handler);
+    private static class HHandler extends java.util.logging.Handler {
+        private final Handler handler;
 
-        java.util.logging.Handler getHandler();
+        public HHandler(Handler handler) {
+            this.handler = handler;
+        }
+
+        @Override
+        public void publish(LogRecord record) {
+            handler.record(XLoggerImpl.levelToStr(record.getLevel()), (String) record.getParameters()[0], record.getMessage());
+        }
+
+        @Override
+        public void flush() {
+        }
+
+        @Override
+        public void close() throws SecurityException {
+        }
+
+        @Override
+        public Level getLevel() {
+            return XLoggerImpl.strToLevel(handler.getLevel());
+        }
+
+        @Override
+        public synchronized void setLevel(Level newLevel) throws SecurityException {
+            handler.setLevel(XLoggerImpl.levelToStr(newLevel));
+        }
     }
 
-    public static class XConsoleHandler implements JDKHandler {
+    public static class XConsoleHandler implements Handler {
         private java.util.logging.Handler handler;
 
         public XConsoleHandler() {
@@ -302,19 +331,9 @@ public class XLoggerImpl implements XLogger {
             logRecord.setParameters(new Object[]{tag});
             handler.publish(logRecord);
         }
-
-        @Override
-        public void setHandler(java.util.logging.Handler handler) {
-            this.handler = handler;
-        }
-
-        @Override
-        public java.util.logging.Handler getHandler() {
-            return this.handler;
-        }
     }
 
-    public static class XFileHandler implements JDKHandler {
+    public static class XFileHandler implements Handler {
         private java.util.logging.Handler handler;
 
         public XFileHandler() {
@@ -343,16 +362,6 @@ public class XLoggerImpl implements XLogger {
             LogRecord logRecord = new LogRecord(XLoggerImpl.strToLevel(level), msg);
             logRecord.setParameters(new Object[]{tag});
             handler.publish(logRecord);
-        }
-
-        @Override
-        public void setHandler(java.util.logging.Handler handler) {
-            this.handler = handler;
-        }
-
-        @Override
-        public java.util.logging.Handler getHandler() {
-            return this.handler;
         }
     }
 }

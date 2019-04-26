@@ -1,6 +1,7 @@
 package me.xuxiaoxiao.xtools.common.http.executor.impl;
 
 import me.xuxiaoxiao.xtools.common.XTools;
+import me.xuxiaoxiao.xtools.common.config.XConfigTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 
 import java.io.*;
@@ -30,7 +31,7 @@ public final class XRequest implements XHttpExecutor.Request {
     public static final String METHOD_DELETE = "DELETE";
 
     static {
-        XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
+        XConfigTools.X_CONFIGS.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
     }
 
     /**

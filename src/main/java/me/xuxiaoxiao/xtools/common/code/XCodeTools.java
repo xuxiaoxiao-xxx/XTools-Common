@@ -1,6 +1,7 @@
 package me.xuxiaoxiao.xtools.common.code;
 
 import me.xuxiaoxiao.xtools.common.XTools;
+import me.xuxiaoxiao.xtools.common.config.XConfigTools;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,6 +30,10 @@ public final class XCodeTools {
     public static final String HASH_SHA256 = "SHA-256";
 
     private static final char[] HEX = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
+    static {
+        XConfigTools.X_CONFIGS.cfgDef(CFG_BUFFER, CFG_BUFFER_DEFAULT);
+    }
 
     private XCodeTools() {
     }
@@ -59,7 +64,7 @@ public final class XCodeTools {
     public static String hash(String algorithm, File file) throws IOException, NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
         try (FileInputStream fileInputStream = new FileInputStream(file); DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)) {
-            byte[] buffer = new byte[Integer.valueOf(XTools.cfgDef(CFG_BUFFER, CFG_BUFFER_DEFAULT))];
+            byte[] buffer = new byte[Integer.valueOf(XTools.cfgGet(CFG_BUFFER))];
             while (true) {
                 if (digestInputStream.read(buffer) <= 0) {
                     break;

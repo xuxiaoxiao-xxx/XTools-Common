@@ -23,7 +23,7 @@ public final class XHttpTools {
     public static final XHttpExecutor EXECUTOR;
 
     static {
-        XTools.cfgDef(XHttpTools.CFG_EXECUTOR, XHttpTools.CFG_EXECUTOR_DEFAULT);
+        XConfigTools.X_CONFIGS.cfgDef(XHttpTools.CFG_EXECUTOR, XHttpTools.CFG_EXECUTOR_DEFAULT);
 
         String executorStr = XTools.cfgGet(CFG_EXECUTOR);
         XHttpExecutor executor;
