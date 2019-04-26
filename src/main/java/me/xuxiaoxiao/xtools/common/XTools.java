@@ -600,6 +600,17 @@ public final class XTools {
     }
 
     /**
+     * 获取或设置配置信息
+     *
+     * @param key 配置键
+     * @param def 配置值为null时设置的默认值
+     * @return 当配置值为null时，将def设置为配置值并返回，否则返回原有的配置值并且不做任何更改
+     */
+    public static String cfgDef(String key, String def) {
+        return XConfigTools.X_CONFIGS.cfgDef(key, def);
+    }
+
+    /**
      * 监听配置信息
      *
      * @param prefix  配置键前缀
@@ -675,13 +686,5 @@ public final class XTools {
      */
     public static void logD(String tag, String detail, Object... args) {
         XLogTools.LOGGER.logD(tag, detail, args);
-    }
-
-    public static void main(String[] args) {
-        logD("aaa", "fafa");
-        XConfigTools.X_CONFIGS.cfgSet("me.xuxiaoxiao$xtools-common$log.level.aaa", "warning");
-        logD("aaa", "afasfa");
-        XConfigTools.X_CONFIGS.cfgRmv("me.xuxiaoxiao$xtools-common$log.level.aaa");
-        logW("aaa", "afasfafafffafa");
     }
 }
