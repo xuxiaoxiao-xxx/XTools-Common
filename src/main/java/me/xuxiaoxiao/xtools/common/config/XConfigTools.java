@@ -3,11 +3,21 @@ package me.xuxiaoxiao.xtools.common.config;
 import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 import me.xuxiaoxiao.xtools.common.config.configs.impl.XConfigsImpl;
 
+import java.io.IOException;
+
 /**
  * 配置工具，此工具被其他依赖，所以此工具不能使用其他工具
  */
 public final class XConfigTools {
     public static final XConfigs X_CONFIGS = new XConfigsImpl();
+
+    static {
+        try {
+            X_CONFIGS.cfgLoad("config.properties");
+        } catch (IOException e) {
+            System.err.println("读取默认配置文件[ config.properties ]失败");
+        }
+    }
 
     private XConfigTools() {
     }

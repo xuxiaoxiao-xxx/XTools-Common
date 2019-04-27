@@ -35,14 +35,6 @@ public class XLoggerImpl implements XLogger {
     public static final String CFG_FILE_LEVEL = XTools.CFG_PREFIX + "log.file.level";
     public static final String CFG_FILE_LEVEL_DEFAULT = "warning";
 
-    static {
-        XConfigTools.X_CONFIGS.cfgDef(CFG_HANDLERS, CFG_HANDLERS_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_FORMATTER, CFG_FORMATTER_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_CONSOLE_LEVEL, CFG_CONSOLE_LEVEL_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_FILE, CFG_FILE_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_FILE_APPEND, CFG_FILE_APPEND_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_FILE_LEVEL, CFG_FILE_LEVEL_DEFAULT);
-    }
 
     /**
      * jdk日志根记录器
@@ -244,8 +236,11 @@ public class XLoggerImpl implements XLogger {
     }
 
     private void defaultHandlers() {
-        for (String handlerClass : XTools.cfgGet(CFG_HANDLERS).split(",")) {
-            addHandler((Handler) XConfigTools.supply(handlerClass.trim()));
+        String handlersStr = XTools.cfgDef(CFG_HANDLERS, CFG_HANDLERS_DEFAULT);
+        if (!XTools.strBlank(handlersStr)) {
+            for (String handlerClass : handlersStr.split(",")) {
+                addHandler((Handler) XConfigTools.supply(handlerClass.trim()));
+            }
         }
     }
 
@@ -311,8 +306,8 @@ public class XLoggerImpl implements XLogger {
 
         public XConsoleHandler() {
             this.handler = new ConsoleHandler();
-            handler.setLevel(XLoggerImpl.strToLevel(XTools.cfgGet(CFG_CONSOLE_LEVEL)));
-            handler.setFormatter((Formatter) XConfigTools.supply(XTools.cfgGet(CFG_FORMATTER)));
+            handler.setLevel(XLoggerImpl.strToLevel(XTools.cfgDef(CFG_CONSOLE_LEVEL, CFG_CONSOLE_LEVEL_DEFAULT).trim()));
+            handler.setFormatter((Formatter) XConfigTools.supply(XTools.cfgDef(CFG_FORMATTER, CFG_FORMATTER_DEFAULT).trim()));
         }
 
         @Override
@@ -338,9 +333,9 @@ public class XLoggerImpl implements XLogger {
 
         public XFileHandler() {
             try {
-                this.handler = new FileHandler(XTools.cfgGet(CFG_FILE), Boolean.valueOf(XTools.cfgGet(CFG_FILE_APPEND)));
-                handler.setLevel(XLoggerImpl.strToLevel(XTools.cfgGet(CFG_FILE_LEVEL)));
-                handler.setFormatter((Formatter) XConfigTools.supply(XTools.cfgGet(CFG_FORMATTER)));
+                this.handler = new FileHandler(XTools.cfgDef(CFG_FILE, CFG_FILE_DEFAULT).trim(), Boolean.valueOf(XTools.cfgDef(CFG_FILE_APPEND, CFG_FILE_APPEND_DEFAULT).trim()));
+                handler.setLevel(XLoggerImpl.strToLevel(XTools.cfgDef(CFG_FILE_LEVEL, CFG_FILE_LEVEL_DEFAULT).trim()));
+                handler.setFormatter((Formatter) XConfigTools.supply(XTools.cfgDef(CFG_FORMATTER, CFG_FORMATTER_DEFAULT).trim()));
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException(e);

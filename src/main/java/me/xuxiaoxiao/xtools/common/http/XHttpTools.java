@@ -23,18 +23,7 @@ public final class XHttpTools {
     public static final XHttpExecutor EXECUTOR;
 
     static {
-        XConfigTools.X_CONFIGS.cfgDef(XHttpTools.CFG_EXECUTOR, XHttpTools.CFG_EXECUTOR_DEFAULT);
-
-        String executorStr = XTools.cfgGet(CFG_EXECUTOR);
-        XHttpExecutor executor;
-        try {
-            executor = XConfigTools.supply(executorStr);
-        } catch (Exception e) {
-            e.printStackTrace();
-            XTools.logW("XHttpExecutor:%s 初始化失败, 将使用默认的XHttpExecutorImpl", executorStr);
-            executor = new XHttpExecutorImpl();
-        }
-        EXECUTOR = executor;
+        EXECUTOR = XConfigTools.supply(XTools.cfgDef(XHttpTools.CFG_EXECUTOR, XHttpTools.CFG_EXECUTOR_DEFAULT).trim());
     }
 
     private XHttpTools() {
