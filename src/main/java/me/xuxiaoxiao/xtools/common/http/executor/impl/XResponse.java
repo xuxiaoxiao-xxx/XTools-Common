@@ -1,7 +1,6 @@
 package me.xuxiaoxiao.xtools.common.http.executor.impl;
 
 import me.xuxiaoxiao.xtools.common.XTools;
-import me.xuxiaoxiao.xtools.common.config.XConfigTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 
 import java.io.File;
@@ -14,10 +13,6 @@ import java.net.HttpURLConnection;
 public class XResponse implements XHttpExecutor.Response, AutoCloseable {
     public static final String CFG_RSP_CHARSET = XTools.CFG_PREFIX + "http.rspCharset";
     public static final String CFG_RSP_CHARSET_DEFAULT = "utf-8";
-
-    static {
-        XConfigTools.X_CONFIGS.cfgDef(CFG_RSP_CHARSET, CFG_RSP_CHARSET_DEFAULT);
-    }
 
     private final HttpURLConnection connection;
     private final InputStream stream;
@@ -39,7 +34,7 @@ public class XResponse implements XHttpExecutor.Response, AutoCloseable {
 
     @Override
     public String string() {
-        return string(XTools.cfgGet(CFG_RSP_CHARSET));
+        return string(XTools.cfgDef(CFG_RSP_CHARSET, CFG_RSP_CHARSET_DEFAULT).trim());
     }
 
     /**

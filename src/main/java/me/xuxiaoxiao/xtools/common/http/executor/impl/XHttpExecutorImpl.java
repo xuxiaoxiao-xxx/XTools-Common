@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.net.*;
 import java.security.SecureRandom;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -54,20 +53,6 @@ public class XHttpExecutorImpl implements XHttpExecutor {
     private HostnameVerifier hostnameVerifier;
     private SSLContext sslContext;
 
-    static {
-        XConfigTools.X_CONFIGS.cfgDef(CFG_CONNECT_TIMEOUT, CFG_CONNECT_TIMEOUT_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_READ_TIMEOUT, CFG_READ_TIMEOUT_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_FOLLOW_REDIRECT, CFG_FOLLOW_REDIRECT_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_CHUNK_LENGTH, CFG_CHUNK_LENGTH_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_COOKIE_MANAGER, CFG_COOKIE_MANAGER_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_INTERCEPTORS, CFG_INTERCEPTORS_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_HOSTNAME_VERIFIER, CFG_HOSTNAME_VERIFIER_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_SSL_ALGORITHM, CFG_SSL_ALGORITHM_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_SSL_KEY_MANAGERS, CFG_SSL_KEY_MANAGERS_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_SSL_TRUST_MANAGERS, CFG_SSL_TRUST_MANAGERS_DEFAULT);
-        XConfigTools.X_CONFIGS.cfgDef(CFG_SSL_SECURE_RANDOM, CFG_SSL_SECURE_RANDOM_DEFAULT);
-    }
-
     public XHttpExecutorImpl() {
         defaultConnectTimeout();
         defaultReadTimeout();
@@ -80,49 +65,38 @@ public class XHttpExecutorImpl implements XHttpExecutor {
     }
 
     public void defaultConnectTimeout() {
-        this.connectTimeout = Integer.valueOf(XTools.cfgGet(CFG_CONNECT_TIMEOUT));
+        this.connectTimeout = Integer.valueOf(XTools.cfgDef(CFG_CONNECT_TIMEOUT, CFG_CONNECT_TIMEOUT_DEFAULT).trim());
     }
 
     public void defaultReadTimeout() {
-        this.readTimeout = Integer.valueOf(XTools.cfgGet(CFG_READ_TIMEOUT));
+        this.readTimeout = Integer.valueOf(XTools.cfgDef(CFG_READ_TIMEOUT, CFG_READ_TIMEOUT_DEFAULT).trim());
     }
 
     public void defaultChunkLength() {
-        this.chunkLength = Integer.valueOf(XTools.cfgGet(CFG_CHUNK_LENGTH));
+        this.chunkLength = Integer.valueOf(XTools.cfgDef(CFG_CHUNK_LENGTH, CFG_CHUNK_LENGTH_DEFAULT).trim());
     }
 
     public void defaultFollowRedirect() {
-        this.followRedirect = Boolean.valueOf(XTools.cfgGet(CFG_FOLLOW_REDIRECT));
+        this.followRedirect = Boolean.valueOf(XTools.cfgDef(CFG_FOLLOW_REDIRECT, CFG_FOLLOW_REDIRECT_DEFAULT).trim());
     }
 
     private void defaultCookieManager() {
-        this.cookieManager = XConfigTools.supply(XTools.cfgGet(CFG_COOKIE_MANAGER));
-        CookieHandler.setDefault(this.cookieManager);
+        this.cookieManager = XConfigTools.supply(XTools.cfgDef(CFG_COOKIE_MANAGER, CFG_COOKIE_MANAGER_DEFAULT).trim());
     }
 
     private void defaultHostnameVerifier() {
-        String hostnameVerifierStr = XTools.cfgGet(CFG_HOSTNAME_VERIFIER);
-        try {
-            hostnameVerifier = XConfigTools.supply(hostnameVerifierStr);
-        } catch (Exception e) {
-            e.printStackTrace();
-            XTools.logW("HostnameVerifier:%s 初始化失败, 将使用默认的HostnameVerifier", hostnameVerifierStr);
-            hostnameVerifier = new XHostnameVerifier();
-        }
+        hostnameVerifier = XConfigTools.supply(XTools.cfgDef(CFG_HOSTNAME_VERIFIER, CFG_HOSTNAME_VERIFIER_DEFAULT).trim());
     }
 
     private void defaultInterceptors() {
-        String interceptorsStr = XTools.cfgGet(CFG_INTERCEPTORS);
-        if (!XTools.strEmpty(interceptorsStr)) {
-            List<XHttpExecutor.Interceptor> interceptorList = new LinkedList<>();
-            for (String str : interceptorsStr.split(",")) {
-                try {
-                    interceptorList.add((XHttpExecutor.Interceptor) XConfigTools.supply(str));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+        String interceptorsStr = XTools.cfgDef(CFG_INTERCEPTORS, CFG_INTERCEPTORS_DEFAULT);
+        if (!XTools.strBlank(interceptorsStr)) {
+            String[] array = interceptorsStr.split(",");
+            Interceptor[] interceptors = new Interceptor[array.length];
+            for (int i = 0; i < array.length; i++) {
+                interceptors[i] = XConfigTools.supply(array[i].trim());
             }
-            setInterceptors(interceptorList.toArray(new XHttpExecutor.Interceptor[0]));
+            setInterceptors(interceptors);
         } else {
             setInterceptors();
         }
@@ -130,44 +104,30 @@ public class XHttpExecutorImpl implements XHttpExecutor {
 
     private void defaultSSL() {
         try {
-            this.sslContext = SSLContext.getInstance(XTools.cfgGet(CFG_SSL_ALGORITHM));
+            this.sslContext = SSLContext.getInstance(XTools.cfgDef(CFG_SSL_ALGORITHM, CFG_SSL_ALGORITHM_DEFAULT));
+
             KeyManager[] keyManagers = null;
-            String keyManagersStr = XTools.cfgGet(CFG_SSL_KEY_MANAGERS);
-            if (!XTools.strEmpty(keyManagersStr)) {
-                List<KeyManager> keyManagerList = new LinkedList<>();
-                for (String str : keyManagersStr.split(",")) {
-                    try {
-                        keyManagerList.add((KeyManager) XConfigTools.supply(str));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+            String keyManagersStr = XTools.cfgDef(CFG_SSL_KEY_MANAGERS, CFG_SSL_KEY_MANAGERS_DEFAULT);
+            if (!XTools.strBlank(keyManagersStr)) {
+                String[] array = keyManagersStr.split(",");
+                keyManagers = new KeyManager[array.length];
+                for (int i = 0, len = array.length; i < len; i++) {
+                    keyManagers[i] = XConfigTools.supply(array[i].trim());
                 }
-                keyManagers = keyManagerList.toArray(new KeyManager[0]);
             }
 
             TrustManager[] trustManagers = null;
-            String trustManagersStr = XTools.cfgGet(CFG_SSL_TRUST_MANAGERS);
-            if (!XTools.strEmpty(trustManagersStr)) {
-                List<TrustManager> trustManagerList = new LinkedList<>();
-                for (String str : trustManagersStr.split(",")) {
-                    try {
-                        trustManagerList.add((TrustManager) XConfigTools.supply(str));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+            String trustManagersStr = XTools.cfgDef(CFG_SSL_TRUST_MANAGERS, CFG_SSL_TRUST_MANAGERS_DEFAULT);
+            if (!XTools.strBlank(trustManagersStr)) {
+                String[] array = trustManagersStr.split(",");
+                trustManagers = new TrustManager[array.length];
+                for (int i = 0, len = array.length; i < len; i++) {
+                    trustManagers[i] = XConfigTools.supply(array[i].trim());
                 }
-                trustManagers = trustManagerList.toArray(new TrustManager[0]);
             }
 
-            SecureRandom secureRandom = null;
-            String secureRandomStr = XTools.cfgGet(CFG_SSL_SECURE_RANDOM);
-            try {
-                if (!XTools.strEmpty(secureRandomStr)) {
-                    secureRandom = XConfigTools.supply(secureRandomStr);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            SecureRandom secureRandom = XConfigTools.supply(XTools.cfgDef(CFG_SSL_SECURE_RANDOM, CFG_SSL_SECURE_RANDOM_DEFAULT).trim());
+
             sslContext.init(keyManagers, trustManagers, secureRandom);
         } catch (Exception e) {
             e.printStackTrace();
