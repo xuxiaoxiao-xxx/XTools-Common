@@ -126,7 +126,11 @@ public class XHttpExecutorImpl implements XHttpExecutor {
                 }
             }
 
-            SecureRandom secureRandom = XConfigTools.supply(XTools.cfgDef(CFG_SSL_SECURE_RANDOM, CFG_SSL_SECURE_RANDOM_DEFAULT).trim());
+            SecureRandom secureRandom = null;
+            String secureRandomStr = XTools.cfgDef(CFG_SSL_SECURE_RANDOM, CFG_SSL_SECURE_RANDOM_DEFAULT).trim();
+            if (!XTools.strBlank(secureRandomStr)) {
+                secureRandom = XConfigTools.supply(secureRandomStr);
+            }
 
             sslContext.init(keyManagers, trustManagers, secureRandom);
         } catch (Exception e) {

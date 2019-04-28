@@ -68,7 +68,7 @@ Java开发基础工具集，陆续收录常用的java代码，令代码更加简
 #### 日志相关
 * 记录详细日志
 * 记录提醒日志
-* 记录告警日志
+* 记录警告日志
 * 记录错误日志
 
 ### Demo
@@ -77,12 +77,12 @@ Java开发基础工具集，陆续收录常用的java代码，令代码更加简
 <dependency>
     <groupId>me.xuxiaoxiao</groupId>
     <artifactId>xtools-common</artifactId>
-    <version>1.2.1</version>
+    <version>1.3.0</version>
 </dependency>
 ```
 * gradle依赖
 ```gradle
-implementation 'me.xuxiaoxiao:xtools-common:1.2.1'
+implementation 'me.xuxiaoxiao:xtools-common:1.3.0'
 ```
 使用示例
 ```java

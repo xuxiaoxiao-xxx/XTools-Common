@@ -23,8 +23,8 @@ public class XLogTools {
     public static final XLogger LOGGER;
 
     static {
-
         LOGGER = XConfigTools.supply(XTools.cfgDef(XLogTools.CFG_LOGGER, XLogTools.CFG_LOGGER_DEFAULT).trim());
+
         LOGGER.setLevel(XTools.cfgDef(XLogTools.CFG_LEVEL, XLogTools.CFG_LEVEL_DEFAULT));
         XConfigTools.X_CONFIGS.cfgIterate(new XConfigs.Iteration() {
 

@@ -2,8 +2,8 @@ package me.xuxiaoxiao.xtools.common.config.configs.impl;
 
 import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -21,8 +21,8 @@ public class XConfigsImpl extends Observable implements XConfigs {
     public void cfgSet(String key, String val) {
         Objects.requireNonNull(key, "配置键不能为null");
         Objects.requireNonNull(val, "配置值不能为null");
+        lock.lock();
         try {
-            lock.lock();
             Object valOld = configs.setProperty(key, val);
             if (!val.equals(valOld)) {
                 setChanged();
@@ -36,8 +36,8 @@ public class XConfigsImpl extends Observable implements XConfigs {
     @Override
     public String cfgRmv(String key) {
         Objects.requireNonNull(key, "配置键不能为null");
+        lock.lock();
         try {
-            lock.lock();
             Object value = configs.remove(key);
             if (value != null) {
                 setChanged();
@@ -55,8 +55,8 @@ public class XConfigsImpl extends Observable implements XConfigs {
     public String cfgDef(String key, String def) {
         Objects.requireNonNull(key, "配置键不能为null");
         Objects.requireNonNull(def, "配置值不能为null");
+        lock.lock();
         try {
-            lock.lock();
             if (configs.getProperty(key) == null) {
                 configs.setProperty(key, def);
                 setChanged();
@@ -72,10 +72,10 @@ public class XConfigsImpl extends Observable implements XConfigs {
 
     @Override
     public void cfgLoad(String file) throws IOException {
-        try (FileInputStream finStream = new FileInputStream(file)) {
-            lock.lock();
+        lock.lock();
+        try (InputStream inStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(file)) {
             Properties properties = new Properties();
-            properties.load(finStream);
+            properties.load(inStream);
             for (Map.Entry<Object, Object> entry : properties.entrySet()) {
                 cfgSet(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
             }
@@ -86,8 +86,8 @@ public class XConfigsImpl extends Observable implements XConfigs {
 
     @Override
     public void cfgIterate(Iteration iteration) {
+        lock.lock();
         try {
-            lock.lock();
             Iterator<Map.Entry<Object, Object>> iterator = configs.entrySet().iterator();
             while (iterator.hasNext()) {
                 Map.Entry<Object, Object> entry = iterator.next();
