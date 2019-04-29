@@ -590,6 +590,16 @@ public final class XTools {
     }
 
     /**
+     * 设置配置信息
+     *
+     * @param key 配置键
+     * @param val 配置值
+     */
+    public static void cfgSet(String key, String val) {
+        XConfigTools.X_CONFIGS.cfgSet(key, val);
+    }
+
+    /**
      * 获取配置信息值
      *
      * @param key 配置信息键名

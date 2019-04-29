@@ -266,7 +266,7 @@ public class XLoggerImpl implements XLogger {
         public String format(LogRecord record) {
             String time = XTools.dateFormat(TIME_FORMAT, new Date(record.getMillis()));
             String tag = (record.getParameters() == null || record.getParameters()[0] == null) ? "xlog" : String.valueOf(record.getParameters()[0]);
-            return String.format("%s | %s | %s | %s\n", time, levelChar(record.getLevel()), tag, record.getMessage());
+            return String.format("%s | %s | %s | %s | %s\n", time, levelChar(record.getLevel()), Thread.currentThread().getName(), tag, record.getMessage());
         }
     }
 
@@ -301,6 +301,9 @@ public class XLoggerImpl implements XLogger {
         }
     }
 
+    /**
+     * 控制台日志处理器
+     */
     public static class XConsoleHandler implements Handler {
         private java.util.logging.Handler handler;
 
@@ -328,6 +331,9 @@ public class XLoggerImpl implements XLogger {
         }
     }
 
+    /**
+     * 文件日志处理器
+     */
     public static class XFileHandler implements Handler {
         private java.util.logging.Handler handler;
 
