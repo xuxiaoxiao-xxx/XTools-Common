@@ -3,7 +3,7 @@ package me.xuxiaoxiao.xtools.common.config.configs.impl;
 import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -73,11 +73,14 @@ public class XConfigsImpl extends Observable implements XConfigs {
     @Override
     public void cfgLoad(String file) throws IOException {
         lock.lock();
-        try (InputStream inStream = Thread.currentThread().getContextClassLoader().getResourceAsStream(file)) {
-            Properties properties = new Properties();
-            properties.load(inStream);
-            for (Map.Entry<Object, Object> entry : properties.entrySet()) {
-                cfgSet(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+        try {
+            Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(file);
+            while (urls != null && urls.hasMoreElements()) {
+                Properties properties = new Properties();
+                properties.load(urls.nextElement().openStream());
+                for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+                    cfgSet(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+                }
             }
         } finally {
             lock.unlock();
