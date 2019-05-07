@@ -184,7 +184,7 @@ public interface XHttpExecutor {
     /**
      * http响应
      */
-    interface Response {
+    interface Response extends AutoCloseable {
 
         /**
          * 获取输入流

@@ -1,7 +1,7 @@
 # XTools-Common
 Java开发基础工具集，陆续收录常用的java代码，令代码更加简洁美观
 
-## 1.3.0 正式发布
+## 1.3.X 正式发布
 #### 强大的配置管理工具
 * XTools默认加载classpath下所有的config.properties配置文件
 * XTools支持使用代码读取和修改配置信息
@@ -86,12 +86,12 @@ Java开发基础工具集，陆续收录常用的java代码，令代码更加简
 <dependency>
     <groupId>me.xuxiaoxiao</groupId>
     <artifactId>xtools-common</artifactId>
-    <version>1.3.0</version>
+    <version>1.3.1</version>
 </dependency>
 ```
 * gradle依赖
 ```gradle
-implementation 'me.xuxiaoxiao:xtools-common:1.3.0'
+implementation 'me.xuxiaoxiao:xtools-common:1.3.1'
 ```
 使用示例
 ```java
