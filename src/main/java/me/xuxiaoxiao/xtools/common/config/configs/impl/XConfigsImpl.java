@@ -2,6 +2,8 @@ package me.xuxiaoxiao.xtools.common.config.configs.impl;
 
 import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
@@ -74,10 +76,18 @@ public class XConfigsImpl extends Observable implements XConfigs {
     public void cfgLoad(String file) throws IOException {
         lock.lock();
         try {
-            Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(file);
+            Enumeration<URL> urls = XConfigsImpl.class.getClassLoader().getResources(file);
             while (urls != null && urls.hasMoreElements()) {
                 Properties properties = new Properties();
                 properties.load(urls.nextElement().openStream());
+                for (Map.Entry<Object, Object> entry : properties.entrySet()) {
+                    cfgSet(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
+                }
+            }
+            File config = new File(file);
+            if (config.exists() && !config.isDirectory() && config.canRead()) {
+                Properties properties = new Properties();
+                properties.load(new FileInputStream(config));
                 for (Map.Entry<Object, Object> entry : properties.entrySet()) {
                     cfgSet(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
                 }
