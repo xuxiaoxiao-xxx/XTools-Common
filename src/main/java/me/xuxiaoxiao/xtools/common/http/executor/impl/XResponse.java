@@ -10,7 +10,7 @@ import java.net.HttpURLConnection;
 /**
  * HTTP响应类，提供了便捷的方法将输入流转换成字符串或文件
  */
-public class XResponse implements XHttpExecutor.Response, AutoCloseable {
+public class XResponse implements XHttpExecutor.Response {
     public static final String CFG_RSP_CHARSET = XTools.CFG_PREFIX + "http.rspCharset";
     public static final String CFG_RSP_CHARSET_DEFAULT = "utf-8";
 
@@ -30,6 +30,11 @@ public class XResponse implements XHttpExecutor.Response, AutoCloseable {
     @Override
     public InputStream stream() {
         return this.stream;
+    }
+
+    @Override
+    public String string() {
+        return string(XTools.cfgDef(CFG_RSP_CHARSET, CFG_RSP_CHARSET_DEFAULT).trim());
     }
 
     /**

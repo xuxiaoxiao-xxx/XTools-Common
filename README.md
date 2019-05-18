@@ -1,44 +1,50 @@
 # XTools-Common
 Java开发基础工具集，陆续收录常用的java代码，令代码更加简洁美观
 
-## 静态公共工具
-每种工具都持有一个静态化的实例，XTools类通过使用这些静态的实例，提供了开箱即用的静态工具方法。
+## 1.3.X 正式发布
+#### 强大的配置管理工具
+* XTools默认加载classpath下所有的config.properties配置文件
+* XTools支持使用代码读取和修改配置信息
+* XTools提供了监听配置配置变化的功能
 
-#### 静态公共工具配置
-
-如果想要对这些静态的实例进行配置，则需要在classpath下新建一个config.properties文件。并在里面填写相应的配置项即可。
-
+各工具支持的配置的项和默认值都在各个工具类或实现类中以"CFG_"开头的常量定义。
 一般格式为：**groupId$artifactId$configKey=configValue**
 
-可以配置的项和默认值都在各个工具类中以"CFG_"开头的常量定义。
+#### 全新设计的日志工具
+* 支持统一设置日志记录等级
+* 支持按照tag设置日志记录等级
+* 支持按照日志处理器设置日志记录等级
 
-## 工具类实例化
-部分可配置性强的工具类都可以实例化后使用，实例化时可以传入配置类。以便和静态公共工具分开使用。
+#### 支持拦截器的HTTP工具
+* HTTP请求工具支持设置拦截器，以统一预处理或后处理http请求
 
-如果实例化时没有传入配置类，则默认使用公共的配置项进行实例化。
-
-## 静态公共工具目录
+## 静态工具方法目录
 #### 编码解码
 * 字符串和文件的MD5散列
 * 字符串和文件的SHA1散列
+
 #### HTTP相关
 * http get请求
 * http post请求
 * http put请求
 * http delete请求
+
 #### 字符串相关
 * 判断字符串是否为null或空
 * 判断字符串是否为空白串
 * 连接集合中的字符串
 * 连接映射中的字符串
 * 将字符串写入文件
+
 #### 文件相关
 * 将文件读取成字符串
 * 将文件复制到另一文件
+
 #### 流相关
 * 将流读取成字符串
 * 将流读取成文件
 * 将流读取到另一个流中
+
 #### 日期相关
 * 获取某天00:00:00时刻的Date对象
 * 判断某天是工作日、公休日还是节假日
@@ -57,18 +63,21 @@ Java开发基础工具集，陆续收录常用的java代码，令代码更加简
 * 判断某月是一年的第几月
 * 阳历转农历
 * 农历转阳历
+
 #### 环境相关
 * 判断是否是Windows
 * 判断是否是Linux
 * 判断是否是MacOS
 * 判断是否是MacOSX
+
 #### 配置相关
 * 设置配置信息
 * 读取配置信息
+
 #### 日志相关
 * 记录详细日志
 * 记录提醒日志
-* 记录告警日志
+* 记录警告日志
 * 记录错误日志
 
 ### Demo
@@ -77,12 +86,12 @@ Java开发基础工具集，陆续收录常用的java代码，令代码更加简
 <dependency>
     <groupId>me.xuxiaoxiao</groupId>
     <artifactId>xtools-common</artifactId>
-    <version>1.2.1</version>
+    <version>1.3.1</version>
 </dependency>
 ```
 * gradle依赖
 ```gradle
-implementation 'me.xuxiaoxiao:xtools-common:1.2.1'
+implementation 'me.xuxiaoxiao:xtools-common:1.3.1'
 ```
 使用示例
 ```java
@@ -113,7 +122,7 @@ public class Test {
         String joinStrWithComma = XTools.strJoin(Arrays.asList("A", "B", "C"), ",");
         
         //
-        //判断今天是否是节假日（农历节日仅支持2000年-今年）
+        //判断今天是否是节假日（仅支持2000年-今年）
         boolean isTodayHoliday = XTools.dateType(new Date()) == XTimeTools.HOLIDAY;
         
         //获取下周一的Date对象

@@ -29,10 +29,6 @@ public final class XRequest implements XHttpExecutor.Request {
     public static final String METHOD_PUT = "PUT";
     public static final String METHOD_DELETE = "DELETE";
 
-    static {
-        XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
-    }
-
     /**
      * 请求编码方式
      */
@@ -123,7 +119,7 @@ public final class XRequest implements XHttpExecutor.Request {
     }
 
     public void defaultCharset() {
-        this.charset = XTools.cfgGet(CFG_REQ_CHARSET);
+        this.charset = XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT).trim();
     }
 
     public void setCharset(String charset) {
@@ -417,7 +413,7 @@ public final class XRequest implements XHttpExecutor.Request {
         }
 
         public String charset() {
-            return XTools.cfgGet(CFG_REQ_CHARSET);
+            return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
         }
 
         @Override
@@ -484,7 +480,7 @@ public final class XRequest implements XHttpExecutor.Request {
         }
 
         public String charset() {
-            return XTools.cfgGet(CFG_REQ_CHARSET);
+            return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
         }
 
         @Override
@@ -528,7 +524,7 @@ public final class XRequest implements XHttpExecutor.Request {
             public final String charset;
 
             public Part(String name, Object value) {
-                this(name, value, XTools.cfgGet(CFG_REQ_CHARSET));
+                this(name, value, XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT));
             }
 
             public Part(String name, Object value, String charset) {
@@ -593,7 +589,7 @@ public final class XRequest implements XHttpExecutor.Request {
         }
 
         public String charset() {
-            return XTools.cfgGet(CFG_REQ_CHARSET);
+            return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
         }
 
         @Override
@@ -623,7 +619,7 @@ public final class XRequest implements XHttpExecutor.Request {
         }
 
         public String charset() {
-            return XTools.cfgGet(CFG_REQ_CHARSET);
+            return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
         }
 
         @Override

@@ -2,6 +2,7 @@ package me.xuxiaoxiao.xtools.common;
 
 import me.xuxiaoxiao.xtools.common.code.XCodeTools;
 import me.xuxiaoxiao.xtools.common.config.XConfigTools;
+import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.log.XLogTools;
@@ -589,34 +590,44 @@ public final class XTools {
     }
 
     /**
+     * 设置配置信息
+     *
+     * @param key 配置键
+     * @param val 配置值
+     */
+    public static void cfgSet(String key, String val) {
+        XConfigTools.X_CONFIGS.cfgSet(key, val);
+    }
+
+    /**
      * 获取配置信息值
      *
      * @param key 配置信息键名
      * @return 配置信息值
      */
     public static String cfgGet(String key) {
-        return XConfigTools.cfgGet(key);
+        return XConfigTools.X_CONFIGS.cfgGet(key);
     }
 
     /**
      * 获取或设置配置信息
      *
-     * @param key 配置信息键名
-     * @param def 配置信息为null时设置的默认值
-     * @return 当配置信息值为null时，将def设置为配置信息的值并返回，否则返回原有的配置信息值并且不做任何更改
+     * @param key 配置键
+     * @param def 配置值为null时设置的默认值
+     * @return 当配置值为null时，将def设置为配置值并返回，否则返回原有的配置值并且不做任何更改
      */
     public static String cfgDef(String key, String def) {
-        return XConfigTools.cfgDef(key, def);
+        return XConfigTools.X_CONFIGS.cfgDef(key, def);
     }
 
     /**
-     * 设置配置信息
+     * 监听配置信息
      *
-     * @param key 配置信息键名
-     * @param val 配置信息值
+     * @param prefix  配置键前缀
+     * @param watcher 配置信息监听器
      */
-    public static void cfgSet(String key, String val) {
-        XConfigTools.cfgSet(key, val);
+    public static void cfgWatch(String prefix, XConfigs.Watcher watcher) {
+        XConfigTools.X_CONFIGS.watcherAdd(prefix, watcher);
     }
 
     /**
