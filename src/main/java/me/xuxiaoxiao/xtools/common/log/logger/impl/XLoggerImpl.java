@@ -15,27 +15,19 @@ import java.util.logging.*;
  * 默认的JDK日志记录器实现类
  */
 public class XLoggerImpl implements XLogger {
-    private static final String TAG = "xlog";
-
     public static final String CFG_HANDLERS = XTools.CFG_PREFIX + "log.handlers";
     public static final String CFG_HANDLERS_DEFAULT = XLoggerImpl.XConsoleHandler.class.getName() + "," + XLoggerImpl.XFileHandler.class.getName();
-
     public static final String CFG_FORMATTER = XTools.CFG_PREFIX + "log.formatter";
     public static final String CFG_FORMATTER_DEFAULT = XLoggerImpl.XLogFormatter.class.getName();
-
     public static final String CFG_CONSOLE_LEVEL = XTools.CFG_PREFIX + "log.console.level";
     public static final String CFG_CONSOLE_LEVEL_DEFAULT = "detail";
-
     public static final String CFG_FILE = XTools.CFG_PREFIX + "log.file";
     public static final String CFG_FILE_DEFAULT = "xlogger.log";
-
     public static final String CFG_FILE_APPEND = XTools.CFG_PREFIX + "log.file.append";
     public static final String CFG_FILE_APPEND_DEFAULT = "true";
-
     public static final String CFG_FILE_LEVEL = XTools.CFG_PREFIX + "log.file.level";
     public static final String CFG_FILE_LEVEL_DEFAULT = "warning";
-
-
+    private static final String TAG = "xlog";
     /**
      * jdk日志根记录器
      */
@@ -49,6 +41,46 @@ public class XLoggerImpl implements XLogger {
     public XLoggerImpl() {
         this.root.setUseParentHandlers(false);
         defaultHandlers();
+    }
+
+    private static String buildMsg(Throwable throwable, String msg, Object... args) {
+        StringBuilder sbMsg = new StringBuilder(String.format(msg, args));
+        if (throwable != null) {
+            sbMsg.append('\n').append(throwable.getMessage());
+            for (StackTraceElement element : throwable.getStackTrace()) {
+                sbMsg.append('\n').append(element.toString());
+            }
+        }
+        return sbMsg.toString();
+    }
+
+    private static Level strToLevel(String level) {
+        switch (level) {
+            case XLogger.LEVEL_OFF:
+                return Level.OFF;
+            case XLogger.LEVEL_ERROR:
+                return Level.SEVERE;
+            case XLogger.LEVEL_WARNING:
+                return Level.WARNING;
+            case XLogger.LEVEL_NOTICE:
+                return Level.INFO;
+            default:
+                return Level.ALL;
+        }
+    }
+
+    private static String levelToStr(Level level) {
+        if (level.equals(Level.OFF)) {
+            return XLogger.LEVEL_OFF;
+        } else if (level.equals(Level.SEVERE)) {
+            return XLogger.LEVEL_ERROR;
+        } else if (level.equals(Level.WARNING)) {
+            return XLogger.LEVEL_WARNING;
+        } else if (level.equals(Level.INFO)) {
+            return XLogger.LEVEL_NOTICE;
+        } else {
+            return XLogger.LEVEL_DETAIL;
+        }
     }
 
     /**
@@ -140,13 +172,13 @@ public class XLoggerImpl implements XLogger {
     }
 
     @Override
-    public void setLevel(String level) {
-        this.root.setLevel(strToLevel(level));
+    public String getLevel() {
+        return levelToStr(this.root.getLevel());
     }
 
     @Override
-    public String getLevel() {
-        return levelToStr(this.root.getLevel());
+    public void setLevel(String level) {
+        this.root.setLevel(strToLevel(level));
     }
 
     @Override
@@ -193,46 +225,6 @@ public class XLoggerImpl implements XLogger {
             logger.setLevel(Level.ALL);
         }
         return logger;
-    }
-
-    private static String buildMsg(Throwable throwable, String msg, Object... args) {
-        StringBuilder sbMsg = new StringBuilder(String.format(msg, args));
-        if (throwable != null) {
-            sbMsg.append('\n').append(throwable.getMessage());
-            for (StackTraceElement element : throwable.getStackTrace()) {
-                sbMsg.append('\n').append(element.toString());
-            }
-        }
-        return sbMsg.toString();
-    }
-
-    private static Level strToLevel(String level) {
-        switch (level) {
-            case XLogger.LEVEL_OFF:
-                return Level.OFF;
-            case XLogger.LEVEL_ERROR:
-                return Level.SEVERE;
-            case XLogger.LEVEL_WARNING:
-                return Level.WARNING;
-            case XLogger.LEVEL_NOTICE:
-                return Level.INFO;
-            default:
-                return Level.ALL;
-        }
-    }
-
-    private static String levelToStr(Level level) {
-        if (level.equals(Level.OFF)) {
-            return XLogger.LEVEL_OFF;
-        } else if (level.equals(Level.SEVERE)) {
-            return XLogger.LEVEL_ERROR;
-        } else if (level.equals(Level.WARNING)) {
-            return XLogger.LEVEL_WARNING;
-        } else if (level.equals(Level.INFO)) {
-            return XLogger.LEVEL_NOTICE;
-        } else {
-            return XLogger.LEVEL_DETAIL;
-        }
     }
 
     private void defaultHandlers() {
@@ -314,13 +306,13 @@ public class XLoggerImpl implements XLogger {
         }
 
         @Override
-        public void setLevel(String level) {
-            handler.setLevel(XLoggerImpl.strToLevel(level));
+        public String getLevel() {
+            return XLoggerImpl.levelToStr(handler.getLevel());
         }
 
         @Override
-        public String getLevel() {
-            return XLoggerImpl.levelToStr(handler.getLevel());
+        public void setLevel(String level) {
+            handler.setLevel(XLoggerImpl.strToLevel(level));
         }
 
         @Override
@@ -349,13 +341,13 @@ public class XLoggerImpl implements XLogger {
         }
 
         @Override
-        public void setLevel(String level) {
-            handler.setLevel(XLoggerImpl.strToLevel(level));
+        public String getLevel() {
+            return XLoggerImpl.levelToStr(handler.getLevel());
         }
 
         @Override
-        public String getLevel() {
-            return XLoggerImpl.levelToStr(handler.getLevel());
+        public void setLevel(String level) {
+            handler.setLevel(XLoggerImpl.strToLevel(level));
         }
 
         @Override

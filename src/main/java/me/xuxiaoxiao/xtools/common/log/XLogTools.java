@@ -15,12 +15,11 @@ public class XLogTools {
 
     public static final String CFG_LEVEL = XTools.CFG_PREFIX + "log.level";
     public static final String CFG_LEVEL_DEFAULT = "detail";
-
-    private static final String TAG_LEVEL_PREFIX = CFG_LEVEL + ".";
     /**
      * 默认日志记录器
      */
     public static final XLogger LOGGER;
+    private static final String TAG_LEVEL_PREFIX = CFG_LEVEL + ".";
 
     static {
         LOGGER = XConfigTools.supply(XTools.cfgDef(XLogTools.CFG_LOGGER, XLogTools.CFG_LOGGER_DEFAULT).trim());

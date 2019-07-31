@@ -91,18 +91,18 @@ public interface XLogger {
     void logD(String tag, Throwable throwable, String detail, Object... args);
 
     /**
-     * 设置根节点日志等级
-     *
-     * @param level 根节点日志等级
-     */
-    void setLevel(String level);
-
-    /**
      * 获取根节点日志等级
      *
      * @return 根节点日志等级
      */
     String getLevel();
+
+    /**
+     * 设置根节点日志等级
+     *
+     * @param level 根节点日志等级
+     */
+    void setLevel(String level);
 
     /**
      * 设置某个tag及其子级的日志等级
@@ -115,7 +115,8 @@ public interface XLogger {
     /**
      * 获取某个tag及其子级的日志等级
      *
-     * @return 根节点日志等级
+     * @param tag tag标签
+     * @return 某个tag及其子级的日志等级
      */
     String getLevel(String tag);
 
@@ -139,18 +140,18 @@ public interface XLogger {
     interface Handler {
 
         /**
-         * 设置处理器的处理等级
-         *
-         * @param level 处理等级
-         */
-        void setLevel(String level);
-
-        /**
          * 获取处理器的处理等级
          *
          * @return 处理等级
          */
         String getLevel();
+
+        /**
+         * 设置处理器的处理等级
+         *
+         * @param level 处理等级
+         */
+        void setLevel(String level);
 
         /**
          * 日志处理方法

@@ -13,13 +13,6 @@ import java.util.List;
  */
 public interface XHttpExecutor {
     /**
-     * 设置连接超时时间
-     *
-     * @param timeout 连接超时时间
-     */
-    void setConnectTimeout(int timeout);
-
-    /**
      * 获取连接超时时间
      *
      * @return 连接超时时间
@@ -27,11 +20,11 @@ public interface XHttpExecutor {
     int getConnectTimeout();
 
     /**
-     * 设置读取超时时间
+     * 设置连接超时时间
      *
-     * @param timeout 读取超时时间
+     * @param timeout 连接超时时间
      */
-    void setReadTimeout(int timeout);
+    void setConnectTimeout(int timeout);
 
     /**
      * 获取读取超时时间
@@ -39,6 +32,13 @@ public interface XHttpExecutor {
      * @return 读取超时时间
      */
     int getReadTimeout();
+
+    /**
+     * 设置读取超时时间
+     *
+     * @param timeout 读取超时时间
+     */
+    void setReadTimeout(int timeout);
 
     /**
      * 添加cookie
@@ -77,18 +77,18 @@ public interface XHttpExecutor {
     void rmvCookies();
 
     /**
-     * 设置请求拦截器
-     *
-     * @param interceptors 拦截器
-     */
-    void setInterceptors(Interceptor... interceptors);
-
-    /**
      * 获取请求拦截器
      *
      * @return 请求拦截器
      */
     Interceptor[] getInterceptors();
+
+    /**
+     * 设置请求拦截器
+     *
+     * @param interceptors 拦截器
+     */
+    void setInterceptors(Interceptor... interceptors);
 
     /**
      * 执行http请求
@@ -123,13 +123,6 @@ public interface XHttpExecutor {
      */
     interface Request {
         /**
-         * 设置请求方法
-         *
-         * @param method 请求方法
-         */
-        void setMethod(String method);
-
-        /**
          * 获取请求方法
          *
          * @return 请求方法
@@ -137,11 +130,11 @@ public interface XHttpExecutor {
         String getMethod();
 
         /**
-         * 设置请求url
+         * 设置请求方法
          *
-         * @param url 请求url
+         * @param method 请求方法
          */
-        void setUrl(String url);
+        void setMethod(String method);
 
         /**
          * 获取请求url
@@ -149,6 +142,13 @@ public interface XHttpExecutor {
          * @return 请求url
          */
         String getUrl();
+
+        /**
+         * 设置请求url
+         *
+         * @param url 请求url
+         */
+        void setUrl(String url);
 
         /**
          * 设置请求头部
@@ -167,18 +167,18 @@ public interface XHttpExecutor {
         List<KeyValue> getHeaders();
 
         /**
-         * 设置请求体
-         *
-         * @param content 请求体
-         */
-        void setContent(Content content);
-
-        /**
          * 获取请求体
          *
          * @return 请求体信息
          */
         Content getContent();
+
+        /**
+         * 设置请求体
+         *
+         * @param content 请求体
+         */
+        void setContent(Content content);
     }
 
     /**
@@ -225,6 +225,7 @@ public interface XHttpExecutor {
          * 请求体的MIME类型
          *
          * @return 请求体的MIME类型
+         * @throws IOException IO异常
          */
         String contentType() throws IOException;
 
@@ -232,6 +233,7 @@ public interface XHttpExecutor {
          * 请求体的长度，如果不确定长度可以返回-1，这将使用chunked模式传输
          *
          * @return 请求体的长度
+         * @throws IOException IO异常
          */
         long contentLength() throws IOException;
 

@@ -139,23 +139,23 @@ public class XHttpExecutorImpl implements XHttpExecutor {
     }
 
     @Override
-    public void setConnectTimeout(int timeout) {
-        this.connectTimeout = timeout;
-    }
-
-    @Override
     public int getConnectTimeout() {
         return this.connectTimeout;
     }
 
     @Override
-    public void setReadTimeout(int timeout) {
-        this.readTimeout = timeout;
+    public void setConnectTimeout(int timeout) {
+        this.connectTimeout = timeout;
     }
 
     @Override
     public int getReadTimeout() {
         return this.readTimeout;
+    }
+
+    @Override
+    public void setReadTimeout(int timeout) {
+        this.readTimeout = timeout;
     }
 
     @Override
@@ -183,25 +183,20 @@ public class XHttpExecutorImpl implements XHttpExecutor {
         this.cookieManager.getCookieStore().removeAll();
     }
 
-    public void setChunkLength(int chunkLength) {
-        this.chunkLength = chunkLength;
-    }
-
     public int getChunkLength() {
         return this.chunkLength;
     }
 
-    public void setFollowRedirect(boolean followRedirect) {
-        this.followRedirect = followRedirect;
+    public void setChunkLength(int chunkLength) {
+        this.chunkLength = chunkLength;
     }
 
     public boolean getFollowRedirect() {
         return this.followRedirect;
     }
 
-    @Override
-    public void setInterceptors(Interceptor... interceptors) {
-        this.interceptors = interceptors;
+    public void setFollowRedirect(boolean followRedirect) {
+        this.followRedirect = followRedirect;
     }
 
     @Override
@@ -209,20 +204,25 @@ public class XHttpExecutorImpl implements XHttpExecutor {
         return this.interceptors;
     }
 
-    public void setSSLContext(SSLContext sslContext) {
-        this.sslContext = sslContext;
+    @Override
+    public void setInterceptors(Interceptor... interceptors) {
+        this.interceptors = interceptors;
     }
 
     public SSLContext getSSLContext() {
         return this.sslContext;
     }
 
-    public void setHostnameVerifier(HostnameVerifier hostnameVerifier) {
-        this.hostnameVerifier = hostnameVerifier;
+    public void setSSLContext(SSLContext sslContext) {
+        this.sslContext = sslContext;
     }
 
     public HostnameVerifier getHostnameVerifier() {
         return this.hostnameVerifier;
+    }
+
+    public void setHostnameVerifier(HostnameVerifier hostnameVerifier) {
+        this.hostnameVerifier = hostnameVerifier;
     }
 
     protected HttpURLConnection connect(Request request) throws Exception {

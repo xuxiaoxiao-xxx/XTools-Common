@@ -5,6 +5,7 @@ import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.locks.Lock;
@@ -73,13 +74,13 @@ public class XConfigsImpl extends Observable implements XConfigs {
     }
 
     @Override
-    public void cfgLoad(String file) throws IOException {
+    public void cfgLoad(String file, String chaset) throws IOException {
         lock.lock();
         try {
             Enumeration<URL> urls = XConfigsImpl.class.getClassLoader().getResources(file);
             while (urls != null && urls.hasMoreElements()) {
                 Properties properties = new Properties();
-                properties.load(urls.nextElement().openStream());
+                properties.load(new InputStreamReader(urls.nextElement().openStream(), "utf-8"));
                 for (Map.Entry<Object, Object> entry : properties.entrySet()) {
                     cfgSet(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
                 }
@@ -87,7 +88,7 @@ public class XConfigsImpl extends Observable implements XConfigs {
             File config = new File(file);
             if (config.exists() && !config.isDirectory() && config.canRead()) {
                 Properties properties = new Properties();
-                properties.load(new FileInputStream(config));
+                properties.load(new InputStreamReader(new FileInputStream(config)));
                 for (Map.Entry<Object, Object> entry : properties.entrySet()) {
                     cfgSet(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
                 }

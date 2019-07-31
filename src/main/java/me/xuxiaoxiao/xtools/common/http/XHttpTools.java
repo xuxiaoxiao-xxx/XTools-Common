@@ -32,7 +32,8 @@ public final class XHttpTools {
     /**
      * 使用给定的请求选项进行HTTP请求
      *
-     * @param request HTTP请求
+     * @param executor http请求执行器
+     * @param request  HTTP请求
      * @return HTTP响应
      */
     public static XHttpExecutor.Response http(XHttpExecutor executor, XHttpExecutor.Request request) {
@@ -46,7 +47,8 @@ public final class XHttpTools {
     /**
      * 执行http请求
      *
-     * @param request 请求参数
+     * @param executor http请求执行器
+     * @param request  请求参数
      * @return 请求结果
      * @throws Exception 请求过程中可能会发生异常
      */

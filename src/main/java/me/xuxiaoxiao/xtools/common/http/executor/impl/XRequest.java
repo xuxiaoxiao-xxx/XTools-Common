@@ -122,12 +122,12 @@ public final class XRequest implements XHttpExecutor.Request {
         this.charset = XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT).trim();
     }
 
-    public void setCharset(String charset) {
-        this.charset = charset;
-    }
-
     public String getCharset() {
         return this.charset;
+    }
+
+    public void setCharset(String charset) {
+        this.charset = charset;
     }
 
     /**
@@ -264,13 +264,6 @@ public final class XRequest implements XHttpExecutor.Request {
         return this;
     }
 
-    @Override
-    public void setMethod(String method) {
-        if (method.equals(METHOD_GET) || method.equals(METHOD_POST) || method.equals(METHOD_DELETE) || method.equals(METHOD_PUT)) {
-            this.requestMethod = method;
-        }
-    }
-
     /**
      * 获得HTTP请求的请求方法
      *
@@ -279,6 +272,31 @@ public final class XRequest implements XHttpExecutor.Request {
     @Override
     public String getMethod() {
         return this.requestMethod;
+    }
+
+    @Override
+    public void setMethod(String method) {
+        if (method.equals(METHOD_GET) || method.equals(METHOD_POST) || method.equals(METHOD_DELETE) || method.equals(METHOD_PUT)) {
+            this.requestMethod = method;
+        }
+    }
+
+    /**
+     * 获得HTTP请求的请求url，如果有请求地址参数则自动拼接成带参数的url
+     *
+     * @return HTTP请求的请求url
+     */
+    @Override
+    public String getUrl() {
+        try {
+            if (this.requestQueries != null) {
+                return String.format("%s?%s", this.requestUrl, kvJoin(this.requestQueries, charset));
+            } else {
+                return this.requestUrl;
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("生成请求url时出错");
+        }
     }
 
     @Override
@@ -302,24 +320,6 @@ public final class XRequest implements XHttpExecutor.Request {
             }
         } else {
             this.requestUrl = url;
-        }
-    }
-
-    /**
-     * 获得HTTP请求的请求url，如果有请求地址参数则自动拼接成带参数的url
-     *
-     * @return HTTP请求的请求url
-     */
-    @Override
-    public String getUrl() {
-        try {
-            if (this.requestQueries != null) {
-                return String.format("%s?%s", this.requestUrl, kvJoin(this.requestQueries, charset));
-            } else {
-                return this.requestUrl;
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException("生成请求url时出错");
         }
     }
 
@@ -366,12 +366,6 @@ public final class XRequest implements XHttpExecutor.Request {
         return this.requestHeaders;
     }
 
-    @Override
-    public void setContent(XHttpExecutor.Content content) {
-        Objects.requireNonNull(content);
-        this.requestContent = content;
-    }
-
     /**
      * 获得HTTP请求的请求体
      *
@@ -380,6 +374,12 @@ public final class XRequest implements XHttpExecutor.Request {
     @Override
     public XHttpExecutor.Content getContent() {
         return this.requestContent;
+    }
+
+    @Override
+    public void setContent(XHttpExecutor.Content content) {
+        Objects.requireNonNull(content);
+        this.requestContent = content;
     }
 
     /**

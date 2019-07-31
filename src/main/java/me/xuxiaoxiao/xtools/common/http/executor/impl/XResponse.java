@@ -23,6 +23,15 @@ public class XResponse implements XHttpExecutor.Response {
     }
 
     /**
+     * 获取Http连接
+     *
+     * @return Http连接
+     */
+    public HttpURLConnection connection() {
+        return this.connection;
+    }
+
+    /**
      * 获取返回的输入流
      *
      * @return 连接的输入流，记得使用XResponse实例的close()方法关闭输入流和连接

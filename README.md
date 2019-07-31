@@ -86,12 +86,12 @@ Java开发基础工具集，陆续收录常用的java代码，令代码更加简
 <dependency>
     <groupId>me.xuxiaoxiao</groupId>
     <artifactId>xtools-common</artifactId>
-    <version>1.3.1</version>
+    <version>1.3.2</version>
 </dependency>
 ```
 * gradle依赖
 ```gradle
-implementation 'me.xuxiaoxiao:xtools-common:1.3.1'
+implementation 'me.xuxiaoxiao:xtools-common:1.3.2'
 ```
 使用示例
 ```java

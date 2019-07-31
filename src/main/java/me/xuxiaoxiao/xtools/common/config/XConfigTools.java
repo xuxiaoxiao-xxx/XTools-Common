@@ -13,7 +13,7 @@ public final class XConfigTools {
 
     static {
         try {
-            X_CONFIGS.cfgLoad("config.properties");
+            X_CONFIGS.cfgLoad("config.properties", "utf-8");
         } catch (IOException e) {
             System.err.println("读取默认配置文件[ config.properties ]失败");
         }

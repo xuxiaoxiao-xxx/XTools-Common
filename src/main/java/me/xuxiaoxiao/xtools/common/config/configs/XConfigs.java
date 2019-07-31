@@ -24,6 +24,7 @@ public interface XConfigs {
      * 移除配置信息
      *
      * @param key 配置键
+     * @return 旧的配置值
      */
     String cfgRmv(String key);
 
@@ -39,9 +40,11 @@ public interface XConfigs {
     /**
      * 加载文件中的配置信息
      *
-     * @param file 配置文件
+     * @param file    配置文件
+     * @param charset 编码格式
+     * @throws IOException IO异常
      */
-    void cfgLoad(String file) throws IOException;
+    void cfgLoad(String file, String charset) throws IOException;
 
     /**
      * 遍历配置信息，在迭代器中的iterate方法可以返回true，表示删除当前迭代的配置项
@@ -58,6 +61,7 @@ public interface XConfigs {
     /**
      * 添加配置观察者
      *
+     * @param prefix  观察前缀
      * @param watcher 配置观察者
      */
     void watcherAdd(String prefix, Watcher watcher);
@@ -65,6 +69,7 @@ public interface XConfigs {
     /**
      * 删除配置观察者
      *
+     * @param prefix  观察前缀
      * @param watcher 配置观察者
      */
     void watcherDel(String prefix, Watcher watcher);
