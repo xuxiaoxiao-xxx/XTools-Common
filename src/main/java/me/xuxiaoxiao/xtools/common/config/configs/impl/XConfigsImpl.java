@@ -74,13 +74,13 @@ public class XConfigsImpl extends Observable implements XConfigs {
     }
 
     @Override
-    public void cfgLoad(String file, String chaset) throws IOException {
+    public void cfgLoad(String file, String charset) throws IOException {
         lock.lock();
         try {
             Enumeration<URL> urls = XConfigsImpl.class.getClassLoader().getResources(file);
             while (urls != null && urls.hasMoreElements()) {
                 Properties properties = new Properties();
-                properties.load(new InputStreamReader(urls.nextElement().openStream(), "utf-8"));
+                properties.load(new InputStreamReader(urls.nextElement().openStream(), charset));
                 for (Map.Entry<Object, Object> entry : properties.entrySet()) {
                     cfgSet(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
                 }
@@ -88,7 +88,7 @@ public class XConfigsImpl extends Observable implements XConfigs {
             File config = new File(file);
             if (config.exists() && !config.isDirectory() && config.canRead()) {
                 Properties properties = new Properties();
-                properties.load(new InputStreamReader(new FileInputStream(config)));
+                properties.load(new InputStreamReader(new FileInputStream(config), charset));
                 for (Map.Entry<Object, Object> entry : properties.entrySet()) {
                     cfgSet(String.valueOf(entry.getKey()), String.valueOf(entry.getValue()));
                 }
