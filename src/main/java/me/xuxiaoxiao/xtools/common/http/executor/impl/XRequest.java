@@ -3,12 +3,17 @@ package me.xuxiaoxiao.xtools.common.http.executor.impl;
 import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.*;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -56,7 +61,7 @@ public final class XRequest implements XHttpExecutor.Request {
 
 
     private XRequest(String method, String url) {
-        defaultCharset();
+        this.charset = XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT).trim();
         setMethod(method);
         setUrl(url);
     }
@@ -67,7 +72,8 @@ public final class XRequest implements XHttpExecutor.Request {
      * @param url 请求url
      * @return GET请求
      */
-    public static XRequest GET(String url) {
+    @Nonnull
+    public static XRequest GET(@Nonnull String url) {
         return new XRequest(METHOD_GET, url);
     }
 
@@ -77,7 +83,8 @@ public final class XRequest implements XHttpExecutor.Request {
      * @param url 请求url
      * @return POST请求
      */
-    public static XRequest POST(String url) {
+    @Nonnull
+    public static XRequest POST(@Nonnull String url) {
         return new XRequest(METHOD_POST, url);
     }
 
@@ -87,7 +94,8 @@ public final class XRequest implements XHttpExecutor.Request {
      * @param url 请求url
      * @return PUT请求
      */
-    public static XRequest PUT(String url) {
+    @Nonnull
+    public static XRequest PUT(@Nonnull String url) {
         return new XRequest(METHOD_PUT, url);
     }
 
@@ -97,7 +105,8 @@ public final class XRequest implements XHttpExecutor.Request {
      * @param url 请求url
      * @return DELETE请求
      */
-    public static XRequest DELETE(String url) {
+    @Nonnull
+    public static XRequest DELETE(@Nonnull String url) {
         return new XRequest(METHOD_DELETE, url);
     }
 
@@ -107,7 +116,8 @@ public final class XRequest implements XHttpExecutor.Request {
      * @return 连接后的字符串
      * @throws UnsupportedEncodingException 给定的编码格式不支持时抛出异常
      */
-    private static String kvJoin(List<XHttpExecutor.KeyValue> keyValues, String charset) throws UnsupportedEncodingException {
+    @Nonnull
+    private static String kvJoin(@Nonnull List<XHttpExecutor.KeyValue> keyValues, @Nonnull String charset) throws UnsupportedEncodingException {
         StringBuilder sbStr = new StringBuilder();
         for (XHttpExecutor.KeyValue keyValue : keyValues) {
             if (sbStr.length() > 0) {
@@ -118,18 +128,6 @@ public final class XRequest implements XHttpExecutor.Request {
         return sbStr.toString();
     }
 
-    public void defaultCharset() {
-        this.charset = XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT).trim();
-    }
-
-    public String getCharset() {
-        return this.charset;
-    }
-
-    public void setCharset(String charset) {
-        this.charset = charset;
-    }
-
     /**
      * 添加值不为null的HTTP请求地址参数，允许同名的请求地址参数
      *
@@ -137,7 +135,8 @@ public final class XRequest implements XHttpExecutor.Request {
      * @param value 请求地址参数值，为null则不会被添加
      * @return HTTP请求实例
      */
-    public XRequest query(String key, Object value) {
+    @Nonnull
+    public XRequest query(@Nonnull String key, @Nullable Object value) {
         return query(key, value, false);
     }
 
@@ -149,8 +148,8 @@ public final class XRequest implements XHttpExecutor.Request {
      * @param append true：清除已经存在的同名的请求地址参数，false：追加同名的请求地址参数
      * @return HTTP请求实例
      */
-    public XRequest query(String key, Object value, boolean append) {
-        Objects.requireNonNull(key);
+    @Nonnull
+    public XRequest query(@Nonnull String key, @Nullable Object value, boolean append) {
         if (this.requestQueries == null) {
             this.requestQueries = new LinkedList<>();
         }
@@ -176,7 +175,8 @@ public final class XRequest implements XHttpExecutor.Request {
      * @param value 请求头值，为null则不会被添加
      * @return HTTP请求实例
      */
-    public XRequest header(String key, String value) {
+    @Nonnull
+    public XRequest header(@Nonnull String key, @Nullable String value) {
         return header(key, value, false);
     }
 
@@ -188,7 +188,8 @@ public final class XRequest implements XHttpExecutor.Request {
      * @param append true：清除已经存在的同名的请求头，false：追加同名的请求头
      * @return HTTP请求实例
      */
-    public XRequest header(String key, String value, boolean append) {
+    @Nonnull
+    public XRequest header(@Nonnull String key, @Nullable String value, boolean append) {
         setHeader(key, value, append);
         return this;
     }
@@ -201,7 +202,8 @@ public final class XRequest implements XHttpExecutor.Request {
      * @param value 请求体参数值，为null则不会被添加
      * @return HTTP请求实例
      */
-    public XRequest content(String key, Object value) {
+    @Nonnull
+    public XRequest content(@Nonnull String key, @Nullable Object value) {
         return content(key, value, false);
     }
 
@@ -214,8 +216,8 @@ public final class XRequest implements XHttpExecutor.Request {
      * @param append true：清除已经存在的同名的请求体参数，false：追加同名请求体参数
      * @return HTTP请求实例
      */
-    public XRequest content(String key, Object value, boolean append) {
-        Objects.requireNonNull(key);
+    @Nonnull
+    public XRequest content(@Nonnull String key, @Nullable Object value, boolean append) {
         if (METHOD_GET.equals(requestMethod) || METHOD_DELETE.equals(requestMethod)) {
             throw new IllegalArgumentException(String.format("%s方法不能添加请求体", requestMethod));
         }
@@ -259,9 +261,19 @@ public final class XRequest implements XHttpExecutor.Request {
      * @param content 自定义的HTTP请求体
      * @return HTTP请求实例
      */
-    public XRequest content(XHttpExecutor.Content content) {
+    @Nonnull
+    public XRequest content(@Nonnull XHttpExecutor.Content content) {
         setContent(content);
         return this;
+    }
+
+    @Nonnull
+    public String getCharset() {
+        return this.charset;
+    }
+
+    public void setCharset(@Nonnull String charset) {
+        this.charset = charset;
     }
 
     /**
@@ -269,15 +281,16 @@ public final class XRequest implements XHttpExecutor.Request {
      *
      * @return HTTP请求的请求方法
      */
+    @Nonnull
     @Override
     public String getMethod() {
         return this.requestMethod;
     }
 
     @Override
-    public void setMethod(String method) {
-        if (method.equals(METHOD_GET) || method.equals(METHOD_POST) || method.equals(METHOD_DELETE) || method.equals(METHOD_PUT)) {
-            this.requestMethod = method;
+    public void setMethod(@Nonnull String method) {
+        if (method.equalsIgnoreCase(METHOD_GET) || method.equalsIgnoreCase(METHOD_POST) || method.equalsIgnoreCase(METHOD_DELETE) || method.equalsIgnoreCase(METHOD_PUT)) {
+            this.requestMethod = method.toUpperCase();
         }
     }
 
@@ -286,6 +299,7 @@ public final class XRequest implements XHttpExecutor.Request {
      *
      * @return HTTP请求的请求url
      */
+    @Nonnull
     @Override
     public String getUrl() {
         try {
@@ -300,7 +314,7 @@ public final class XRequest implements XHttpExecutor.Request {
     }
 
     @Override
-    public void setUrl(String url) {
+    public void setUrl(@Nonnull String url) {
         if (!url.toLowerCase().startsWith("http://") && !url.toLowerCase().startsWith("https://")) {
             throw new IllegalArgumentException("XRequest仅支持HTTP协议和HTTPS协议");
         } else if (url.indexOf('?') >= 0) {
@@ -324,8 +338,7 @@ public final class XRequest implements XHttpExecutor.Request {
     }
 
     @Override
-    public void setHeader(String key, String value, boolean append) {
-        Objects.requireNonNull(key);
+    public void setHeader(@Nonnull String key, @Nullable String value, boolean append) {
         if (this.requestHeaders == null) {
             this.requestHeaders = new LinkedList<>();
         }
@@ -348,6 +361,7 @@ public final class XRequest implements XHttpExecutor.Request {
      *
      * @return HTTP请求的请求头列表
      */
+    @Nullable
     @Override
     public List<XHttpExecutor.KeyValue> getHeaders() {
         if ((this.requestMethod.equals(METHOD_POST) || this.requestMethod.equals(METHOD_PUT)) && this.requestContent != null) {
@@ -371,14 +385,14 @@ public final class XRequest implements XHttpExecutor.Request {
      *
      * @return HTTP请求的请求体
      */
+    @Nullable
     @Override
     public XHttpExecutor.Content getContent() {
         return this.requestContent;
     }
 
     @Override
-    public void setContent(XHttpExecutor.Content content) {
-        Objects.requireNonNull(content);
+    public void setContent(@Nonnull XHttpExecutor.Content content) {
         this.requestContent = content;
     }
 
@@ -390,12 +404,13 @@ public final class XRequest implements XHttpExecutor.Request {
         private final List<XHttpExecutor.KeyValue> params = new LinkedList<>();
         private byte[] urlencoded;
 
-        public UrlencodedContent param(String key, Object value) {
+        @Nonnull
+        public UrlencodedContent param(@Nonnull String key, @Nullable Object value) {
             return this.param(key, value, false);
         }
 
-        public UrlencodedContent param(String key, Object value, boolean clear) {
-            Objects.requireNonNull(key);
+        @Nonnull
+        public UrlencodedContent param(@Nonnull String key, @Nullable Object value, boolean clear) {
             this.urlencoded = null;
             if (clear) {
                 Iterator<XHttpExecutor.KeyValue> iterator = this.params.iterator();
@@ -412,10 +427,13 @@ public final class XRequest implements XHttpExecutor.Request {
             return this;
         }
 
+        @Nonnull
+        @Override
         public String charset() {
             return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
         }
 
+        @Nonnull
         @Override
         public String contentType() {
             return MIME_URLENCODED + "; charset=" + charset;
@@ -430,7 +448,7 @@ public final class XRequest implements XHttpExecutor.Request {
         }
 
         @Override
-        public void contentWrite(OutputStream outStream) throws IOException {
+        public void contentWrite(@Nonnull OutputStream outStream) throws IOException {
             if (urlencoded == null) {
                 urlencoded = kvJoin(params, charset).getBytes(charset);
             }
@@ -447,23 +465,25 @@ public final class XRequest implements XHttpExecutor.Request {
 
         private final String charset = charset();
         private final List<Part> parts = new LinkedList<>();
-        private String boundary = XTools.md5(String.format("multipart-%d-%d", System.currentTimeMillis(), new Random().nextInt()));
+        private final String boundary = XTools.md5(String.format("multipart-%d-%d", System.currentTimeMillis(), new Random().nextInt()));
 
-        public MultipartContent part(String key, Object value) {
+        @Nonnull
+        public MultipartContent part(@Nonnull String key, @Nullable Object value) {
             return this.part(new Part(key, value, charset), false);
         }
 
-        public MultipartContent part(String key, Object value, boolean clear) {
+        @Nonnull
+        public MultipartContent part(@Nonnull String key, @Nullable Object value, boolean clear) {
             return this.part(new Part(key, value, charset), clear);
         }
 
-        public MultipartContent part(Part part) {
+        @Nonnull
+        public MultipartContent part(@Nonnull Part part) {
             return this.part(part, false);
         }
 
-        public MultipartContent part(Part part, boolean clear) {
-            Objects.requireNonNull(part);
-            Objects.requireNonNull(part.name);
+        @Nonnull
+        public MultipartContent part(@Nonnull Part part, boolean clear) {
             if (clear) {
                 Iterator<Part> iterator = this.parts.iterator();
                 while (iterator.hasNext()) {
@@ -479,10 +499,13 @@ public final class XRequest implements XHttpExecutor.Request {
             return this;
         }
 
+        @Nonnull
+        @Override
         public String charset() {
             return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
         }
 
+        @Nonnull
         @Override
         public String contentType() {
             return MIME_MULTIPART + "; boundary=" + boundary;
@@ -505,7 +528,7 @@ public final class XRequest implements XHttpExecutor.Request {
         }
 
         @Override
-        public void contentWrite(OutputStream outStream) throws IOException {
+        public void contentWrite(@Nonnull OutputStream outStream) throws IOException {
             for (Part part : parts) {
                 outStream.write((HYPHENS + boundary + CRLF).getBytes(charset));
                 for (String header : part.headers()) {
@@ -519,20 +542,24 @@ public final class XRequest implements XHttpExecutor.Request {
         }
 
         public static class Part {
+            @Nonnull
             public final String name;
+            @Nullable
             public final Object value;
+            @Nonnull
             public final String charset;
 
-            public Part(String name, Object value) {
+            public Part(@Nonnull String name, @Nullable Object value) {
                 this(name, value, XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT));
             }
 
-            public Part(String name, Object value, String charset) {
+            public Part(@Nonnull String name, @Nullable Object value, @Nonnull String charset) {
                 this.name = name;
                 this.value = value;
                 this.charset = charset;
             }
 
+            @Nonnull
             public String[] headers() throws IOException {
                 if (value instanceof File) {
                     String disposition = String.format("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"", name, URLEncoder.encode(((File) value).getName(), charset));
@@ -551,7 +578,7 @@ public final class XRequest implements XHttpExecutor.Request {
                 }
             }
 
-            public void partWrite(OutputStream outStream) throws IOException {
+            public void partWrite(@Nonnull OutputStream outStream) throws IOException {
                 if (value instanceof File) {
                     try (FileInputStream fiStream = new FileInputStream((File) value)) {
                         XTools.streamToStream(fiStream, outStream);
@@ -573,7 +600,7 @@ public final class XRequest implements XHttpExecutor.Request {
         public final String mime;
         public final byte[] bytes;
 
-        public StringContent(String mime, String str) {
+        public StringContent(@Nonnull String mime, @Nonnull String str) {
             try {
                 Matcher matcher = P_CHARSET.matcher(mime);
                 if (matcher.find()) {
@@ -588,10 +615,13 @@ public final class XRequest implements XHttpExecutor.Request {
             }
         }
 
+        @Nonnull
+        @Override
         public String charset() {
             return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
         }
 
+        @Nonnull
         @Override
         public String contentType() {
             return mime;
@@ -603,7 +633,7 @@ public final class XRequest implements XHttpExecutor.Request {
         }
 
         @Override
-        public void contentWrite(OutputStream outStream) throws IOException {
+        public void contentWrite(@Nonnull OutputStream outStream) throws IOException {
             outStream.write(bytes);
         }
     }
@@ -614,14 +644,17 @@ public final class XRequest implements XHttpExecutor.Request {
     public static class FileContent implements XHttpExecutor.Content {
         public final File file;
 
-        public FileContent(File file) {
+        public FileContent(@Nonnull File file) {
             this.file = file;
         }
 
+        @Nonnull
+        @Override
         public String charset() {
             return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
         }
 
+        @Nonnull
         @Override
         public String contentType() throws IOException {
             return Files.probeContentType(Paths.get(file.getAbsolutePath()));
@@ -633,7 +666,7 @@ public final class XRequest implements XHttpExecutor.Request {
         }
 
         @Override
-        public void contentWrite(OutputStream outStream) throws IOException {
+        public void contentWrite(@Nonnull OutputStream outStream) throws IOException {
             try (FileInputStream finStream = new FileInputStream(file)) {
                 XTools.streamToStream(finStream, outStream);
             }

@@ -6,6 +6,8 @@ import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.http.executor.impl.XHttpExecutorImpl;
 import me.xuxiaoxiao.xtools.common.http.executor.impl.XResponse;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.util.List;
@@ -32,7 +34,8 @@ public final class XHttpTools {
      * @param request  HTTP请求
      * @return HTTP响应
      */
-    public static XHttpExecutor.Response http(XHttpExecutor executor, XHttpExecutor.Request request) {
+    @Nonnull
+    public static XHttpExecutor.Response http(@Nonnull XHttpExecutor executor, @Nonnull XHttpExecutor.Request request) {
         try {
             return executor.execute(request);
         } catch (Exception e) {
@@ -45,7 +48,7 @@ public final class XHttpTools {
      *
      * @param decorator HTTP装饰者
      */
-    public static synchronized void addDecorator(Decorator decorator) {
+    public static synchronized void addDecorator(@Nonnull Decorator decorator) {
         decorator.setOrigin(XHttpTools.EXECUTOR);
         XHttpTools.EXECUTOR = decorator;
     }
@@ -56,10 +59,11 @@ public final class XHttpTools {
     public static abstract class Decorator implements XHttpExecutor {
         private XHttpExecutor origin;
 
-        final void setOrigin(XHttpExecutor origin) {
+        final void setOrigin(@Nonnull XHttpExecutor origin) {
             this.origin = origin;
         }
 
+        @Nonnull
         public final XHttpExecutor getOrigin() {
             return this.origin;
         }
@@ -85,22 +89,24 @@ public final class XHttpTools {
         }
 
         @Override
-        public void addCookie(URI uri, HttpCookie cookie) {
+        public void addCookie(@Nullable URI uri, @Nonnull HttpCookie cookie) {
             this.origin.addCookie(uri, cookie);
         }
 
+        @Nonnull
         @Override
-        public List<HttpCookie> getCookies(URI uri) {
+        public List<HttpCookie> getCookies(@Nonnull URI uri) {
             return this.origin.getCookies(uri);
         }
 
+        @Nonnull
         @Override
         public List<HttpCookie> getCookies() {
             return this.origin.getCookies();
         }
 
         @Override
-        public void rmvCookies(URI uri, HttpCookie cookie) {
+        public void rmvCookies(@Nullable URI uri, @Nonnull HttpCookie cookie) {
             this.origin.rmvCookies(uri, cookie);
         }
 
@@ -109,7 +115,8 @@ public final class XHttpTools {
             this.origin.rmvCookies();
         }
 
+        @Nonnull
         @Override
-        public abstract Response execute(Request request) throws Exception;
+        public abstract Response execute(@Nonnull Request request) throws Exception;
     }
 }

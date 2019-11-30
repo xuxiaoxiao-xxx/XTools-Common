@@ -2,6 +2,7 @@ package me.xuxiaoxiao.xtools.common.code;
 
 import me.xuxiaoxiao.xtools.common.XTools;
 
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -41,7 +42,8 @@ public final class XCodeTools {
      * @return 散列结果，全小写字母
      * @throws NoSuchAlgorithmException 当未找到指定的散列算法时抛出异常
      */
-    public static String hash(String algorithm, byte[] bytes) throws NoSuchAlgorithmException {
+    @Nonnull
+    public static String hash(@Nonnull String algorithm, @Nonnull byte[] bytes) throws NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
         messageDigest.update(bytes);
         return bytesToHex(messageDigest.digest());
@@ -56,7 +58,8 @@ public final class XCodeTools {
      * @throws IOException              当文件未找到或者输入输出时错误时抛出异常
      * @throws NoSuchAlgorithmException 当未找到指定的散列算法时抛出异常
      */
-    public static String hash(String algorithm, File file) throws IOException, NoSuchAlgorithmException {
+    @Nonnull
+    public static String hash(@Nonnull String algorithm, @Nonnull File file) throws IOException, NoSuchAlgorithmException {
         MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
         try (FileInputStream fileInputStream = new FileInputStream(file); DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)) {
             byte[] buffer = new byte[Integer.parseInt(XTools.cfgDef(CFG_BUFFER, CFG_BUFFER_DEFAULT).trim())];
@@ -75,7 +78,8 @@ public final class XCodeTools {
      * @param bytes 要转换的字节数组
      * @return 转换后的字符串，全小写字母
      */
-    public static String bytesToHex(byte[] bytes) {
+    @Nonnull
+    public static String bytesToHex(@Nonnull byte[] bytes) {
         char[] chars = new char[bytes.length * 2];
         for (int i = 0; i < bytes.length; i++) {
             byte b = bytes[i];

@@ -2,6 +2,8 @@ package me.xuxiaoxiao.xtools.common.time;
 
 import me.xuxiaoxiao.xtools.common.XTools;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -63,11 +65,11 @@ public final class XTimeTools {
     /**
      * 一天的毫秒数
      */
-    public static final long DAY_MILLIS = 24L * HOUR_MILLIS;
+    public static final long DAY_MILLIS = 24 * HOUR_MILLIS;
     /**
      * 一周的毫秒数
      */
-    public static final long WEEK_MILLIS = 7L * DAY_MILLIS;
+    public static final long WEEK_MILLIS = 7 * DAY_MILLIS;
     /**
      * yyyy-MM-dd HH:mm:ss.SSS格式的日期
      */
@@ -109,7 +111,8 @@ public final class XTimeTools {
      * @param date   date对象
      * @return 相应格式的字符串
      */
-    public static String dateFormat(String format, Date date) {
+    @Nonnull
+    public static String dateFormat(@Nonnull String format, @Nonnull Date date) {
         Objects.requireNonNull(format);
         Objects.requireNonNull(date);
         HashMap<String, SimpleDateFormat> formats = DATE_FORMATS.get();
@@ -132,7 +135,8 @@ public final class XTimeTools {
      * @param dateStr 日期字符串
      * @return 相应的date对象
      */
-    public static Date dateParse(String format, String dateStr) {
+    @Nonnull
+    public static Date dateParse(@Nonnull String format, @Nonnull String dateStr) {
         Objects.requireNonNull(format);
         Objects.requireNonNull(dateStr);
         HashMap<String, SimpleDateFormat> formats = DATE_FORMATS.get();
@@ -162,7 +166,7 @@ public final class XTimeTools {
      * @see #RESTDAY
      * @see #HOLIDAY
      */
-    public static int dateType(Date date) {
+    public static int dateType(@Nonnull Date date) {
         Objects.requireNonNull(date);
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
@@ -189,7 +193,8 @@ public final class XTimeTools {
      * @param offset 偏移的天数
      * @return 以base所在的那一天为基准偏移offset天00:00:00时刻的date对象
      */
-    public static Date date(Date base, int offset) {
+    @Nonnull
+    public static Date date(@Nullable Date base, int offset) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         return dateParse(FORMAT_YMD, dateFormat(FORMAT_YMD, new Date(baseTime + offset * DAY_MILLIS)));
     }
@@ -202,7 +207,8 @@ public final class XTimeTools {
      * @param dayIndex   那一周的第几天（每周的第一天是周一，周一为0）
      * @return 以base所在的那一周为基准偏移weekOffset周的dayIndex天00:00:00时刻的date对象
      */
-    public static Date dateByWeek(Date base, int weekOffset, int dayIndex) {
+    @Nonnull
+    public static Date dateByWeek(@Nullable Date base, int weekOffset, int dayIndex) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime + weekOffset * WEEK_MILLIS);
@@ -222,7 +228,8 @@ public final class XTimeTools {
      * @param dayIndex    那一月的第几天（一号为0）
      * @return 以base所在的那一月为基准偏移monthOffset月的dayIndex天00:00:00时刻的date对象
      */
-    public static Date dateByMonth(Date base, int monthOffset, int dayIndex) {
+    @Nonnull
+    public static Date dateByMonth(@Nullable Date base, int monthOffset, int dayIndex) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -239,7 +246,8 @@ public final class XTimeTools {
      * @param dayIndex     那一季度的第几天（一号为0）
      * @return 以base所在的那一季度为基准偏移seasonOffset季度的dayIndex天00:00:00时刻的date对象
      */
-    public static Date dateBySeason(Date base, int seasonOffset, int dayIndex) {
+    @Nonnull
+    public static Date dateBySeason(@Nullable Date base, int seasonOffset, int dayIndex) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -256,7 +264,8 @@ public final class XTimeTools {
      * @param dayIndex   那一年的第几天（第一天为0）
      * @return 以base所在的那一年为基准偏移yearOffset年的dayIndex天00:00:00时刻的date对象
      */
-    public static Date dateByYear(Date base, int yearOffset, int dayIndex) {
+    @Nonnull
+    public static Date dateByYear(@Nullable Date base, int yearOffset, int dayIndex) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -273,7 +282,8 @@ public final class XTimeTools {
      * @param weekIndex   那一月的第几周（每周的第一天是周一，每月的第一周是第一个周一所在的那一周，第一周为0）
      * @return 以base所在的那一月为基准偏移monthOffset月的weekIndex周的周一00:00:00时刻的date对象
      */
-    public static Date weekByMonth(Date base, int monthOffset, int weekIndex) {
+    @Nonnull
+    public static Date weekByMonth(@Nullable Date base, int monthOffset, int weekIndex) {
         Date date = dateByMonth(base, monthOffset, 0);
         while (dateInWeek(date) != MONDAY) {
             date = new Date(date.getTime() + DAY_MILLIS);
@@ -289,7 +299,8 @@ public final class XTimeTools {
      * @param weekIndex    那一季度的第几周（每周的第一天是周一，每季度的第一周是第一个周一所在的那一周，第一周为0）
      * @return 以base所在的那一季度为基准偏移seasonOffset季度的weekIndex周的周一00:00:00时刻的date对象
      */
-    public static Date weekBySeason(Date base, int seasonOffset, int weekIndex) {
+    @Nonnull
+    public static Date weekBySeason(@Nullable Date base, int seasonOffset, int weekIndex) {
         Date date = dateBySeason(base, seasonOffset, 0);
         while (dateInWeek(date) != MONDAY) {
             date = new Date(date.getTime() + DAY_MILLIS);
@@ -305,7 +316,8 @@ public final class XTimeTools {
      * @param weekIndex  那一年的第几周（每周的第一天是周一，每年的第一周是第一个周一所在的那一周，第一周为0）
      * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的weekIndex周的周一00:00:00时刻的date对象
      */
-    public static Date weekByYear(Date base, int yearOffset, int weekIndex) {
+    @Nonnull
+    public static Date weekByYear(@Nullable Date base, int yearOffset, int weekIndex) {
         Date date = dateByYear(base, yearOffset, 0);
         while (dateInWeek(date) != MONDAY) {
             date = new Date(date.getTime() + DAY_MILLIS);
@@ -321,7 +333,8 @@ public final class XTimeTools {
      * @param monthIndex   那一季度的第几个月（第一个月为0）
      * @return 以base所在的那一季度为基准偏移seasonOffset季度的monthIndex月的一号00:00:00时刻的date对象
      */
-    public static Date monthBySeason(Date base, int seasonOffset, int monthIndex) {
+    @Nonnull
+    public static Date monthBySeason(@Nullable Date base, int seasonOffset, int monthIndex) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -338,7 +351,8 @@ public final class XTimeTools {
      * @param monthIndex 那一年的第几个月（一月为0）
      * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的一号00:00:00时刻的date对象
      */
-    public static Date monthByYear(Date base, int yearOffset, int monthIndex) {
+    @Nonnull
+    public static Date monthByYear(@Nullable Date base, int yearOffset, int monthIndex) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -356,7 +370,8 @@ public final class XTimeTools {
      * @param seasonIndex 那一年的第几个季度（第一个季度为0）
      * @return 以base所在的那一年为基准偏移yearOffset年的seasonIndex月的第一天00:00:00时刻的date对象
      */
-    public static Date seasonByYear(Date base, int yearOffset, int seasonIndex) {
+    @Nonnull
+    public static Date seasonByYear(@Nullable Date base, int yearOffset, int seasonIndex) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -372,7 +387,7 @@ public final class XTimeTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天是那周中的第几天（每周的第一天是周一，周一为0）
      */
-    public static int dateInWeek(Date base) {
+    public static int dateInWeek(@Nullable Date base) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -402,7 +417,7 @@ public final class XTimeTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天是那个月中的第几天（一号为0）
      */
-    public static int dateInMonth(Date base) {
+    public static int dateInMonth(@Nullable Date base) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -415,7 +430,7 @@ public final class XTimeTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天是那个季度中的第几天（第一天为0）
      */
-    public static int dateInSeason(Date base) {
+    public static int dateInSeason(@Nullable Date base) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -430,7 +445,7 @@ public final class XTimeTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天是那一年中的第几天（第一天为0）
      */
-    public static int dateInYear(Date base) {
+    public static int dateInYear(@Nullable Date base) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -443,7 +458,7 @@ public final class XTimeTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的周是哪个月的第几周（正数表示本月第几周，负数表示上月第几周,例：1=本月第二周，-3=上月第四周）
      */
-    public static int weekInMonth(Date base) {
+    public static int weekInMonth(@Nullable Date base) {
         Date weekMonday = dateByWeek(base, 0, MONDAY);
 
         Date monthMonday = dateByMonth(base, 0, 0);
@@ -469,7 +484,7 @@ public final class XTimeTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的周是哪一季度的第几周（正数表示本季度第几周，负数表示上季度第几周,例：1=本季第第二周，-12=上季度第13周）
      */
-    public static int weekInSeason(Date base) {
+    public static int weekInSeason(@Nullable Date base) {
         Date weekMonday = dateByWeek(base, 0, MONDAY);
 
         Date seasonMonday = dateBySeason(base, 0, 0);
@@ -494,7 +509,7 @@ public final class XTimeTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的周是哪一年的第几周（正数表示今年第几周，负数表示去年第几周,例：1=今年第二周，-51=去年第52周）
      */
-    public static int weekInYear(Date base) {
+    public static int weekInYear(@Nullable Date base) {
         Date weekMonday = dateByWeek(base, 0, MONDAY);
 
         Date yearMonday = dateByYear(base, 0, 0);
@@ -520,7 +535,7 @@ public final class XTimeTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的月是那一季度的第几月，第一个月为0
      */
-    public static int monthInSeason(Date base) {
+    public static int monthInSeason(@Nullable Date base) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -533,7 +548,7 @@ public final class XTimeTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的月是那一年的第几月，第一个月为0
      */
-    public static int monthInYear(Date base) {
+    public static int monthInYear(@Nullable Date base) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -546,7 +561,7 @@ public final class XTimeTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的季度是那一年的第几季度，第一个季度为0
      */
-    public static int seasonInYear(Date base) {
+    public static int seasonInYear(@Nullable Date base) {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
@@ -559,7 +574,8 @@ public final class XTimeTools {
      * @param solarDate 阳历时间的Date对象
      * @return 对应的农历时间的字符串，例1：1992年八月初六。例2：2033年闰冬月廿八
      */
-    public static String solarToLunar(Date solarDate) {
+    @Nonnull
+    public static String solarToLunar(@Nonnull Date solarDate) {
         // 验证日期是否在范围内
         Date minDate, maxDate;
         try {
@@ -646,7 +662,8 @@ public final class XTimeTools {
      * @param lunarDate 农历时间字符串。例1：1992年八月初六。例2：2033年闰冬月廿八
      * @return 阳历时间的Date对象
      */
-    public static Date lunarToSolar(String lunarDate) {
+    @Nonnull
+    public static Date lunarToSolar(@Nonnull String lunarDate) {
         // 匹配年月日闰
         Matcher matcher = Pattern.compile(XLunarDb.LUNAR_PATTERN).matcher(lunarDate);
         if (!matcher.matches()) {
@@ -657,7 +674,7 @@ public final class XTimeTools {
         String strDay = matcher.group(5);
         String strLeap = matcher.group(3);
         // 解析农历年
-        int lunarYear = Integer.valueOf(strYear);
+        int lunarYear = Integer.parseInt(strYear);
         // 解析农历月，1代表正月
         int lunarMonth = 0;
         for (int i = 0; i < XLunarDb.LUNAR_MONTH.length; i++) {

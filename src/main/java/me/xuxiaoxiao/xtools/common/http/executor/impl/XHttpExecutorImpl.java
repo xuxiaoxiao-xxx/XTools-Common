@@ -4,6 +4,8 @@ import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.config.XConfigTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.net.ssl.*;
 import java.io.DataOutputStream;
 import java.io.InputStream;
@@ -112,22 +114,24 @@ public class XHttpExecutorImpl implements XHttpExecutor {
     }
 
     @Override
-    public void addCookie(URI uri, HttpCookie cookie) {
+    public void addCookie(@Nullable URI uri, @Nonnull HttpCookie cookie) {
         this.cookieManager.getCookieStore().add(uri, cookie);
     }
 
+    @Nonnull
     @Override
-    public List<HttpCookie> getCookies(URI uri) {
+    public List<HttpCookie> getCookies(@Nonnull URI uri) {
         return this.cookieManager.getCookieStore().get(uri);
     }
 
+    @Nonnull
     @Override
     public List<HttpCookie> getCookies() {
         return this.cookieManager.getCookieStore().getCookies();
     }
 
     @Override
-    public void rmvCookies(URI uri, HttpCookie cookie) {
+    public void rmvCookies(@Nullable URI uri, @Nonnull HttpCookie cookie) {
         this.cookieManager.getCookieStore().remove(uri, cookie);
     }
 
@@ -152,23 +156,26 @@ public class XHttpExecutorImpl implements XHttpExecutor {
         this.followRedirect = followRedirect;
     }
 
+    @Nonnull
     public SSLContext getSSLContext() {
         return this.sslContext;
     }
 
-    public void setSSLContext(SSLContext sslContext) {
+    public void setSSLContext(@Nonnull SSLContext sslContext) {
         this.sslContext = sslContext;
     }
 
+    @Nonnull
     public HostnameVerifier getHostnameVerifier() {
         return this.hostnameVerifier;
     }
 
-    public void setHostnameVerifier(HostnameVerifier hostnameVerifier) {
+    public void setHostnameVerifier(@Nonnull HostnameVerifier hostnameVerifier) {
         this.hostnameVerifier = hostnameVerifier;
     }
 
-    protected HttpURLConnection connect(Request request) throws Exception {
+    @Nonnull
+    protected HttpURLConnection connect(@Nonnull Request request) throws Exception {
         String url = request.getUrl();
         if (url.toLowerCase().startsWith("http://")) {
             HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
@@ -191,8 +198,9 @@ public class XHttpExecutorImpl implements XHttpExecutor {
         }
     }
 
+    @Nonnull
     @Override
-    public Response execute(Request request) throws Exception {
+    public Response execute(@Nonnull Request request) throws Exception {
         HttpURLConnection connection = connect(request);
         //设置请求方法
         connection.setRequestMethod(request.getMethod());

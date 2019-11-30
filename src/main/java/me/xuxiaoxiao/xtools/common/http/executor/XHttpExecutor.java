@@ -1,5 +1,7 @@
 package me.xuxiaoxiao.xtools.common.http.executor;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,7 +48,7 @@ public interface XHttpExecutor {
      * @param uri    cookie的uri
      * @param cookie cookie信息
      */
-    void addCookie(URI uri, HttpCookie cookie);
+    void addCookie(@Nullable URI uri, @Nonnull HttpCookie cookie);
 
     /**
      * 获取cookie
@@ -54,13 +56,15 @@ public interface XHttpExecutor {
      * @param uri cookie的uri
      * @return cookie信息
      */
-    List<HttpCookie> getCookies(URI uri);
+    @Nonnull
+    List<HttpCookie> getCookies(@Nonnull URI uri);
 
     /**
      * 获取所有cookie
      *
      * @return cookie信息
      */
+    @Nonnull
     List<HttpCookie> getCookies();
 
     /**
@@ -69,7 +73,7 @@ public interface XHttpExecutor {
      * @param uri    cookie的uri
      * @param cookie cookie信息
      */
-    void rmvCookies(URI uri, HttpCookie cookie);
+    void rmvCookies(@Nullable URI uri, @Nonnull HttpCookie cookie);
 
     /**
      * 删除所有cookie
@@ -83,7 +87,8 @@ public interface XHttpExecutor {
      * @return 请求结果
      * @throws Exception 请求过程中可能会发生异常
      */
-    Response execute(Request request) throws Exception;
+    @Nonnull
+    Response execute(@Nonnull Request request) throws Exception;
 
     /**
      * http请求
@@ -94,6 +99,7 @@ public interface XHttpExecutor {
          *
          * @return 请求方法
          */
+        @Nonnull
         String getMethod();
 
         /**
@@ -101,13 +107,14 @@ public interface XHttpExecutor {
          *
          * @param method 请求方法
          */
-        void setMethod(String method);
+        void setMethod(@Nonnull String method);
 
         /**
          * 获取请求url
          *
          * @return 请求url
          */
+        @Nonnull
         String getUrl();
 
         /**
@@ -115,7 +122,7 @@ public interface XHttpExecutor {
          *
          * @param url 请求url
          */
-        void setUrl(String url);
+        void setUrl(@Nonnull String url);
 
         /**
          * 设置请求头部
@@ -124,13 +131,14 @@ public interface XHttpExecutor {
          * @param value  请求头值
          * @param append 重复请求头是否追加
          */
-        void setHeader(String key, String value, boolean append);
+        void setHeader(@Nonnull String key, @Nullable String value, boolean append);
 
         /**
          * 获取请求头部
          *
          * @return 请求头部
          */
+        @Nullable
         List<KeyValue> getHeaders();
 
         /**
@@ -138,6 +146,7 @@ public interface XHttpExecutor {
          *
          * @return 请求体信息
          */
+        @Nullable
         Content getContent();
 
         /**
@@ -145,7 +154,7 @@ public interface XHttpExecutor {
          *
          * @param content 请求体
          */
-        void setContent(Content content);
+        void setContent(@Nonnull Content content);
     }
 
     /**
@@ -158,6 +167,7 @@ public interface XHttpExecutor {
          *
          * @return 获取输入流
          */
+        @Nullable
         InputStream stream();
 
         /**
@@ -165,6 +175,7 @@ public interface XHttpExecutor {
          *
          * @return 字符串结果
          */
+        @Nullable
         String string();
 
         /**
@@ -173,6 +184,7 @@ public interface XHttpExecutor {
          * @param charset 字符串编码
          * @return 字符串结果
          */
+        @Nullable
         String string(String charset);
 
         /**
@@ -181,6 +193,7 @@ public interface XHttpExecutor {
          * @param path 文件路径
          * @return 文件结果
          */
+        @Nullable
         File file(String path);
     }
 
@@ -189,11 +202,20 @@ public interface XHttpExecutor {
      */
     interface Content {
         /**
+         * 请求体字符编码
+         *
+         * @return 字符编码
+         */
+        @Nonnull
+        String charset() throws IOException;
+
+        /**
          * 请求体的MIME类型
          *
          * @return 请求体的MIME类型
          * @throws IOException IO异常
          */
+        @Nonnull
         String contentType() throws IOException;
 
         /**
@@ -210,7 +232,7 @@ public interface XHttpExecutor {
          * @param outStream 目标输出流
          * @throws IOException 将请求体写出到输出流时可能会发生异常
          */
-        void contentWrite(OutputStream outStream) throws IOException;
+        void contentWrite(@Nonnull OutputStream outStream) throws IOException;
     }
 
     /**
@@ -226,7 +248,7 @@ public interface XHttpExecutor {
          */
         public final Object value;
 
-        public KeyValue(String key, Object value) {
+        public KeyValue(@Nonnull String key, @Nonnull Object value) {
             this.key = key;
             this.value = value;
         }

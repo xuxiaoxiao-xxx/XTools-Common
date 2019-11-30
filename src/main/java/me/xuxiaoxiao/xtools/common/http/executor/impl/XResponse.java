@@ -3,6 +3,8 @@ package me.xuxiaoxiao.xtools.common.http.executor.impl;
 import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -17,7 +19,7 @@ public class XResponse implements XHttpExecutor.Response {
     private final HttpURLConnection connection;
     private final InputStream stream;
 
-    public XResponse(HttpURLConnection connection, InputStream stream) {
+    public XResponse(@Nullable HttpURLConnection connection, @Nullable InputStream stream) {
         this.connection = connection;
         this.stream = stream;
     }
@@ -27,6 +29,7 @@ public class XResponse implements XHttpExecutor.Response {
      *
      * @return Http连接
      */
+    @Nullable
     public HttpURLConnection connection() {
         return this.connection;
     }
@@ -36,11 +39,13 @@ public class XResponse implements XHttpExecutor.Response {
      *
      * @return 连接的输入流，记得使用XResponse实例的close()方法关闭输入流和连接
      */
+    @Nullable
     @Override
     public InputStream stream() {
         return this.stream;
     }
 
+    @Nullable
     @Override
     public String string() {
         return string(XTools.cfgDef(CFG_RSP_CHARSET, CFG_RSP_CHARSET_DEFAULT).trim());
@@ -51,8 +56,9 @@ public class XResponse implements XHttpExecutor.Response {
      *
      * @return 转化后的字符串
      */
+    @Nullable
     @Override
-    public final String string(String charset) {
+    public final String string(@Nonnull String charset) {
         try {
             return XTools.streamToStr(stream(), charset);
         } catch (Exception e) {
@@ -73,8 +79,9 @@ public class XResponse implements XHttpExecutor.Response {
      * @param path 文件存储的路径
      * @return 转化后的文件
      */
+    @Nullable
     @Override
-    public final File file(String path) {
+    public final File file(@Nonnull String path) {
         try {
             return XTools.streamToFile(stream(), path);
         } catch (Exception e) {

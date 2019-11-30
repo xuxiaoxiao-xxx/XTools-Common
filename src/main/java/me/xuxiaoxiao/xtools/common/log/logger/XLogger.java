@@ -1,5 +1,8 @@
 package me.xuxiaoxiao.xtools.common.log.logger;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * 日志记录器。
  * <ul>
@@ -21,7 +24,7 @@ public interface XLogger {
      * @param error 错误信息
      * @param args  错误信息中的参数
      */
-    void logE(String tag, String error, Object... args);
+    void logE(@Nonnull String tag, @Nonnull String error, @Nullable Object... args);
 
     /**
      * 记录错误信息的日志
@@ -31,7 +34,7 @@ public interface XLogger {
      * @param error     错误信息
      * @param args      错误信息中的参数
      */
-    void logE(String tag, Throwable throwable, String error, Object... args);
+    void logE(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String error, @Nullable Object... args);
 
     /**
      * 记录警告信息的日志
@@ -40,7 +43,7 @@ public interface XLogger {
      * @param warning 警告信息
      * @param args    警告信息中的参数
      */
-    void logW(String tag, String warning, Object... args);
+    void logW(@Nonnull String tag, @Nonnull String warning, @Nullable Object... args);
 
     /**
      * 记录警告信息的日志
@@ -50,7 +53,7 @@ public interface XLogger {
      * @param warning   告警信息
      * @param args      告警信息中的参数
      */
-    void logW(String tag, Throwable throwable, String warning, Object... args);
+    void logW(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String warning, @Nullable Object... args);
 
     /**
      * 记录提示信息的日志
@@ -59,7 +62,7 @@ public interface XLogger {
      * @param notice 提示信息
      * @param args   提示信息中的参数
      */
-    void logN(String tag, String notice, Object... args);
+    void logN(@Nonnull String tag, @Nonnull String notice, @Nullable Object... args);
 
     /**
      * 记录提示信息的日志
@@ -69,7 +72,7 @@ public interface XLogger {
      * @param notice    提示信息
      * @param args      提示信息中的参数
      */
-    void logN(String tag, Throwable throwable, String notice, Object... args);
+    void logN(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String notice, @Nullable Object... args);
 
     /**
      * 记录详细信息的日志
@@ -78,7 +81,7 @@ public interface XLogger {
      * @param detail 详细信息
      * @param args   详细信息中的参数
      */
-    void logD(String tag, String detail, Object... args);
+    void logD(@Nonnull String tag, @Nonnull String detail, @Nullable Object... args);
 
     /**
      * 记录详细信息的日志
@@ -88,13 +91,14 @@ public interface XLogger {
      * @param detail    详细信息
      * @param args      详细信息中的参数
      */
-    void logD(String tag, Throwable throwable, String detail, Object... args);
+    void logD(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String detail, @Nullable Object... args);
 
     /**
      * 获取根节点日志等级
      *
      * @return 根节点日志等级
      */
+    @Nonnull
     String getLevel();
 
     /**
@@ -102,56 +106,35 @@ public interface XLogger {
      *
      * @param level 根节点日志等级
      */
-    void setLevel(String level);
-
-    /**
-     * 设置某个tag及其子级的日志等级
-     *
-     * @param tag   日志tag
-     * @param level 日志等级
-     */
-    void setLevel(String tag, String level);
-
-    /**
-     * 获取某个tag及其子级的日志等级
-     *
-     * @param tag tag标签
-     * @return 某个tag及其子级的日志等级
-     */
-    String getLevel(String tag);
+    void setLevel(@Nonnull String level);
 
     /**
      * 添加日志处理器
      *
      * @param handler 日志处理器
      */
-    void addHandler(Handler handler);
+    void addHandler(@Nonnull Handler handler);
 
     /**
      * 获取日志处理器
      *
      * @return 日志处理器
      */
+    @Nonnull
     Handler[] getHandlers();
 
     /**
      * 日志处理器接口
      */
     interface Handler {
-
         /**
-         * 获取处理器的处理等级
+         * 是否处理日志
          *
-         * @return 处理等级
+         * @param level 日志等级
+         * @param tag   日志tag
+         * @return 是否处理
          */
-        String getLevel();
-
-        /**
-         * 设置处理器的处理等级
-         *
-         * @param level 处理等级
-         */
-        void setLevel(String level);
+        boolean accept(@Nonnull String level, @Nonnull String tag);
 
         /**
          * 日志处理方法
@@ -160,6 +143,6 @@ public interface XLogger {
          * @param tag   日志tag
          * @param msg   日志信息
          */
-        void record(String level, String tag, String msg);
+        void recordLog(@Nonnull String level, @Nonnull String tag, @Nonnull String msg);
     }
 }

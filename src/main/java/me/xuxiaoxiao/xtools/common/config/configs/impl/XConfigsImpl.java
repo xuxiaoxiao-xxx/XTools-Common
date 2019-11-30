@@ -2,29 +2,35 @@ package me.xuxiaoxiao.xtools.common.config.configs.impl;
 
 import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class XConfigsImpl extends Observable implements XConfigs {
     private final Properties configs = new Properties();
-    private final Lock lock = new ReentrantLock();
+    private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
+    @Nonnull
     @Override
-    public String cfgGet(String key) {
-        return configs.getProperty(key);
+    public String cfgGet(@Nonnull String key) {
+        lock.readLock().lock();
+        try {
+            return configs.getProperty(key);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
-    public void cfgSet(String key, String val) {
-        Objects.requireNonNull(key, "配置键不能为null");
-        Objects.requireNonNull(val, "配置值不能为null");
-        lock.lock();
+    public void cfgSet(@Nonnull String key, @Nonnull String val) {
+        lock.writeLock().lock();
         try {
             Object valOld = configs.setProperty(key, val);
             if (!val.equals(valOld)) {
@@ -32,14 +38,15 @@ public class XConfigsImpl extends Observable implements XConfigs {
                 notifyObservers(new String[]{key, valOld == null ? null : String.valueOf(valOld), val});
             }
         } finally {
-            lock.unlock();
+            lock.writeLock().unlock();
         }
     }
 
+    @Nullable
     @Override
-    public String cfgRmv(String key) {
+    public String cfgRmv(@Nonnull String key) {
         Objects.requireNonNull(key, "配置键不能为null");
-        lock.lock();
+        lock.writeLock().lock();
         try {
             Object value = configs.remove(key);
             if (value != null) {
@@ -50,15 +57,14 @@ public class XConfigsImpl extends Observable implements XConfigs {
                 return null;
             }
         } finally {
-            lock.unlock();
+            lock.writeLock().unlock();
         }
     }
 
+    @Nonnull
     @Override
-    public String cfgDef(String key, String def) {
-        Objects.requireNonNull(key, "配置键不能为null");
-        Objects.requireNonNull(def, "配置值不能为null");
-        lock.lock();
+    public String cfgDef(@Nonnull String key, @Nonnull String def) {
+        lock.writeLock().lock();
         try {
             if (configs.getProperty(key) == null) {
                 configs.setProperty(key, def);
@@ -69,13 +75,13 @@ public class XConfigsImpl extends Observable implements XConfigs {
                 return configs.getProperty(key, def);
             }
         } finally {
-            lock.unlock();
+            lock.writeLock().unlock();
         }
     }
 
     @Override
-    public void cfgLoad(String file, String charset) throws IOException {
-        lock.lock();
+    public void cfgLoad(@Nonnull String file, @Nonnull String charset) throws IOException {
+        lock.writeLock().lock();
         try {
             Enumeration<URL> urls = XConfigsImpl.class.getClassLoader().getResources(file);
             while (urls != null && urls.hasMoreElements()) {
@@ -94,13 +100,13 @@ public class XConfigsImpl extends Observable implements XConfigs {
                 }
             }
         } finally {
-            lock.unlock();
+            lock.writeLock().unlock();
         }
     }
 
     @Override
-    public void cfgIterate(Iteration iteration) {
-        lock.lock();
+    public void cfgIterate(@Nonnull Iteration iteration) {
+        lock.writeLock().lock();
         try {
             Iterator<Map.Entry<Object, Object>> iterator = configs.entrySet().iterator();
             while (iterator.hasNext()) {
@@ -113,7 +119,7 @@ public class XConfigsImpl extends Observable implements XConfigs {
                 }
             }
         } finally {
-            lock.unlock();
+            lock.writeLock().unlock();
         }
     }
 
@@ -121,19 +127,19 @@ public class XConfigsImpl extends Observable implements XConfigs {
     public void cfgClear() {
         cfgIterate(new Iteration() {
             @Override
-            public boolean iterate(String key, String value) {
+            public boolean iterate(@Nonnull String key, @Nonnull String value) {
                 return true;
             }
         });
     }
 
     @Override
-    public void watcherAdd(String prefix, Watcher watcher) {
+    public void watcherAdd(@Nonnull String prefix, @Nonnull Watcher watcher) {
         addObserver(new WObserver(prefix, watcher));
     }
 
     @Override
-    public void watcherDel(String prefix, Watcher watcher) {
+    public void watcherDel(@Nonnull String prefix, @Nonnull Watcher watcher) {
         deleteObserver(new WObserver(prefix, watcher));
     }
 
@@ -150,7 +156,7 @@ public class XConfigsImpl extends Observable implements XConfigs {
         private final String prefix;
         private final Watcher watcher;
 
-        public WObserver(String prefix, Watcher watcher) {
+        public WObserver(@Nonnull String prefix, @Nonnull Watcher watcher) {
             this.prefix = prefix.replace("\\.+$", "");
             this.watcher = watcher;
         }

@@ -6,8 +6,11 @@ import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.log.XLogTools;
+import me.xuxiaoxiao.xtools.common.log.logger.XLogger;
 import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -29,7 +32,8 @@ public final class XTools {
      * @param str 被散列的字符串
      * @return 散列结果，全小写字母
      */
-    public static String md5(String str) {
+    @Nullable
+    public static String md5(@Nonnull String str) {
         try {
             return XCodeTools.hash(XCodeTools.HASH_MD5, str.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
@@ -43,7 +47,8 @@ public final class XTools {
      * @param file 被散列的文件
      * @return 散列结果，全小写字母
      */
-    public static String md5(File file) {
+    @Nullable
+    public static String md5(@Nonnull File file) {
         try {
             return XCodeTools.hash(XCodeTools.HASH_MD5, file);
         } catch (Exception e) {
@@ -58,7 +63,8 @@ public final class XTools {
      * @param str 被散列的字符串
      * @return 散列结果，全小写字母
      */
-    public static String sha1(String str) {
+    @Nullable
+    public static String sha1(@Nonnull String str) {
         try {
             return XCodeTools.hash(XCodeTools.HASH_SHA1, str.getBytes(StandardCharsets.UTF_8));
         } catch (Exception e) {
@@ -72,7 +78,8 @@ public final class XTools {
      * @param file 被散列的文件
      * @return 散列结果，全小写字母
      */
-    public static String sha1(File file) {
+    @Nullable
+    public static String sha1(@Nonnull File file) {
         try {
             return XCodeTools.hash(XCodeTools.HASH_SHA1, file);
         } catch (Exception e) {
@@ -88,7 +95,8 @@ public final class XTools {
      * @param request http请求
      * @return 请求的响应体
      */
-    public static XHttpExecutor.Response http(XHttpExecutor.Request request) {
+    @Nonnull
+    public static XHttpExecutor.Response http(@Nonnull XHttpExecutor.Request request) {
         return XHttpTools.http(XHttpTools.EXECUTOR, request);
     }
 
@@ -99,7 +107,8 @@ public final class XTools {
      * @param request  http请求
      * @return 请求的响应体
      */
-    public static XHttpExecutor.Response http(XHttpExecutor executor, XHttpExecutor.Request request) {
+    @Nonnull
+    public static XHttpExecutor.Response http(@Nonnull XHttpExecutor executor, @Nonnull XHttpExecutor.Request request) {
         return XHttpTools.http(executor, request);
     }
 
@@ -109,7 +118,7 @@ public final class XTools {
      * @param str 要判断的字符串
      * @return str == null || str.length() == 0
      */
-    public static boolean strEmpty(String str) {
+    public static boolean strEmpty(@Nullable String str) {
         return str == null || str.length() == 0;
     }
 
@@ -119,8 +128,25 @@ public final class XTools {
      * @param str 要判断的字符串
      * @return str == null || str.trim().length() == 0
      */
-    public static boolean strBlank(String str) {
+    public static boolean strBlank(@Nullable String str) {
         return str == null || str.trim().length() == 0;
+    }
+
+    @Nullable
+    public static String strTrim(@Nullable String str) {
+        return str == null ? null : str.trim();
+    }
+
+    @Nullable
+    public static String[] strTrim(@Nullable String[] strs) {
+        if (strs == null) {
+            return null;
+        } else {
+            for (int i = 0, len = strs.length; i < len; i++) {
+                strs[i] = (strs[i] == null ? null : strs[i].trim());
+            }
+            return strs;
+        }
     }
 
     /**
@@ -130,7 +156,8 @@ public final class XTools {
      * @param glue   用于连接的字符串
      * @return 连接后的字符串
      */
-    public static String strJoin(String[] strArr, String glue) {
+    @Nonnull
+    public static String strJoin(@Nonnull String[] strArr, @Nonnull String glue) {
         StringBuilder sbStr = new StringBuilder();
         for (String str : strArr) {
             if (sbStr.length() > 0) {
@@ -148,7 +175,8 @@ public final class XTools {
      * @param glue   用于连接的字符串
      * @return 连接后的字符串
      */
-    public static String strJoin(Collection<String> strSet, String glue) {
+    @Nonnull
+    public static String strJoin(@Nonnull Collection<String> strSet, @Nonnull String glue) {
         StringBuilder sbStr = new StringBuilder();
         for (String str : strSet) {
             if (sbStr.length() > 0) {
@@ -167,7 +195,8 @@ public final class XTools {
      * @param glueOuter 连接键值对之间的字符串
      * @return 拼接后的字符串
      */
-    public static String strJoin(Map<?, ?> strMap, String glueInner, String glueOuter) {
+    @Nonnull
+    public static String strJoin(@Nonnull Map<?, ?> strMap, @Nonnull String glueInner, @Nonnull String glueOuter) {
         StringBuilder sbStr = new StringBuilder();
         for (Object key : strMap.keySet()) {
             if (sbStr.length() > 0) {
@@ -187,13 +216,16 @@ public final class XTools {
      * @return 保存后的文件
      * @throws IOException 在保存时可能会发生IO异常
      */
-    public static File strToFile(String str, String path, String charset) throws IOException {
+    @Nonnull
+    public static File strToFile(@Nullable String str, @Nonnull String path, @Nonnull String charset) throws IOException {
         File file = new File(path);
-        try (BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(file))) {
-            outStream.write(str.getBytes(charset));
-            outStream.flush();
-            return file;
+        if (!XTools.strEmpty(str)) {
+            try (BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(file))) {
+                outStream.write(str.getBytes(charset));
+                outStream.flush();
+            }
         }
+        return file;
     }
 
     /**
@@ -204,7 +236,8 @@ public final class XTools {
      * @return 读取出的字符串
      * @throws IOException 在读取时可能会发生IO异常
      */
-    public static String fileToStr(File file, String charset) throws IOException {
+    @Nonnull
+    public static String fileToStr(@Nonnull File file, @Nonnull String charset) throws IOException {
         try (FileInputStream fInStream = new FileInputStream(file)) {
             return streamToStr(fInStream, charset);
         }
@@ -218,7 +251,8 @@ public final class XTools {
      * @return 目标文件
      * @throws IOException 在复制时可能会发生IO异常
      */
-    public static File fileToFile(File file, String path) throws IOException {
+    @Nonnull
+    public static File fileToFile(@Nonnull File file, @Nonnull String path) throws IOException {
         File fileTo = new File(path);
         try (FileInputStream fInStream = new FileInputStream(file); FileOutputStream fOutStream = new FileOutputStream(fileTo)) {
             streamToStream(fInStream, fOutStream);
@@ -234,7 +268,8 @@ public final class XTools {
      * @return 读取出的字符串
      * @throws IOException 在读取时可能会发生IO异常
      */
-    public static String streamToStr(InputStream inStream, String charset) throws IOException {
+    @Nonnull
+    public static String streamToStr(@Nonnull InputStream inStream, @Nonnull String charset) throws IOException {
         int count;
         char[] buffer = new char[1024];
         StringBuilder sbStr = new StringBuilder();
@@ -253,7 +288,8 @@ public final class XTools {
      * @return 保存后的文件
      * @throws IOException 在读取时可能会发生IO异常
      */
-    public static File streamToFile(InputStream inStream, String path) throws IOException {
+    @Nonnull
+    public static File streamToFile(@Nonnull InputStream inStream, @Nonnull String path) throws IOException {
         int count;
         byte[] buffer = new byte[1024];
         File file = new File(path);
@@ -274,7 +310,7 @@ public final class XTools {
      * @param outStream 要写入的输出流，不会关闭该输出流
      * @throws IOException 输入输出时可能会发生IO异常
      */
-    public static void streamToStream(InputStream inStream, OutputStream outStream) throws IOException {
+    public static void streamToStream(@Nonnull InputStream inStream, @Nonnull OutputStream outStream) throws IOException {
         int count;
         byte[] buffer = new byte[1024];
         BufferedInputStream bufInStream = new BufferedInputStream(inStream);
@@ -291,7 +327,7 @@ public final class XTools {
      * @param date 任意一天的date对象
      * @return 任意一天的类型。1：工作日(XTimeTools.WORKDAY)，2：公休日(XTimeTools.RESTDAY)，3：节假日(XTimeTools.HOLIDAY)
      */
-    public static int dateType(Date date) {
+    public static int dateType(@Nonnull Date date) {
         return XTimeTools.dateType(date);
     }
 
@@ -301,7 +337,8 @@ public final class XTools {
      * @param date date对象
      * @return 相应格式的字符串
      */
-    public static String dateFormat(Date date) {
+    @Nonnull
+    public static String dateFormat(@Nonnull Date date) {
         return XTimeTools.dateFormat(XTimeTools.FORMAT_YMDHMS, date);
     }
 
@@ -312,7 +349,8 @@ public final class XTools {
      * @param date   date对象
      * @return 相应格式的字符串
      */
-    public static String dateFormat(String format, Date date) {
+    @Nonnull
+    public static String dateFormat(@Nonnull String format, @Nonnull Date date) {
         return XTimeTools.dateFormat(format, date);
     }
 
@@ -322,7 +360,8 @@ public final class XTools {
      * @param dateStr 日期字符串
      * @return 相应的date对象
      */
-    public static Date dateParse(String dateStr) {
+    @Nonnull
+    public static Date dateParse(@Nonnull String dateStr) {
         return XTimeTools.dateParse(XTimeTools.FORMAT_YMDHMS, dateStr);
     }
 
@@ -333,7 +372,8 @@ public final class XTools {
      * @param dateStr 日期字符串
      * @return 相应的date对象
      */
-    public static Date dateParse(String format, String dateStr) {
+    @Nonnull
+    public static Date dateParse(@Nonnull String format, @Nonnull String dateStr) {
         return XTimeTools.dateParse(format, dateStr);
     }
 
@@ -344,7 +384,8 @@ public final class XTools {
      * @param offset 偏移的天数
      * @return 以base所在的那一天为基准偏移offset天00:00:00时刻的date对象
      */
-    public static Date date(Date base, int offset) {
+    @Nonnull
+    public static Date date(@Nullable Date base, int offset) {
         return XTimeTools.date(base, offset);
     }
 
@@ -356,7 +397,8 @@ public final class XTools {
      * @param dayIndex   那一周的第几天（每周的第一天是周一，周一为0）
      * @return 以base所在的那一周为基准偏移weekOffset周的dayIndex天00:00:00时刻的date对象
      */
-    public static Date dateByWeek(Date base, int weekOffset, int dayIndex) {
+    @Nonnull
+    public static Date dateByWeek(@Nullable Date base, int weekOffset, int dayIndex) {
         return XTimeTools.dateByWeek(base, weekOffset, dayIndex);
     }
 
@@ -368,7 +410,8 @@ public final class XTools {
      * @param dayIndex    那一月的第几天（一号为0）
      * @return 以base所在的那一月为基准偏移monthOffset月的dayIndex天00:00:00时刻的date对象
      */
-    public static Date dateByMonth(Date base, int monthOffset, int dayIndex) {
+    @Nonnull
+    public static Date dateByMonth(@Nullable Date base, int monthOffset, int dayIndex) {
         return XTimeTools.dateByMonth(base, monthOffset, dayIndex);
     }
 
@@ -380,7 +423,8 @@ public final class XTools {
      * @param dayIndex     那一季度的第几天（一号为0）
      * @return 以base所在的那一季度为基准偏移seasonOffset季度的dayIndex天00:00:00时刻的date对象
      */
-    public static Date dateBySeason(Date base, int seasonOffset, int dayIndex) {
+    @Nonnull
+    public static Date dateBySeason(@Nullable Date base, int seasonOffset, int dayIndex) {
         return XTimeTools.dateBySeason(base, seasonOffset, dayIndex);
     }
 
@@ -392,7 +436,8 @@ public final class XTools {
      * @param dayIndex   那一年的第几天（第一天为0）
      * @return 以base所在的那一年为基准偏移yearOffset年的dayIndex天00:00:00时刻的date对象
      */
-    public static Date dateByYear(Date base, int yearOffset, int dayIndex) {
+    @Nonnull
+    public static Date dateByYear(@Nullable Date base, int yearOffset, int dayIndex) {
         return XTimeTools.dateByYear(base, yearOffset, dayIndex);
     }
 
@@ -404,7 +449,8 @@ public final class XTools {
      * @param weekIndex   那一月的第几周（每周的第一天是周一，每月的第一周是第一个周一所在的那一周，第一周为0）
      * @return 以base所在的那一月为基准偏移monthOffset月的weekIndex周的周一00:00:00时刻的date对象
      */
-    public static Date weekByMonth(Date base, int monthOffset, int weekIndex) {
+    @Nonnull
+    public static Date weekByMonth(@Nullable Date base, int monthOffset, int weekIndex) {
         return XTimeTools.weekByMonth(base, monthOffset, weekIndex);
     }
 
@@ -416,7 +462,8 @@ public final class XTools {
      * @param weekIndex    那一季度的第几周（每周的第一天是周一，每季度的第一周是第一个周一所在的那一周，第一周为0）
      * @return 以base所在的那一季度为基准偏移seasonOffset季度的weekIndex周的周一00:00:00时刻的date对象
      */
-    public static Date weekBySeason(Date base, int seasonOffset, int weekIndex) {
+    @Nonnull
+    public static Date weekBySeason(@Nullable Date base, int seasonOffset, int weekIndex) {
         return XTimeTools.weekBySeason(base, seasonOffset, weekIndex);
     }
 
@@ -428,7 +475,8 @@ public final class XTools {
      * @param weekIndex  那一年的第几周（每周的第一天是周一，每年的第一周是第一个周一所在的那一周，第一周为0）
      * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的weekIndex周的周一00:00:00时刻的date对象
      */
-    public static Date weekByYear(Date base, int yearOffset, int weekIndex) {
+    @Nonnull
+    public static Date weekByYear(@Nullable Date base, int yearOffset, int weekIndex) {
         return XTimeTools.weekByYear(base, yearOffset, weekIndex);
     }
 
@@ -440,7 +488,8 @@ public final class XTools {
      * @param monthIndex   那一季度的第几个月（第一个月为0）
      * @return 以base所在的那一季度为基准偏移seasonOffset季度的monthIndex月的一号00:00:00时刻的date对象
      */
-    public static Date monthBySeason(Date base, int seasonOffset, int monthIndex) {
+    @Nonnull
+    public static Date monthBySeason(@Nullable Date base, int seasonOffset, int monthIndex) {
         return XTimeTools.monthBySeason(base, seasonOffset, monthIndex);
     }
 
@@ -452,7 +501,8 @@ public final class XTools {
      * @param monthIndex 那一年的第几个月（一月为0）
      * @return 以base所在的那一年为基准偏移yearOffset年的monthIndex月的weekIndex周的周一00:00:00时刻的date对象
      */
-    public static Date monthByYear(Date base, int yearOffset, int monthIndex) {
+    @Nonnull
+    public static Date monthByYear(@Nullable Date base, int yearOffset, int monthIndex) {
         return XTimeTools.monthByYear(base, yearOffset, monthIndex);
     }
 
@@ -464,7 +514,8 @@ public final class XTools {
      * @param seasonIndex 那一年的第几个季度（第一个季度为0）
      * @return 以base所在的那一年为基准偏移yearOffset年的seasonIndex月的第一天00:00:00时刻的date对象
      */
-    public static Date seasonByYear(Date base, int yearOffset, int seasonIndex) {
+    @Nonnull
+    public static Date seasonByYear(@Nullable Date base, int yearOffset, int seasonIndex) {
         return XTimeTools.seasonByYear(base, yearOffset, seasonIndex);
     }
 
@@ -474,7 +525,7 @@ public final class XTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天是那周中的第几天（每周的第一天是周一，周一为0）
      */
-    public static int dateInWeek(Date base) {
+    public static int dateInWeek(@Nullable Date base) {
         return XTimeTools.dateInWeek(base);
     }
 
@@ -484,7 +535,7 @@ public final class XTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天是那个月中的第几天（一号为0）
      */
-    public static int dateInMonth(Date base) {
+    public static int dateInMonth(@Nullable Date base) {
         return XTimeTools.dateInMonth(base);
     }
 
@@ -494,7 +545,7 @@ public final class XTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天是那个季度中的第几天（第一天为0）
      */
-    public static int dateInSeason(Date base) {
+    public static int dateInSeason(@Nullable Date base) {
         return XTimeTools.dateInSeason(base);
     }
 
@@ -504,7 +555,7 @@ public final class XTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天是那一年中的第几天（第一天为0）
      */
-    public static int dateInYear(Date base) {
+    public static int dateInYear(@Nullable Date base) {
         return XTimeTools.dateInYear(base);
     }
 
@@ -514,7 +565,7 @@ public final class XTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的周是哪个月的第几周（正数表示本月第几周，负数表示上月第几周,例：1=本月第二周，-3=上月第四周）
      */
-    public static int weekInMonth(Date base) {
+    public static int weekInMonth(@Nullable Date base) {
         return XTimeTools.weekInMonth(base);
     }
 
@@ -524,7 +575,7 @@ public final class XTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的周是哪一季度的第几周（正数表示本季度第几周，负数表示上季度第几周,例：1=本季第第二周，-12=上季度第13周）
      */
-    public static int weekInSeason(Date base) {
+    public static int weekInSeason(@Nullable Date base) {
         return XTimeTools.weekInSeason(base);
     }
 
@@ -534,7 +585,7 @@ public final class XTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的周是哪一年的第几周（正数表示今年第几周，负数表示去年第几周,例：1=今年第二周，-51=去年第52周）
      */
-    public static int weekInYear(Date base) {
+    public static int weekInYear(@Nullable Date base) {
         return XTimeTools.weekInYear(base);
     }
 
@@ -544,7 +595,7 @@ public final class XTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的月是那一季度的第几月，第一个月为0
      */
-    public static int monthInSeason(Date base) {
+    public static int monthInSeason(@Nullable Date base) {
         return XTimeTools.monthInSeason(base);
     }
 
@@ -554,7 +605,7 @@ public final class XTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的月是那一年的第几月
      */
-    public static int monthInYear(Date base) {
+    public static int monthInYear(@Nullable Date base) {
         return XTimeTools.monthInYear(base);
     }
 
@@ -564,7 +615,7 @@ public final class XTools {
      * @param base 基准时间的date对象，如果为null则以当前时间为基准
      * @return base那天所在的季度是那一年的第几季度，第一个季度为0
      */
-    public static int seasonInYear(Date base) {
+    public static int seasonInYear(@Nullable Date base) {
         return XTimeTools.seasonInYear(base);
     }
 
@@ -574,7 +625,8 @@ public final class XTools {
      * @param solarDate 阳历时间的Date对象
      * @return 对应的农历时间的字符串，例1：1992年八月初六。例2：2033年闰冬月廿八
      */
-    public static String solarToLunar(Date solarDate) {
+    @Nonnull
+    public static String solarToLunar(@Nonnull Date solarDate) {
         return XTimeTools.solarToLunar(solarDate);
     }
 
@@ -584,7 +636,8 @@ public final class XTools {
      * @param lunarDate 农历时间字符串。例1：1992年八月初六。例2：2033年闰冬月廿八
      * @return 阳历时间的Date对象
      */
-    public static Date lunarToSolar(String lunarDate) {
+    @Nonnull
+    public static Date lunarToSolar(@Nonnull String lunarDate) {
         return XTimeTools.lunarToSolar(lunarDate);
     }
 
@@ -633,7 +686,7 @@ public final class XTools {
      * @param key 配置键
      * @param val 配置值
      */
-    public static void cfgSet(String key, String val) {
+    public static void cfgSet(@Nonnull String key, @Nonnull String val) {
         XConfigTools.X_CONFIGS.cfgSet(key, val);
     }
 
@@ -643,7 +696,8 @@ public final class XTools {
      * @param key 配置信息键名
      * @return 配置信息值
      */
-    public static String cfgGet(String key) {
+    @Nullable
+    public static String cfgGet(@Nonnull String key) {
         return XConfigTools.X_CONFIGS.cfgGet(key);
     }
 
@@ -654,7 +708,8 @@ public final class XTools {
      * @param def 配置值为null时设置的默认值
      * @return 当配置值为null时，将def设置为配置值并返回，否则返回原有的配置值并且不做任何更改
      */
-    public static String cfgDef(String key, String def) {
+    @Nonnull
+    public static String cfgDef(@Nonnull String key, @Nonnull String def) {
         return XConfigTools.X_CONFIGS.cfgDef(key, def);
     }
 
@@ -664,7 +719,7 @@ public final class XTools {
      * @param prefix  配置键前缀
      * @param watcher 配置信息监听器
      */
-    public static void cfgWatch(String prefix, XConfigs.Watcher watcher) {
+    public static void cfgWatch(@Nonnull String prefix, @Nonnull XConfigs.Watcher watcher) {
         XConfigTools.X_CONFIGS.watcherAdd(prefix, watcher);
     }
 
@@ -675,7 +730,7 @@ public final class XTools {
      * @param error 错误信息
      * @param args  错误信息中的参数
      */
-    public static void logE(String tag, String error, Object... args) {
+    public static void logE(@Nonnull String tag, @Nonnull String error, @Nullable Object... args) {
         XLogTools.LOGGER.logE(tag, error, args);
     }
 
@@ -687,7 +742,7 @@ public final class XTools {
      * @param error     错误信息
      * @param args      错误信息中的参数
      */
-    public static void logE(String tag, Throwable throwable, String error, Object... args) {
+    public static void logE(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String error, @Nullable Object... args) {
         XLogTools.LOGGER.logE(tag, throwable, error, args);
     }
 
@@ -698,7 +753,7 @@ public final class XTools {
      * @param warning 警告信息
      * @param args    警告信息中的参数
      */
-    public static void logW(String tag, String warning, Object... args) {
+    public static void logW(@Nonnull String tag, @Nonnull String warning, @Nullable Object... args) {
         XLogTools.LOGGER.logW(tag, warning, args);
     }
 
@@ -710,7 +765,7 @@ public final class XTools {
      * @param warning   告警信息
      * @param args      告警信息中的参数
      */
-    public static void logW(String tag, Throwable throwable, String warning, Object... args) {
+    public static void logW(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String warning, @Nullable Object... args) {
         XLogTools.LOGGER.logW(tag, throwable, warning, args);
     }
 
@@ -721,7 +776,7 @@ public final class XTools {
      * @param notice 提示信息
      * @param args   提示信息中的参数
      */
-    public static void logN(String tag, String notice, Object... args) {
+    public static void logN(@Nonnull String tag, @Nonnull String notice, @Nullable Object... args) {
         XLogTools.LOGGER.logN(tag, notice, args);
     }
 
@@ -732,7 +787,15 @@ public final class XTools {
      * @param detail 详细信息
      * @param args   详细信息中的参数
      */
-    public static void logD(String tag, String detail, Object... args) {
+    public static void logD(@Nonnull String tag, @Nonnull String detail, @Nullable Object... args) {
         XLogTools.LOGGER.logD(tag, detail, args);
+    }
+
+    public static void main(String[] args) {
+        XLogTools.LOGGER.setLevel(XLogger.LEVEL_DETAIL);
+        XTools.logE("aaa", "aaa");
+        XTools.logW("aaa.bbb", "aaa.bbb");
+        XTools.logN("aaa.bbb.ccc", "aaa.bbb.ccc");
+        XTools.logD("aaa.bbb.ccc.ddd", "aaa.bbb.ccc.ddd");
     }
 }

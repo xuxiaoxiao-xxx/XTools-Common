@@ -3,6 +3,7 @@ package me.xuxiaoxiao.xtools.common.config;
 import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 import me.xuxiaoxiao.xtools.common.config.configs.impl.XConfigsImpl;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 
 /**
@@ -29,8 +30,9 @@ public final class XConfigTools {
      * @param <T>       实例类型
      * @return 需求的类的实例
      */
+    @Nonnull
     @SuppressWarnings("unchecked")
-    public static <T> T supply(String clazzName) {
+    public static <T> T supply(@Nonnull String clazzName) {
         try {
             Class<?> clazz = Class.forName(clazzName);
             if (XSupplier.class.isAssignableFrom(clazz)) {
