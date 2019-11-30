@@ -2,6 +2,7 @@ package me.xuxiaoxiao.xtools.common.log.logger.impl;
 
 import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.config.XConfigTools;
+import me.xuxiaoxiao.xtools.common.log.XLogTools;
 import me.xuxiaoxiao.xtools.common.log.logger.XLogger;
 
 import javax.annotation.Nonnull;
@@ -30,17 +31,17 @@ public class XLoggerImpl implements XLogger {
     public static final String CFG_FILE_APPEND = XTools.CFG_PREFIX + "log.file.append";
     public static final String CFG_FILE_APPEND_DEFAULT = "true";
     public static final String CFG_FILE_LEVEL = XTools.CFG_PREFIX + "log.file.level";
-    public static final String CFG_FILE_LEVEL_DEFAULT = "warning";
+    public static final String CFG_FILE_LEVEL_DEFAULT = "detail";
     private static final String TAG = "xlog";
     /**
      * jdk日志根记录器
      */
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-    private final Logger root = Logger.getLogger(TAG);
+    private final Logger logger = Logger.getLogger(TAG);
     private final ArrayList<Handler> handlers = new ArrayList<>();
 
     public XLoggerImpl() {
-        this.root.setUseParentHandlers(false);
+        this.logger.setUseParentHandlers(false);
         this.setLevel(XTools.cfgDef(CFG_LEVEL, CFG_LEVEL_DEFAULT));
         String handlersStr = XTools.cfgDef(CFG_HANDLERS, CFG_HANDLERS_DEFAULT);
         if (!XTools.strBlank(handlersStr)) {
@@ -112,10 +113,12 @@ public class XLoggerImpl implements XLogger {
     public void logE(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String error, @Nullable Object... args) {
         this.rwLock.readLock().lock();
         try {
-            for (Handler handler : this.handlers) {
-                if (handler.accept(LEVEL_ERROR, tag)) {
-                    this.root.log(Level.SEVERE, buildMsg(throwable, error, args), tag);
-                    break;
+            if (this.logger.isLoggable(strToLevel(LEVEL_ERROR))) {
+                for (Handler handler : this.handlers) {
+                    if (handler.accept(LEVEL_ERROR, tag)) {
+                        this.logger.log(Level.SEVERE, buildMsg(throwable, error, args), tag);
+                        break;
+                    }
                 }
             }
         } finally {
@@ -138,10 +141,12 @@ public class XLoggerImpl implements XLogger {
     public void logW(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String warning, @Nullable Object... args) {
         this.rwLock.readLock().lock();
         try {
-            for (Handler handler : this.handlers) {
-                if (handler.accept(LEVEL_WARNING, tag)) {
-                    this.root.log(Level.WARNING, buildMsg(throwable, warning, args), tag);
-                    break;
+            if (this.logger.isLoggable(strToLevel(LEVEL_WARNING))) {
+                for (Handler handler : this.handlers) {
+                    if (handler.accept(LEVEL_WARNING, tag)) {
+                        this.logger.log(Level.WARNING, buildMsg(throwable, warning, args), tag);
+                        break;
+                    }
                 }
             }
         } finally {
@@ -164,10 +169,12 @@ public class XLoggerImpl implements XLogger {
     public void logN(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String notice, @Nullable Object... args) {
         this.rwLock.readLock().lock();
         try {
-            for (Handler handler : this.handlers) {
-                if (handler.accept(LEVEL_NOTICE, tag)) {
-                    this.root.log(Level.INFO, buildMsg(throwable, notice, args), tag);
-                    break;
+            if (this.logger.isLoggable(strToLevel(LEVEL_NOTICE))) {
+                for (Handler handler : this.handlers) {
+                    if (handler.accept(LEVEL_NOTICE, tag)) {
+                        this.logger.log(Level.INFO, buildMsg(throwable, notice, args), tag);
+                        break;
+                    }
                 }
             }
         } finally {
@@ -190,10 +197,12 @@ public class XLoggerImpl implements XLogger {
     public void logD(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String detail, @Nullable Object... args) {
         this.rwLock.readLock().lock();
         try {
-            for (Handler handler : this.handlers) {
-                if (handler.accept(LEVEL_DETAIL, tag)) {
-                    this.root.log(Level.CONFIG, buildMsg(throwable, detail, args), tag);
-                    break;
+            if (this.logger.isLoggable(strToLevel(LEVEL_DETAIL))) {
+                for (Handler handler : this.handlers) {
+                    if (handler.accept(LEVEL_DETAIL, tag)) {
+                        this.logger.log(Level.CONFIG, buildMsg(throwable, detail, args), tag);
+                        break;
+                    }
                 }
             }
         } finally {
@@ -204,12 +213,12 @@ public class XLoggerImpl implements XLogger {
     @Nonnull
     @Override
     public String getLevel() {
-        return levelToStr(this.root.getLevel());
+        return levelToStr(this.logger.getLevel());
     }
 
     @Override
     public void setLevel(@Nonnull String level) {
-        this.root.setLevel(strToLevel(level));
+        this.logger.setLevel(strToLevel(level));
     }
 
     @Override
@@ -218,9 +227,9 @@ public class XLoggerImpl implements XLogger {
         try {
             this.handlers.add(handler);
             if (handler instanceof java.util.logging.Handler) {
-                this.root.addHandler((java.util.logging.Handler) handler);
+                this.logger.addHandler((java.util.logging.Handler) handler);
             } else {
-                this.root.addHandler(new HandlerWrapper(handler));
+                this.logger.addHandler(new HandlerWrapper(handler));
             }
         } finally {
             rwLock.writeLock().unlock();
@@ -253,7 +262,7 @@ public class XLoggerImpl implements XLogger {
         @Override
         public void publish(LogRecord record) {
             if (handler.accept(XLoggerImpl.levelToStr(record.getLevel()), (String) record.getParameters()[0])) {
-                handler.recordLog(XLoggerImpl.levelToStr(record.getLevel()), (String) record.getParameters()[0], record.getMessage());
+                handler.record(XLoggerImpl.levelToStr(record.getLevel()), (String) record.getParameters()[0], record.getMessage());
             }
         }
 
@@ -304,14 +313,16 @@ public class XLoggerImpl implements XLogger {
 
         @Override
         public boolean accept(@Nonnull String level, @Nonnull String tag) {
-            return strToLevel(level).intValue() > this.getLevel().intValue();
+            return XLogTools.acceptLevel(level, levelToStr(this.getLevel()));
         }
 
         @Override
-        public void recordLog(@Nonnull String level, @Nonnull String tag, @Nonnull String msg) {
-            LogRecord logRecord = new LogRecord(XLoggerImpl.strToLevel(level), msg);
-            logRecord.setParameters(new Object[]{tag});
-            this.publish(logRecord);
+        public void record(@Nonnull String level, @Nonnull String tag, @Nonnull String msg) {
+            if (accept(level, tag)) {
+                LogRecord logRecord = new LogRecord(XLoggerImpl.strToLevel(level), msg);
+                logRecord.setParameters(new Object[]{tag});
+                this.publish(logRecord);
+            }
         }
     }
 
@@ -328,14 +339,16 @@ public class XLoggerImpl implements XLogger {
 
         @Override
         public boolean accept(@Nonnull String level, @Nonnull String tag) {
-            return strToLevel(level).intValue() > this.getLevel().intValue();
+            return XLogTools.acceptLevel(level, levelToStr(this.getLevel()));
         }
 
         @Override
-        public void recordLog(@Nonnull String level, @Nonnull String tag, @Nonnull String msg) {
-            LogRecord logRecord = new LogRecord(XLoggerImpl.strToLevel(level), msg);
-            logRecord.setParameters(new Object[]{tag});
-            this.publish(logRecord);
+        public void record(@Nonnull String level, @Nonnull String tag, @Nonnull String msg) {
+            if (accept(level, tag)) {
+                LogRecord logRecord = new LogRecord(XLoggerImpl.strToLevel(level), msg);
+                logRecord.setParameters(new Object[]{tag});
+                this.publish(logRecord);
+            }
         }
     }
 }

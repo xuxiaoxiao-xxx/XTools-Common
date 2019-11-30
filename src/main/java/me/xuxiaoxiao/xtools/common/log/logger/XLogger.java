@@ -143,6 +143,6 @@ public interface XLogger {
          * @param tag   日志tag
          * @param msg   日志信息
          */
-        void recordLog(@Nonnull String level, @Nonnull String tag, @Nonnull String msg);
+        void record(@Nonnull String level, @Nonnull String tag, @Nonnull String msg);
     }
 }

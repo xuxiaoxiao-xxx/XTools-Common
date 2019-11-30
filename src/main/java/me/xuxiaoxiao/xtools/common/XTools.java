@@ -6,7 +6,6 @@ import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.log.XLogTools;
-import me.xuxiaoxiao.xtools.common.log.logger.XLogger;
 import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
 import javax.annotation.Nonnull;
@@ -789,13 +788,5 @@ public final class XTools {
      */
     public static void logD(@Nonnull String tag, @Nonnull String detail, @Nullable Object... args) {
         XLogTools.LOGGER.logD(tag, detail, args);
-    }
-
-    public static void main(String[] args) {
-        XLogTools.LOGGER.setLevel(XLogger.LEVEL_DETAIL);
-        XTools.logE("aaa", "aaa");
-        XTools.logW("aaa.bbb", "aaa.bbb");
-        XTools.logN("aaa.bbb.ccc", "aaa.bbb.ccc");
-        XTools.logD("aaa.bbb.ccc.ddd", "aaa.bbb.ccc.ddd");
     }
 }
