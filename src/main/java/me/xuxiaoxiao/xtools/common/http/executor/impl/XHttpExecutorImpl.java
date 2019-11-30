@@ -29,9 +29,6 @@ public class XHttpExecutorImpl implements XHttpExecutor {
     public static final String CFG_COOKIE_MANAGER = XTools.CFG_PREFIX + "http.cookieManager";
     public static final String CFG_COOKIE_MANAGER_DEFAULT = XHttpExecutorImpl.XCookieManager.class.getName();
 
-    public static final String CFG_INTERCEPTORS = XTools.CFG_PREFIX + "http.interceptors";
-    public static final String CFG_INTERCEPTORS_DEFAULT = "";
-
     public static final String CFG_HOSTNAME_VERIFIER = XTools.CFG_PREFIX + "http.hostnameVerifier";
     public static final String CFG_HOSTNAME_VERIFIER_DEFAULT = XHttpExecutorImpl.XHostnameVerifier.class.getName();
 
@@ -49,60 +46,16 @@ public class XHttpExecutorImpl implements XHttpExecutor {
     private int chunkLength;
     private boolean followRedirect;
     private CookieManager cookieManager;
-    private Interceptor[] interceptors;
     private HostnameVerifier hostnameVerifier;
     private SSLContext sslContext;
 
     public XHttpExecutorImpl() {
-        defaultConnectTimeout();
-        defaultReadTimeout();
-        defaultChunkLength();
-        defaultFollowRedirect();
-        defaultCookieManager();
-        defaultHostnameVerifier();
-        defaultInterceptors();
-        defaultSSL();
-    }
-
-    public void defaultConnectTimeout() {
-        this.connectTimeout = Integer.valueOf(XTools.cfgDef(CFG_CONNECT_TIMEOUT, CFG_CONNECT_TIMEOUT_DEFAULT).trim());
-    }
-
-    public void defaultReadTimeout() {
-        this.readTimeout = Integer.valueOf(XTools.cfgDef(CFG_READ_TIMEOUT, CFG_READ_TIMEOUT_DEFAULT).trim());
-    }
-
-    public void defaultChunkLength() {
-        this.chunkLength = Integer.valueOf(XTools.cfgDef(CFG_CHUNK_LENGTH, CFG_CHUNK_LENGTH_DEFAULT).trim());
-    }
-
-    public void defaultFollowRedirect() {
-        this.followRedirect = Boolean.valueOf(XTools.cfgDef(CFG_FOLLOW_REDIRECT, CFG_FOLLOW_REDIRECT_DEFAULT).trim());
-    }
-
-    private void defaultCookieManager() {
+        this.connectTimeout = Integer.parseInt(XTools.cfgDef(CFG_CONNECT_TIMEOUT, CFG_CONNECT_TIMEOUT_DEFAULT).trim());
+        this.readTimeout = Integer.parseInt(XTools.cfgDef(CFG_READ_TIMEOUT, CFG_READ_TIMEOUT_DEFAULT).trim());
+        this.chunkLength = Integer.parseInt(XTools.cfgDef(CFG_CHUNK_LENGTH, CFG_CHUNK_LENGTH_DEFAULT).trim());
+        this.followRedirect = Boolean.parseBoolean(XTools.cfgDef(CFG_FOLLOW_REDIRECT, CFG_FOLLOW_REDIRECT_DEFAULT).trim());
         this.cookieManager = XConfigTools.supply(XTools.cfgDef(CFG_COOKIE_MANAGER, CFG_COOKIE_MANAGER_DEFAULT).trim());
-    }
-
-    private void defaultHostnameVerifier() {
-        hostnameVerifier = XConfigTools.supply(XTools.cfgDef(CFG_HOSTNAME_VERIFIER, CFG_HOSTNAME_VERIFIER_DEFAULT).trim());
-    }
-
-    private void defaultInterceptors() {
-        String interceptorsStr = XTools.cfgDef(CFG_INTERCEPTORS, CFG_INTERCEPTORS_DEFAULT);
-        if (!XTools.strBlank(interceptorsStr)) {
-            String[] array = interceptorsStr.split(",");
-            Interceptor[] interceptors = new Interceptor[array.length];
-            for (int i = 0; i < array.length; i++) {
-                interceptors[i] = XConfigTools.supply(array[i].trim());
-            }
-            setInterceptors(interceptors);
-        } else {
-            setInterceptors();
-        }
-    }
-
-    private void defaultSSL() {
+        this.hostnameVerifier = XConfigTools.supply(XTools.cfgDef(CFG_HOSTNAME_VERIFIER, CFG_HOSTNAME_VERIFIER_DEFAULT).trim());
         try {
             this.sslContext = SSLContext.getInstance(XTools.cfgDef(CFG_SSL_ALGORITHM, CFG_SSL_ALGORITHM_DEFAULT));
 
@@ -132,7 +85,7 @@ public class XHttpExecutorImpl implements XHttpExecutor {
                 secureRandom = XConfigTools.supply(secureRandomStr);
             }
 
-            sslContext.init(keyManagers, trustManagers, secureRandom);
+            this.sslContext.init(keyManagers, trustManagers, secureRandom);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -197,16 +150,6 @@ public class XHttpExecutorImpl implements XHttpExecutor {
 
     public void setFollowRedirect(boolean followRedirect) {
         this.followRedirect = followRedirect;
-    }
-
-    @Override
-    public Interceptor[] getInterceptors() {
-        return this.interceptors;
-    }
-
-    @Override
-    public void setInterceptors(Interceptor... interceptors) {
-        this.interceptors = interceptors;
     }
 
     public SSLContext getSSLContext() {

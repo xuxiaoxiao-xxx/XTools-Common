@@ -16,7 +16,7 @@ Java开发基础工具集，陆续收录常用的java代码，令代码更加简
 * 支持按照日志处理器设置日志记录等级
 
 #### 支持拦截器的HTTP工具
-* HTTP请求工具支持设置拦截器，以统一预处理或后处理http请求
+* HTTP请求工具支持设置装饰者，以统一预处理或后处理http请求
 
 ## 静态工具方法目录
 #### 编码解码
@@ -32,6 +32,7 @@ Java开发基础工具集，陆续收录常用的java代码，令代码更加简
 #### 字符串相关
 * 判断字符串是否为null或空
 * 判断字符串是否为空白串
+* 连接数组中的字符串
 * 连接集合中的字符串
 * 连接映射中的字符串
 * 将字符串写入文件
@@ -73,6 +74,7 @@ Java开发基础工具集，陆续收录常用的java代码，令代码更加简
 #### 配置相关
 * 设置配置信息
 * 读取配置信息
+* 监听配置信息
 
 #### 日志相关
 * 记录详细日志
@@ -119,7 +121,7 @@ public class Test {
         boolean isStrBlank = XTools.strBlank("\n");
         
         //将集合中的字符串以逗号连接
-        String joinStrWithComma = XTools.strJoin(Arrays.asList("A", "B", "C"), ",");
+        String joinStrWithComma = XTools.strJoin(new String[]{"A","B","C"}, ",");
         
         //
         //判断今天是否是节假日（仅支持2000年-今年）

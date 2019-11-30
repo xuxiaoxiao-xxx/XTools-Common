@@ -6,9 +6,9 @@ import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 import me.xuxiaoxiao.xtools.common.http.executor.impl.XHttpExecutorImpl;
 import me.xuxiaoxiao.xtools.common.http.executor.impl.XResponse;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
+import java.net.HttpCookie;
+import java.net.URI;
+import java.util.List;
 
 /**
  * HTTP工具类
@@ -20,11 +20,7 @@ public final class XHttpTools {
     /**
      * 默认的请求执行器
      */
-    public static final XHttpExecutor EXECUTOR;
-
-    static {
-        EXECUTOR = XConfigTools.supply(XTools.cfgDef(XHttpTools.CFG_EXECUTOR, XHttpTools.CFG_EXECUTOR_DEFAULT).trim());
-    }
+    public static XHttpExecutor EXECUTOR = XConfigTools.supply(XTools.cfgDef(XHttpTools.CFG_EXECUTOR, XHttpTools.CFG_EXECUTOR_DEFAULT).trim());
 
     private XHttpTools() {
     }
@@ -38,46 +34,82 @@ public final class XHttpTools {
      */
     public static XHttpExecutor.Response http(XHttpExecutor executor, XHttpExecutor.Request request) {
         try {
-            return execute(executor, request);
+            return executor.execute(request);
         } catch (Exception e) {
             return new XResponse(null, null);
         }
     }
 
     /**
-     * 执行http请求
+     * 添加HTTP装饰者
      *
-     * @param executor http请求执行器
-     * @param request  请求参数
-     * @return 请求结果
-     * @throws Exception 请求过程中可能会发生异常
+     * @param decorator HTTP装饰者
      */
-    public static XHttpExecutor.Response execute(XHttpExecutor executor, XHttpExecutor.Request request) throws Exception {
-        XHttpExecutor.Interceptor[] interceptors = executor.getInterceptors();
-        if (interceptors != null && interceptors.length > 0) {
-            for (XHttpExecutor.Interceptor interceptor : interceptors) {
-                executor = (XHttpExecutor) Proxy.newProxyInstance(XHttpTools.class.getClassLoader(), new Class[]{XHttpExecutor.class}, new ExecuteHandler(executor, interceptor));
-            }
-        }
-        return executor.execute(request);
+    public static synchronized void addDecorator(Decorator decorator) {
+        decorator.setOrigin(XHttpTools.EXECUTOR);
+        XHttpTools.EXECUTOR = decorator;
     }
 
-    private static class ExecuteHandler implements InvocationHandler {
-        XHttpExecutor target;
-        XHttpExecutor.Interceptor interceptor;
+    /**
+     * HTTP执行装饰者，对每个执行器的方法进行装饰
+     */
+    public static abstract class Decorator implements XHttpExecutor {
+        private XHttpExecutor origin;
 
-        public ExecuteHandler(XHttpExecutor target, XHttpExecutor.Interceptor interceptor) {
-            this.target = target;
-            this.interceptor = interceptor;
+        final void setOrigin(XHttpExecutor origin) {
+            this.origin = origin;
+        }
+
+        public final XHttpExecutor getOrigin() {
+            return this.origin;
         }
 
         @Override
-        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-            if (XHttpExecutor.class.equals(method.getDeclaringClass())) {
-                return interceptor.intercept(target, (XHttpExecutor.Request) args[0]);
-            } else {
-                return method.invoke(target, args);
-            }
+        public int getConnectTimeout() {
+            return this.origin.getConnectTimeout();
         }
+
+        @Override
+        public void setConnectTimeout(int timeout) {
+            this.origin.setConnectTimeout(timeout);
+        }
+
+        @Override
+        public int getReadTimeout() {
+            return this.origin.getReadTimeout();
+        }
+
+        @Override
+        public void setReadTimeout(int timeout) {
+            this.origin.setReadTimeout(timeout);
+        }
+
+        @Override
+        public void addCookie(URI uri, HttpCookie cookie) {
+            this.origin.addCookie(uri, cookie);
+        }
+
+        @Override
+        public List<HttpCookie> getCookies(URI uri) {
+            return this.origin.getCookies(uri);
+        }
+
+        @Override
+        public List<HttpCookie> getCookies() {
+            return this.origin.getCookies();
+        }
+
+        @Override
+        public void rmvCookies(URI uri, HttpCookie cookie) {
+            this.origin.rmvCookies(uri, cookie);
+        }
+
+        @Override
+        public void rmvCookies() {
+            this.origin.rmvCookies();
+        }
+
+        @Override
+        public abstract Response execute(Request request) throws Exception;
     }
 }

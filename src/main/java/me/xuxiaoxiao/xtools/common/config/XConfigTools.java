@@ -29,6 +29,7 @@ public final class XConfigTools {
      * @param <T>       实例类型
      * @return 需求的类的实例
      */
+    @SuppressWarnings("unchecked")
     public static <T> T supply(String clazzName) {
         try {
             Class<?> clazz = Class.forName(clazzName);

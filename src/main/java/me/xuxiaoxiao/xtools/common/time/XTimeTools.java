@@ -45,25 +45,33 @@ public final class XTimeTools {
     public final static int SUNDAY = 6;
 
     /**
-     * int dateType(Date date);函数的返回值的枚举，工作日
+     * int dateType(Date date);函数的返回值的枚举，工作日，补班日
      */
     public static final int WORKDAY = 1;
     /**
-     * int dateType(Date date);函数的返回值的枚举，公休日
+     * int dateType(Date date);函数的返回值的枚举，公休日，调休日
      */
     public static final int RESTDAY = 2;
     /**
-     * int dateType(Date date);函数的返回值的枚举，节假日
+     * int dateType(Date date);函数的返回值的枚举，法定节假日
      */
     public static final int HOLIDAY = 3;
     /**
+     * 一小时的毫秒数
+     */
+    public static final long HOUR_MILLIS = 60 * 60 * 1000;
+    /**
      * 一天的毫秒数
      */
-    public static final long DAY_MILLIS = 24L * 60 * 60 * 1000;
+    public static final long DAY_MILLIS = 24L * HOUR_MILLIS;
     /**
      * 一周的毫秒数
      */
     public static final long WEEK_MILLIS = 7L * DAY_MILLIS;
+    /**
+     * yyyy-MM-dd HH:mm:ss.SSS格式的日期
+     */
+    public static final String FORMAT_YMDHMSS = "yyyy-MM-dd HH:mm:ss.SSS";
     /**
      * yyyy-MM-dd HH:mm:ss格式的日期
      */
@@ -72,6 +80,14 @@ public final class XTimeTools {
      * yyyy-MM-dd格式的日期
      */
     public static final String FORMAT_YMD = "yyyy-MM-dd";
+    /**
+     * yyyy-MM格式的日期
+     */
+    public static final String FORMAT_YM = "yyyy-MM";
+    /**
+     * MM-dd格式的日期
+     */
+    public static final String FORMAT_MD = "MM-dd";
     /**
      * HH:mm:ss格式的日期
      */

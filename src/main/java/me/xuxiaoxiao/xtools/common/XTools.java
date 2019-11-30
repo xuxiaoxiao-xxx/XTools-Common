@@ -124,7 +124,25 @@ public final class XTools {
     }
 
     /**
-     * 将几个字符串用一个固定的字符串连接起来
+     * 将字符串数组用一个固定的字符串连接起来
+     *
+     * @param strArr 字符串集合
+     * @param glue   用于连接的字符串
+     * @return 连接后的字符串
+     */
+    public static String strJoin(String[] strArr, String glue) {
+        StringBuilder sbStr = new StringBuilder();
+        for (String str : strArr) {
+            if (sbStr.length() > 0) {
+                sbStr.append(glue);
+            }
+            sbStr.append(str);
+        }
+        return sbStr.toString();
+    }
+
+    /**
+     * 将字符串集合用一个固定的字符串连接起来
      *
      * @param strSet 字符串集合
      * @param glue   用于连接的字符串
@@ -280,12 +298,32 @@ public final class XTools {
     /**
      * 将date对象转换成相应格式的字符串，线程安全
      *
+     * @param date date对象
+     * @return 相应格式的字符串
+     */
+    public static String dateFormat(Date date) {
+        return XTimeTools.dateFormat(XTimeTools.FORMAT_YMDHMS, date);
+    }
+
+    /**
+     * 将date对象转换成相应格式的字符串，线程安全
+     *
      * @param format 格式字符串
      * @param date   date对象
      * @return 相应格式的字符串
      */
     public static String dateFormat(String format, Date date) {
         return XTimeTools.dateFormat(format, date);
+    }
+
+    /**
+     * 将日期字符串转换成相应的date对象，线程安全
+     *
+     * @param dateStr 日期字符串
+     * @return 相应的date对象
+     */
+    public static Date dateParse(String dateStr) {
+        return XTimeTools.dateParse(XTimeTools.FORMAT_YMDHMS, dateStr);
     }
 
     /**
