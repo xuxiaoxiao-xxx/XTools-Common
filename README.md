@@ -1,7 +1,7 @@
 # XTools-Common
 Java开发基础工具集，陆续收录常用的java代码，令代码更加简洁美观
 
-## 1.3.X 正式发布
+## 1.4.X 正式发布
 #### 强大的配置管理工具
 * XTools默认加载classpath下所有的config.properties配置文件
 * XTools支持使用代码读取和修改配置信息
@@ -12,10 +12,9 @@ Java开发基础工具集，陆续收录常用的java代码，令代码更加简
 
 #### 全新设计的日志工具
 * 支持统一设置日志记录等级
-* 支持按照tag设置日志记录等级
-* 支持按照日志处理器设置日志记录等级
+* 支持处理器根据tag决定是否处理日志，可以用于正则匹配处理等。使日志功能使用起来更加简单易懂。
 
-#### 支持拦截器的HTTP工具
+#### 支持装饰者的HTTP工具
 * HTTP请求工具支持设置装饰者，以统一预处理或后处理http请求
 
 ## 静态工具方法目录
@@ -88,12 +87,12 @@ Java开发基础工具集，陆续收录常用的java代码，令代码更加简
 <dependency>
     <groupId>me.xuxiaoxiao</groupId>
     <artifactId>xtools-common</artifactId>
-    <version>1.3.2</version>
+    <version>1.4.0</version>
 </dependency>
 ```
 * gradle依赖
 ```gradle
-implementation 'me.xuxiaoxiao:xtools-common:1.3.2'
+implementation 'me.xuxiaoxiao:xtools-common:1.4.0'
 ```
 使用示例
 ```java
