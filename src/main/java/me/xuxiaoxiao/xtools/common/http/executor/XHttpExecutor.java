@@ -205,6 +205,7 @@ public interface XHttpExecutor {
          * 请求体字符编码
          *
          * @return 字符编码
+         * @throws IOException IO异常
          */
         @Nonnull
         String charset() throws IOException;
