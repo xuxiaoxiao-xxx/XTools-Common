@@ -130,11 +130,10 @@ public interface XLogger {
         /**
          * 是否处理日志
          *
-         * @param level 日志等级
-         * @param tag   日志tag
+         * @param tag 日志tag
          * @return 是否处理
          */
-        boolean accept(@Nonnull String level, @Nonnull String tag);
+        boolean accept(@Nonnull String tag);
 
         /**
          * 日志处理方法

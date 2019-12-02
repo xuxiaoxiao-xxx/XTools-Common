@@ -2,7 +2,6 @@ package me.xuxiaoxiao.xtools.common.log.logger.impl;
 
 import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.config.XConfigTools;
-import me.xuxiaoxiao.xtools.common.log.XLogTools;
 import me.xuxiaoxiao.xtools.common.log.logger.XLogger;
 
 import javax.annotation.Nonnull;
@@ -98,12 +97,6 @@ public class XLoggerImpl implements XLogger {
         }
     }
 
-    /**
-     * 记录错误信息的日志
-     *
-     * @param error 错误信息
-     * @param args  错误信息中的参数
-     */
     @Override
     public void logE(@Nonnull String tag, @Nonnull String error, @Nullable Object... args) {
         this.logE(tag, null, error, args);
@@ -115,7 +108,7 @@ public class XLoggerImpl implements XLogger {
         try {
             if (this.logger.isLoggable(strToLevel(LEVEL_ERROR))) {
                 for (Handler handler : this.handlers) {
-                    if (handler.accept(LEVEL_ERROR, tag)) {
+                    if (handler.accept(tag)) {
                         this.logger.log(Level.SEVERE, buildMsg(throwable, error, args), tag);
                         break;
                     }
@@ -126,12 +119,6 @@ public class XLoggerImpl implements XLogger {
         }
     }
 
-    /**
-     * 记录告警信息的日志
-     *
-     * @param warning 告警信息
-     * @param args    告警信息中的参数
-     */
     @Override
     public void logW(@Nonnull String tag, @Nonnull String warning, @Nullable Object... args) {
         this.logW(tag, null, warning, args);
@@ -143,7 +130,7 @@ public class XLoggerImpl implements XLogger {
         try {
             if (this.logger.isLoggable(strToLevel(LEVEL_WARNING))) {
                 for (Handler handler : this.handlers) {
-                    if (handler.accept(LEVEL_WARNING, tag)) {
+                    if (handler.accept(tag)) {
                         this.logger.log(Level.WARNING, buildMsg(throwable, warning, args), tag);
                         break;
                     }
@@ -154,12 +141,6 @@ public class XLoggerImpl implements XLogger {
         }
     }
 
-    /**
-     * 记录提示信息的日志
-     *
-     * @param notice 提示信息
-     * @param args   提示信息中的参数
-     */
     @Override
     public void logN(@Nonnull String tag, @Nonnull String notice, @Nullable Object... args) {
         this.logN(tag, null, notice, args);
@@ -171,7 +152,7 @@ public class XLoggerImpl implements XLogger {
         try {
             if (this.logger.isLoggable(strToLevel(LEVEL_NOTICE))) {
                 for (Handler handler : this.handlers) {
-                    if (handler.accept(LEVEL_NOTICE, tag)) {
+                    if (handler.accept(tag)) {
                         this.logger.log(Level.INFO, buildMsg(throwable, notice, args), tag);
                         break;
                     }
@@ -182,12 +163,6 @@ public class XLoggerImpl implements XLogger {
         }
     }
 
-    /**
-     * 记录详细信息的日志
-     *
-     * @param detail 详细信息
-     * @param args   详细信息中的参数
-     */
     @Override
     public void logD(@Nonnull String tag, @Nonnull String detail, @Nullable Object... args) {
         this.logD(tag, null, detail, args);
@@ -199,7 +174,7 @@ public class XLoggerImpl implements XLogger {
         try {
             if (this.logger.isLoggable(strToLevel(LEVEL_DETAIL))) {
                 for (Handler handler : this.handlers) {
-                    if (handler.accept(LEVEL_DETAIL, tag)) {
+                    if (handler.accept(tag)) {
                         this.logger.log(Level.CONFIG, buildMsg(throwable, detail, args), tag);
                         break;
                     }
@@ -261,7 +236,7 @@ public class XLoggerImpl implements XLogger {
 
         @Override
         public void publish(LogRecord record) {
-            if (handler.accept(XLoggerImpl.levelToStr(record.getLevel()), (String) record.getParameters()[0])) {
+            if (handler.accept((String) record.getParameters()[0])) {
                 handler.record(XLoggerImpl.levelToStr(record.getLevel()), (String) record.getParameters()[0], record.getMessage());
             }
         }
@@ -312,13 +287,13 @@ public class XLoggerImpl implements XLogger {
         }
 
         @Override
-        public boolean accept(@Nonnull String level, @Nonnull String tag) {
-            return XLogTools.acceptLevel(level, levelToStr(this.getLevel()));
+        public boolean accept(@Nonnull String tag) {
+            return true;
         }
 
         @Override
         public void record(@Nonnull String level, @Nonnull String tag, @Nonnull String msg) {
-            if (accept(level, tag)) {
+            if (accept(tag)) {
                 LogRecord logRecord = new LogRecord(XLoggerImpl.strToLevel(level), msg);
                 logRecord.setParameters(new Object[]{tag});
                 this.publish(logRecord);
@@ -338,13 +313,13 @@ public class XLoggerImpl implements XLogger {
         }
 
         @Override
-        public boolean accept(@Nonnull String level, @Nonnull String tag) {
-            return XLogTools.acceptLevel(level, levelToStr(this.getLevel()));
+        public boolean accept(@Nonnull String tag) {
+            return true;
         }
 
         @Override
         public void record(@Nonnull String level, @Nonnull String tag, @Nonnull String msg) {
-            if (accept(level, tag)) {
+            if (accept(tag)) {
                 LogRecord logRecord = new LogRecord(XLoggerImpl.strToLevel(level), msg);
                 logRecord.setParameters(new Object[]{tag});
                 this.publish(logRecord);

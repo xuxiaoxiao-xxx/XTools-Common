@@ -131,11 +131,23 @@ public final class XTools {
         return str == null || str.trim().length() == 0;
     }
 
+    /**
+     * 去除字符串前后的空白符，如果为null则返回null
+     *
+     * @param str 需要去除前后空白符的字符串
+     * @return 去除前后空白符的字符串，如果传入的字符串为null则返回null
+     */
     @Nullable
     public static String strTrim(@Nullable String str) {
         return str == null ? null : str.trim();
     }
 
+    /**
+     * 去除字符串数组中每个元素的前后的空白符，如果为null则返回null
+     *
+     * @param strs 需要去除前后空白符的字符串数组
+     * @return 去除每个元素前后空白符的字符串数组，如果传入的字符串数组为null则返回null，字符串中元素为null的返回的数据中也是null
+     */
     @Nullable
     public static String[] strTrim(@Nullable String[] strs) {
         if (strs == null) {
@@ -218,11 +230,9 @@ public final class XTools {
     @Nonnull
     public static File strToFile(@Nullable String str, @Nonnull String path, @Nonnull String charset) throws IOException {
         File file = new File(path);
-        if (!XTools.strEmpty(str)) {
-            try (BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(file))) {
-                outStream.write(str.getBytes(charset));
-                outStream.flush();
-            }
+        try (BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(file))) {
+            outStream.write(str == null ? new byte[0] : str.getBytes(charset));
+            outStream.flush();
         }
         return file;
     }

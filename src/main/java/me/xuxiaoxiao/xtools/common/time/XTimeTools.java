@@ -73,7 +73,7 @@ public final class XTimeTools {
     /**
      * yyyy-MM-dd HH:mm:ss.SSS格式的日期
      */
-    public static final String FORMAT_YMDHMSS = "yyyy-MM-dd HH:mm:ss.SSS";
+    public static final String FORMAT_YMDHMSSSS = "yyyy-MM-dd HH:mm:ss.SSS";
     /**
      * yyyy-MM-dd HH:mm:ss格式的日期
      */
