@@ -60,7 +60,12 @@ public class XResponse implements XHttpExecutor.Response {
     @Override
     public final String string(@Nonnull String charset) {
         try {
-            return XTools.streamToStr(stream(), charset);
+            InputStream inStream = stream();
+            if (inStream == null) {
+                return null;
+            } else {
+                return XTools.streamToStr(inStream, charset);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -83,7 +88,12 @@ public class XResponse implements XHttpExecutor.Response {
     @Override
     public final File file(@Nonnull String path) {
         try {
-            return XTools.streamToFile(stream(), path);
+            InputStream inStream = stream();
+            if (inStream == null) {
+                return null;
+            } else {
+                return XTools.streamToFile(inStream, path);
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return null;
