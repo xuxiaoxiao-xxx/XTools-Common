@@ -2,6 +2,7 @@ package me.xuxiaoxiao.xtools.common.log.logger.impl;
 
 import me.xuxiaoxiao.xtools.common.XTools;
 import me.xuxiaoxiao.xtools.common.config.XConfigTools;
+import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
 import me.xuxiaoxiao.xtools.common.log.logger.XLogger;
 
 import javax.annotation.Nonnull;
@@ -12,6 +13,7 @@ import java.util.Date;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.logging.*;
+import java.util.regex.Pattern;
 
 /**
  * 默认的JDK日志记录器实现类
@@ -19,29 +21,67 @@ import java.util.logging.*;
 public class XLoggerImpl implements XLogger {
     public static final String CFG_LEVEL = XTools.CFG_PREFIX + "log.level";
     public static final String CFG_LEVEL_DEFAULT = "detail";
+    public static final String CFG_REGEX = XTools.CFG_PREFIX + "log.regex";
+    public static final String CFG_REGEX_DEFAULT = ".+";
     public static final String CFG_HANDLERS = XTools.CFG_PREFIX + "log.handlers";
     public static final String CFG_HANDLERS_DEFAULT = XLoggerImpl.XConsoleHandler.class.getName() + "," + XLoggerImpl.XFileHandler.class.getName();
     public static final String CFG_FORMATTER = XTools.CFG_PREFIX + "log.formatter";
     public static final String CFG_FORMATTER_DEFAULT = XLoggerImpl.XLogFormatter.class.getName();
     public static final String CFG_CONSOLE_LEVEL = XTools.CFG_PREFIX + "log.console.level";
     public static final String CFG_CONSOLE_LEVEL_DEFAULT = "detail";
+    public static final String CFG_FILE_LEVEL = XTools.CFG_PREFIX + "log.file.level";
+    public static final String CFG_FILE_LEVEL_DEFAULT = "detail";
     public static final String CFG_FILE = XTools.CFG_PREFIX + "log.file.name";
     public static final String CFG_FILE_DEFAULT = "xlogger.log";
     public static final String CFG_FILE_APPEND = XTools.CFG_PREFIX + "log.file.append";
     public static final String CFG_FILE_APPEND_DEFAULT = "true";
-    public static final String CFG_FILE_LEVEL = XTools.CFG_PREFIX + "log.file.level";
-    public static final String CFG_FILE_LEVEL_DEFAULT = "detail";
-    private static final String TAG = "xlog";
-    /**
-     * jdk日志根记录器
-     */
-    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-    private final Logger logger = Logger.getLogger(TAG);
+
+    private final Logger logger = Logger.getLogger("xlog");
     private final ArrayList<Handler> handlers = new ArrayList<>();
+    private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private Pattern tagRegex;
 
     public XLoggerImpl() {
         this.logger.setUseParentHandlers(false);
+        this.defaultLevel();
+        this.defaultHandlers();
+        this.defaultRegex();
+        XTools.cfgWatch(XLoggerImpl.CFG_REGEX, new XConfigs.Watcher() {
+            @Override
+            public void onCfgAdd(@Nonnull XConfigs configs, @Nonnull String key, @Nonnull String val) {
+                defaultRegex();
+            }
+
+            @Override
+            public void onCfgDel(@Nonnull XConfigs configs, @Nonnull String key, @Nonnull String val) {
+                defaultRegex();
+            }
+
+            @Override
+            public void onCfgChange(@Nonnull XConfigs configs, @Nonnull String key, @Nullable String valOld, @Nullable String valNew) {
+                defaultRegex();
+            }
+        });
+    }
+
+    /**
+     * 设置默认的日志等级
+     */
+    protected void defaultLevel() {
         this.setLevel(XTools.cfgDef(CFG_LEVEL, CFG_LEVEL_DEFAULT));
+    }
+
+    /**
+     * 设置默认的日志等级
+     */
+    protected void defaultRegex() {
+        this.tagRegex = Pattern.compile(XTools.cfgDef(CFG_REGEX, CFG_REGEX_DEFAULT));
+    }
+
+    /**
+     * 设置默认的日志处理器
+     */
+    protected void defaultHandlers() {
         String handlersStr = XTools.cfgDef(CFG_HANDLERS, CFG_HANDLERS_DEFAULT);
         if (!XTools.strBlank(handlersStr)) {
             for (String handlerClass : handlersStr.split(",")) {
@@ -51,8 +91,8 @@ public class XLoggerImpl implements XLogger {
     }
 
     @Nonnull
-    private static String buildMsg(@Nullable Throwable throwable, @Nonnull String msg, @Nullable Object... args) {
-        StringBuilder sbMsg = new StringBuilder(String.format(msg, args));
+    private static String buildMsg(@Nullable Throwable throwable, @Nonnull String msg) {
+        StringBuilder sbMsg = new StringBuilder(msg);
         if (throwable != null) {
             sbMsg.append('\n').append(throwable.getMessage());
             for (StackTraceElement element : throwable.getStackTrace()) {
@@ -98,21 +138,16 @@ public class XLoggerImpl implements XLogger {
     }
 
     @Override
-    public void logE(@Nonnull String tag, @Nonnull String error, @Nullable Object... args) {
-        this.logE(tag, null, error, args);
+    public void logE(@Nonnull String tag, @Nonnull String error) {
+        this.logE(tag, null, error);
     }
 
     @Override
-    public void logE(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String error, @Nullable Object... args) {
+    public void logE(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String error) {
         this.rwLock.readLock().lock();
         try {
-            if (this.logger.isLoggable(strToLevel(LEVEL_ERROR))) {
-                for (Handler handler : this.handlers) {
-                    if (handler.accept(tag)) {
-                        this.logger.log(Level.SEVERE, buildMsg(throwable, error, args), tag);
-                        break;
-                    }
-                }
+            if (this.logger.isLoggable(strToLevel(LEVEL_ERROR)) && this.accept(tag)) {
+                this.logger.log(Level.SEVERE, buildMsg(throwable, error), tag);
             }
         } finally {
             this.rwLock.readLock().unlock();
@@ -120,21 +155,16 @@ public class XLoggerImpl implements XLogger {
     }
 
     @Override
-    public void logW(@Nonnull String tag, @Nonnull String warning, @Nullable Object... args) {
-        this.logW(tag, null, warning, args);
+    public void logW(@Nonnull String tag, @Nonnull String warning) {
+        this.logW(tag, null, warning);
     }
 
     @Override
-    public void logW(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String warning, @Nullable Object... args) {
+    public void logW(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String warning) {
         this.rwLock.readLock().lock();
         try {
-            if (this.logger.isLoggable(strToLevel(LEVEL_WARNING))) {
-                for (Handler handler : this.handlers) {
-                    if (handler.accept(tag)) {
-                        this.logger.log(Level.WARNING, buildMsg(throwable, warning, args), tag);
-                        break;
-                    }
-                }
+            if (this.logger.isLoggable(strToLevel(LEVEL_WARNING)) && this.accept(tag)) {
+                this.logger.log(Level.WARNING, buildMsg(throwable, warning), tag);
             }
         } finally {
             this.rwLock.readLock().unlock();
@@ -142,21 +172,16 @@ public class XLoggerImpl implements XLogger {
     }
 
     @Override
-    public void logN(@Nonnull String tag, @Nonnull String notice, @Nullable Object... args) {
-        this.logN(tag, null, notice, args);
+    public void logN(@Nonnull String tag, @Nonnull String notice) {
+        this.logN(tag, null, notice);
     }
 
     @Override
-    public void logN(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String notice, @Nullable Object... args) {
+    public void logN(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String notice) {
         this.rwLock.readLock().lock();
         try {
-            if (this.logger.isLoggable(strToLevel(LEVEL_NOTICE))) {
-                for (Handler handler : this.handlers) {
-                    if (handler.accept(tag)) {
-                        this.logger.log(Level.INFO, buildMsg(throwable, notice, args), tag);
-                        break;
-                    }
-                }
+            if (this.logger.isLoggable(strToLevel(LEVEL_NOTICE)) && this.accept(tag)) {
+                this.logger.log(Level.INFO, buildMsg(throwable, notice), tag);
             }
         } finally {
             this.rwLock.readLock().unlock();
@@ -164,25 +189,25 @@ public class XLoggerImpl implements XLogger {
     }
 
     @Override
-    public void logD(@Nonnull String tag, @Nonnull String detail, @Nullable Object... args) {
-        this.logD(tag, null, detail, args);
+    public void logD(@Nonnull String tag, @Nonnull String detail) {
+        this.logD(tag, null, detail);
     }
 
     @Override
-    public void logD(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String detail, @Nullable Object... args) {
+    public void logD(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String detail) {
         this.rwLock.readLock().lock();
         try {
-            if (this.logger.isLoggable(strToLevel(LEVEL_DETAIL))) {
-                for (Handler handler : this.handlers) {
-                    if (handler.accept(tag)) {
-                        this.logger.log(Level.CONFIG, buildMsg(throwable, detail, args), tag);
-                        break;
-                    }
-                }
+            if (this.logger.isLoggable(strToLevel(LEVEL_DETAIL)) && this.accept(tag)) {
+                this.logger.log(Level.CONFIG, buildMsg(throwable, detail), tag);
             }
         } finally {
             this.rwLock.readLock().unlock();
         }
+    }
+
+    @Override
+    public boolean accept(@Nonnull String tag) {
+        return this.tagRegex != null && this.tagRegex.matcher(tag).matches();
     }
 
     @Nonnull
@@ -236,9 +261,7 @@ public class XLoggerImpl implements XLogger {
 
         @Override
         public void publish(LogRecord record) {
-            if (handler.accept((String) record.getParameters()[0])) {
-                handler.record(XLoggerImpl.levelToStr(record.getLevel()), (String) record.getParameters()[0], record.getMessage());
-            }
+            handler.record(XLoggerImpl.levelToStr(record.getLevel()), (String) record.getParameters()[0], record.getMessage());
         }
 
         @Override
@@ -287,17 +310,10 @@ public class XLoggerImpl implements XLogger {
         }
 
         @Override
-        public boolean accept(@Nonnull String tag) {
-            return true;
-        }
-
-        @Override
         public void record(@Nonnull String level, @Nonnull String tag, @Nonnull String msg) {
-            if (accept(tag)) {
-                LogRecord logRecord = new LogRecord(XLoggerImpl.strToLevel(level), msg);
-                logRecord.setParameters(new Object[]{tag});
-                this.publish(logRecord);
-            }
+            LogRecord logRecord = new LogRecord(XLoggerImpl.strToLevel(level), msg);
+            logRecord.setParameters(new Object[]{tag});
+            this.publish(logRecord);
         }
     }
 
@@ -313,17 +329,10 @@ public class XLoggerImpl implements XLogger {
         }
 
         @Override
-        public boolean accept(@Nonnull String tag) {
-            return true;
-        }
-
-        @Override
         public void record(@Nonnull String level, @Nonnull String tag, @Nonnull String msg) {
-            if (accept(tag)) {
-                LogRecord logRecord = new LogRecord(XLoggerImpl.strToLevel(level), msg);
-                logRecord.setParameters(new Object[]{tag});
-                this.publish(logRecord);
-            }
+            LogRecord logRecord = new LogRecord(XLoggerImpl.strToLevel(level), msg);
+            logRecord.setParameters(new Object[]{tag});
+            this.publish(logRecord);
         }
     }
 }

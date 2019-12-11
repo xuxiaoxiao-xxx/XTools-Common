@@ -22,9 +22,8 @@ public interface XLogger {
      *
      * @param tag   日志tag
      * @param error 错误信息
-     * @param args  错误信息中的参数
      */
-    void logE(@Nonnull String tag, @Nonnull String error, @Nullable Object... args);
+    void logE(@Nonnull String tag, @Nonnull String error);
 
     /**
      * 记录错误信息的日志
@@ -32,18 +31,16 @@ public interface XLogger {
      * @param tag       日志tag
      * @param throwable 异常对象
      * @param error     错误信息
-     * @param args      错误信息中的参数
      */
-    void logE(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String error, @Nullable Object... args);
+    void logE(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String error);
 
     /**
      * 记录警告信息的日志
      *
      * @param tag     日志tag
      * @param warning 警告信息
-     * @param args    警告信息中的参数
      */
-    void logW(@Nonnull String tag, @Nonnull String warning, @Nullable Object... args);
+    void logW(@Nonnull String tag, @Nonnull String warning);
 
     /**
      * 记录警告信息的日志
@@ -51,18 +48,16 @@ public interface XLogger {
      * @param tag       日志tag
      * @param throwable 异常对象
      * @param warning   告警信息
-     * @param args      告警信息中的参数
      */
-    void logW(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String warning, @Nullable Object... args);
+    void logW(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String warning);
 
     /**
      * 记录提示信息的日志
      *
      * @param tag    日志tag
      * @param notice 提示信息
-     * @param args   提示信息中的参数
      */
-    void logN(@Nonnull String tag, @Nonnull String notice, @Nullable Object... args);
+    void logN(@Nonnull String tag, @Nonnull String notice);
 
     /**
      * 记录提示信息的日志
@@ -70,18 +65,16 @@ public interface XLogger {
      * @param tag       日志tag
      * @param throwable 异常对象
      * @param notice    提示信息
-     * @param args      提示信息中的参数
      */
-    void logN(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String notice, @Nullable Object... args);
+    void logN(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String notice);
 
     /**
      * 记录详细信息的日志
      *
      * @param tag    日志tag
      * @param detail 详细信息
-     * @param args   详细信息中的参数
      */
-    void logD(@Nonnull String tag, @Nonnull String detail, @Nullable Object... args);
+    void logD(@Nonnull String tag, @Nonnull String detail);
 
     /**
      * 记录详细信息的日志
@@ -89,9 +82,16 @@ public interface XLogger {
      * @param tag       日志tag
      * @param throwable 异常对象
      * @param detail    详细信息
-     * @param args      详细信息中的参数
      */
-    void logD(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String detail, @Nullable Object... args);
+    void logD(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String detail);
+
+    /**
+     * 是否处理日志
+     *
+     * @param tag 日志tag
+     * @return 是否处理
+     */
+    boolean accept(@Nonnull String tag);
 
     /**
      * 获取根节点日志等级
@@ -127,14 +127,6 @@ public interface XLogger {
      * 日志处理器接口
      */
     interface Handler {
-        /**
-         * 是否处理日志
-         *
-         * @param tag 日志tag
-         * @return 是否处理
-         */
-        boolean accept(@Nonnull String tag);
-
         /**
          * 日志处理方法
          *

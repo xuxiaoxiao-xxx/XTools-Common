@@ -737,10 +737,9 @@ public final class XTools {
      *
      * @param tag   日志tag
      * @param error 错误信息
-     * @param args  错误信息中的参数
      */
-    public static void logE(@Nonnull String tag, @Nonnull String error, @Nullable Object... args) {
-        XLogTools.LOGGER.logE(tag, error, args);
+    public static void logE(@Nonnull String tag, @Nonnull String error) {
+        XLogTools.LOGGER.logE(tag, error);
     }
 
     /**
@@ -749,10 +748,9 @@ public final class XTools {
      * @param tag       日志tag
      * @param throwable 异常对象
      * @param error     错误信息
-     * @param args      错误信息中的参数
      */
-    public static void logE(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String error, @Nullable Object... args) {
-        XLogTools.LOGGER.logE(tag, throwable, error, args);
+    public static void logE(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String error) {
+        XLogTools.LOGGER.logE(tag, throwable, error);
     }
 
     /**
@@ -760,10 +758,9 @@ public final class XTools {
      *
      * @param tag     日志tag
      * @param warning 警告信息
-     * @param args    警告信息中的参数
      */
-    public static void logW(@Nonnull String tag, @Nonnull String warning, @Nullable Object... args) {
-        XLogTools.LOGGER.logW(tag, warning, args);
+    public static void logW(@Nonnull String tag, @Nonnull String warning) {
+        XLogTools.LOGGER.logW(tag, warning);
     }
 
     /**
@@ -772,10 +769,9 @@ public final class XTools {
      * @param tag       日志tag
      * @param throwable 异常对象
      * @param warning   告警信息
-     * @param args      告警信息中的参数
      */
-    public static void logW(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String warning, @Nullable Object... args) {
-        XLogTools.LOGGER.logW(tag, throwable, warning, args);
+    public static void logW(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String warning) {
+        XLogTools.LOGGER.logW(tag, throwable, warning);
     }
 
     /**
@@ -783,10 +779,9 @@ public final class XTools {
      *
      * @param tag    日志tag
      * @param notice 提示信息
-     * @param args   提示信息中的参数
      */
-    public static void logN(@Nonnull String tag, @Nonnull String notice, @Nullable Object... args) {
-        XLogTools.LOGGER.logN(tag, notice, args);
+    public static void logN(@Nonnull String tag, @Nonnull String notice) {
+        XLogTools.LOGGER.logN(tag, notice);
     }
 
     /**
@@ -794,9 +789,8 @@ public final class XTools {
      *
      * @param tag    日志tag
      * @param detail 详细信息
-     * @param args   详细信息中的参数
      */
-    public static void logD(@Nonnull String tag, @Nonnull String detail, @Nullable Object... args) {
-        XLogTools.LOGGER.logD(tag, detail, args);
+    public static void logD(@Nonnull String tag, @Nonnull String detail) {
+        XLogTools.LOGGER.logD(tag, detail);
     }
 }
