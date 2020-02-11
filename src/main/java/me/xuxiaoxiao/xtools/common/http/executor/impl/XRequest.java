@@ -218,9 +218,6 @@ public final class XRequest implements XHttpExecutor.Request {
      */
     @Nonnull
     public XRequest content(@Nonnull String key, @Nullable Object value, boolean append) {
-        if (METHOD_GET.equals(requestMethod) || METHOD_DELETE.equals(requestMethod)) {
-            throw new IllegalArgumentException(String.format("%s方法不能添加请求体", requestMethod));
-        }
         if (this.requestContent == null) {
             this.requestContent = new UrlencodedContent();
         }
@@ -364,7 +361,7 @@ public final class XRequest implements XHttpExecutor.Request {
     @Nullable
     @Override
     public List<XHttpExecutor.KeyValue> getHeaders() {
-        if ((this.requestMethod.equals(METHOD_POST) || this.requestMethod.equals(METHOD_PUT)) && this.requestContent != null) {
+        if (this.requestContent != null) {
             try {
                 header("Content-Type", this.requestContent.contentType(), true);
                 long contentLength = requestContent.contentLength();

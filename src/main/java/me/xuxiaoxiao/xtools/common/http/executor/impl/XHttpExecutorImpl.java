@@ -230,8 +230,8 @@ public class XHttpExecutorImpl implements XHttpExecutor {
             }
         }
 
-        //如果为POST或PUT方法则输出请求体
-        if (XRequest.METHOD_POST.equals(request.getMethod()) || XRequest.METHOD_PUT.equals(request.getMethod())) {
+        //如果请求体不为null，则输出请求体
+        if (request.getContent() != null) {
             connection.setDoOutput(true);
             connection.setUseCaches(false);
             XHttpExecutor.Content content = request.getContent();

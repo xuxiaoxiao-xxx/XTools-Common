@@ -39,6 +39,7 @@ public final class XHttpTools {
         try {
             return executor.execute(request);
         } catch (Exception e) {
+            e.printStackTrace();
             return new XResponse(null, null);
         }
     }
