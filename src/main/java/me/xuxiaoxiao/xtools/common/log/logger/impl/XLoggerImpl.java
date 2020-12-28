@@ -277,7 +277,7 @@ public class XLoggerImpl implements XLogger {
      * 日志格式化器
      */
     public static class XLogFormatter extends Formatter {
-        private static final String TIME_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+        private static final String TIME_FORMAT = "yyMMdd.HHmmss.SSS";
 
         private char levelChar(@Nullable Level level) {
             if (Level.SEVERE.equals(level)) {
@@ -295,7 +295,7 @@ public class XLoggerImpl implements XLogger {
         public String format(LogRecord record) {
             String time = XTools.dateFormat(TIME_FORMAT, new Date(record.getMillis()));
             String tag = (record.getParameters() == null || record.getParameters()[0] == null) ? "xlog" : String.valueOf(record.getParameters()[0]);
-            return String.format("%s|%s|%s| %s | %s\n", time, levelChar(record.getLevel()), Thread.currentThread().getName(), tag, record.getMessage());
+            return String.format("%s|%s|%s|%s: %s\n", time, levelChar(record.getLevel()), Thread.currentThread().getName(), tag, record.getMessage());
         }
     }
 
