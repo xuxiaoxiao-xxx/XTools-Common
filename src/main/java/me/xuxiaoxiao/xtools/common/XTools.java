@@ -10,6 +10,7 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -28,7 +29,7 @@ public final class XTools {
      * 字符串MD5散列
      *
      * @param str 被散列的字符串
-     * @return 散列结果，全小写字母
+     * @return MD5散列结果，全小写字母
      */
     @Nonnull
     public static String md5(@Nonnull String str) {
@@ -39,7 +40,7 @@ public final class XTools {
      * 文件MD5散列
      *
      * @param file 被散列的文件
-     * @return 散列结果，全小写字母
+     * @return MD5散列结果，全小写字母
      */
     @Nonnull
     public static String md5(@Nonnull File file) {
@@ -50,7 +51,7 @@ public final class XTools {
      * 字符串SHA1散列
      *
      * @param str 被散列的字符串
-     * @return 散列结果，全小写字母
+     * @return SHA1散列结果，全小写字母
      */
     @Nonnull
     public static String sha1(@Nonnull String str) {
@@ -61,7 +62,7 @@ public final class XTools {
      * 文件SHA1散列
      *
      * @param file 被散列的文件
-     * @return 散列结果，全小写字母
+     * @return SHA1散列结果，全小写字母
      */
     @Nonnull
     public static String sha1(@Nonnull File file) {
@@ -69,10 +70,10 @@ public final class XTools {
     }
 
     /**
-     * 字符串SHA1散列
+     * 字符串SHA256散列
      *
      * @param str 被散列的字符串
-     * @return 散列结果，全小写字母
+     * @return SHA256散列结果，全小写字母
      */
     @Nonnull
     public static String sha256(@Nonnull String str) {
@@ -80,10 +81,10 @@ public final class XTools {
     }
 
     /**
-     * 文件SHA1散列
+     * 文件SHA256散列
      *
      * @param file 被散列的文件
-     * @return 散列结果，全小写字母
+     * @return SHA256散列结果，全小写字母
      */
     @Nonnull
     public static String sha256(@Nonnull File file) {
@@ -91,35 +92,77 @@ public final class XTools {
     }
 
     /**
-     * 使用默认的请求执行器进行HTTP请求，
-     * 如需对HTTP请求进行更复杂的配置，请移步XTools.http(XOption option, XRequest request);方法
-     *
-     * @param request http请求
-     * @return 请求的响应体
-     */
-    @Nonnull
-    public static XResponse http(@Nonnull XRequest request) {
-        return httpTools.http(request);
-    }
-
-    /**
      * 判断字符串是否为空
      *
      * @param str 要判断的字符串
-     * @return str == null || str.length() == 0
+     * @return str == null || str.isEmpty()
      */
-    public static boolean strEmpty(@Nullable String str) {
+    public static boolean isEmpty(@Nullable String str) {
         return str == null || str.isEmpty();
     }
 
     /**
-     * 判断字符串是否没有可见字符
+     * 判断集合是否为空
+     *
+     * @param collection 要判断的集合
+     * @return collection == null || collection.isEmpty()
+     */
+    public static boolean isEmpty(@Nullable Collection<?> collection) {
+        return collection == null || collection.isEmpty();
+    }
+
+    /**
+     * 判断映射是否为空
+     *
+     * @param map 要判断的字映射
+     * @return map == null || map.isEmpty()
+     */
+    public static boolean isEmpty(@Nullable Map<?, ?> map) {
+        return map == null || map.isEmpty();
+    }
+
+    /**
+     * 判断字符串是否为空或全是空白符
      *
      * @param str 要判断的字符串
-     * @return str == null || str.trim().length() == 0
+     * @return str == null || str.trim().isEmpty()
      */
-    public static boolean strBlank(@Nullable String str) {
+    public static boolean isBlank(@Nullable String str) {
         return str == null || str.trim().isEmpty();
+    }
+
+    /**
+     * 判断集合是否为空或全为null元素
+     *
+     * @param collection 要判断的集合
+     * @return true: 集合里没有有意义的元素；false: 集合中至少有一个非null的元素
+     */
+    public static boolean isBlank(@Nullable Collection<?> collection) {
+        if (!XTools.isEmpty(collection)) {
+            for (Object o : collection) {
+                if (o != null) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 判断映射是否为空或全为null键值对
+     *
+     * @param map 要判断的字映射
+     * @return true: 映射里没有有意义的键值对；false: 映射中至少有一个非null的键或值
+     */
+    public static boolean isBlank(@Nullable Map<?, ?> map) {
+        if (!XTools.isEmpty(map)) {
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                if (entry.getKey() != null || entry.getValue() != null) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -159,38 +202,38 @@ public final class XTools {
      * @return 连接后的字符串
      */
     @Nonnull
-    public static String strJoin(@Nonnull String[] strArr, @Nonnull String glue) {
+    public static <T> String joinArray(@Nonnull T[] strArr, @Nonnull String glue) {
         StringBuilder sbStr = new StringBuilder();
-        for (String str : strArr) {
+        for (Object obj : strArr) {
             if (sbStr.length() > 0) {
                 sbStr.append(glue);
             }
-            sbStr.append(str);
+            sbStr.append(obj);
         }
         return sbStr.toString();
     }
 
     /**
-     * 将字符串集合用一个固定的字符串连接起来
+     * 将集合元素用一个固定的字符串连接起来
      *
-     * @param strSet 字符串集合
-     * @param glue   用于连接的字符串
+     * @param set  需要连接的集合
+     * @param glue 用于连接的字符串
      * @return 连接后的字符串
      */
     @Nonnull
-    public static String strJoin(@Nonnull Collection<String> strSet, @Nonnull String glue) {
+    public static String joinCollection(@Nonnull Collection<?> set, @Nonnull String glue) {
         StringBuilder sbStr = new StringBuilder();
-        for (String str : strSet) {
+        for (Object obj : set) {
             if (sbStr.length() > 0) {
                 sbStr.append(glue);
             }
-            sbStr.append(str);
+            sbStr.append(obj);
         }
         return sbStr.toString();
     }
 
     /**
-     * 将键值对集合用固定的字符串连接起来
+     * 将映射用固定的字符串连接起来
      *
      * @param strMap    键值对集合
      * @param glueInner 连接键和值的字符串
@@ -198,7 +241,7 @@ public final class XTools {
      * @return 拼接后的字符串
      */
     @Nonnull
-    public static String strJoin(@Nonnull Map<?, ?> strMap, @Nonnull String glueInner, @Nonnull String glueOuter) {
+    public static String joinMap(@Nonnull Map<?, ?> strMap, @Nonnull String glueInner, @Nonnull String glueOuter) {
         StringBuilder sbStr = new StringBuilder();
         for (Object key : strMap.keySet()) {
             if (sbStr.length() > 0) {
@@ -221,7 +264,7 @@ public final class XTools {
     @Nonnull
     public static File strToFile(@Nullable String str, @Nonnull String path, @Nonnull String charset) throws IOException {
         File file = new File(path);
-        try (BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(file))) {
+        try (BufferedOutputStream outStream = new BufferedOutputStream(Files.newOutputStream(file.toPath()))) {
             outStream.write(str == null ? new byte[0] : str.getBytes(charset));
             outStream.flush();
         }
@@ -294,7 +337,7 @@ public final class XTools {
         byte[] buffer = new byte[1024];
         File file = new File(path);
         BufferedInputStream bufInStream = new BufferedInputStream(inStream);
-        try (BufferedOutputStream outStream = new BufferedOutputStream(new FileOutputStream(file))) {
+        try (BufferedOutputStream outStream = new BufferedOutputStream(Files.newOutputStream(file.toPath()))) {
             while ((count = bufInStream.read(buffer)) > 0) {
                 outStream.write(buffer, 0, count);
             }
@@ -678,5 +721,17 @@ public final class XTools {
     public static boolean sysLinux() {
         String osName = System.getProperties().getProperty("os.name").toLowerCase();
         return osName.contains("linux");
+    }
+
+    /**
+     * 使用默认的请求执行器进行HTTP请求，
+     * 如需对HTTP请求进行更复杂的配置，请移步XTools.http(XOption option, XRequest request);方法
+     *
+     * @param request http请求
+     * @return 请求的响应体
+     */
+    @Nonnull
+    public static XResponse http(@Nonnull XRequest request) {
+        return httpTools.http(request);
     }
 }

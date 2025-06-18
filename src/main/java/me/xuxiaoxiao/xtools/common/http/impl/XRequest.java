@@ -19,7 +19,7 @@ import java.util.regex.Pattern;
 /**
  * HTTP请求类，记录了HTTP请求的请求方法，请求地址，请求头，请求体
  */
-public final class XRequest {
+public class XRequest {
     public static final String MIME_URLENCODED = "application/x-www-form-urlencoded";
     public static final String MIME_MULTIPART = "multipart/form-data";
     public static final String MIME_JSON = "application/json";
@@ -48,17 +48,17 @@ public final class XRequest {
     /**
      * 请求地址参数
      */
-    private List<KeyValue> requestQueries;
+    private final List<KeyValue> requestQueries = new LinkedList<>();
     /**
      * 请求头
      */
-    private List<KeyValue> requestHeaders;
+    private final List<KeyValue> requestHeaders = new LinkedList<>();
     /**
      * 请求体
      */
     private Content requestContent;
 
-    public XRequest(String method, String url) {
+    public XRequest(@Nonnull String method, @Nonnull String url) {
         this.setMethod(method);
         this.setUrl(url);
     }
@@ -153,7 +153,7 @@ public final class XRequest {
     }
 
     /**
-     * 添加值不为null的HTTP请求地址参数，允许同名的请求地址参数
+     * 添加HTTP请求地址参数，允许同名的请求地址参数
      *
      * @param key   请求地址参数名称
      * @param value 请求地址参数值，为null则不会被添加
@@ -165,7 +165,7 @@ public final class XRequest {
     }
 
     /**
-     * 添加值不为null的HTTP请求地址参数，可选择对于同名的请求地址参数的处理方式
+     * 添加HTTP请求地址参数，可选择对于同名的请求地址参数的处理方式
      *
      * @param key      请求地址参数名称
      * @param value    请求地址参数值，为null则不会被添加
@@ -174,17 +174,8 @@ public final class XRequest {
      */
     @Nonnull
     public XRequest query(@Nonnull String key, @Nullable Object value, boolean override) {
-        if (this.requestQueries == null) {
-            this.requestQueries = new LinkedList<>();
-        }
         if (override) {
-            Iterator<KeyValue> iterator = this.requestQueries.iterator();
-            while (iterator.hasNext()) {
-                KeyValue keyValue = iterator.next();
-                if (keyValue.key.equals(key)) {
-                    iterator.remove();
-                }
-            }
+            this.requestQueries.removeIf(keyValue -> keyValue.key.equals(key));
         }
         if (value != null) {
             this.requestQueries.add(new KeyValue(key, value));
@@ -193,7 +184,7 @@ public final class XRequest {
     }
 
     /**
-     * 添加值不为null的HTTP请求头，允许同名的请求头
+     * 添加HTTP请求头，允许同名的请求头
      *
      * @param key   请求头名称
      * @param value 请求头值，为null则不会被添加
@@ -205,7 +196,7 @@ public final class XRequest {
     }
 
     /**
-     * 添加值不为null的HTTP请求头，可选择对于同名的请求头的处理方式
+     * 添加HTTP请求头，可选择对于同名的请求头的处理方式
      *
      * @param key      请求头名称
      * @param value    请求头值，为null则不会被添加
@@ -219,7 +210,7 @@ public final class XRequest {
     }
 
     /**
-     * 添加值不为null的HTTP请求体参数，允许同名的请求体参数。
+     * 添加HTTP请求体参数，允许同名的请求体参数。
      * 如果有文件参数，则会使用multipart请求体，否则使用urlencoded请求体
      *
      * @param key   请求体参数名
@@ -232,7 +223,7 @@ public final class XRequest {
     }
 
     /**
-     * 添加值不为null的HTTP请求体参数，可选择对同名的请求体参数的处理方式。
+     * 添加HTTP请求体参数，可选择对同名的请求体参数的处理方式。
      * 如果有文件参数，则会使用multipart请求体，否则使用urlencoded请求体
      *
      * @param key      请求体参数名
@@ -326,7 +317,6 @@ public final class XRequest {
                     }
                 }
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
                 throw new IllegalArgumentException(String.format("不支持编码方式：%s", charset));
             }
         } else {
@@ -342,7 +332,7 @@ public final class XRequest {
     @Nonnull
     public String getUrl() {
         try {
-            if (this.requestQueries != null) {
+            if (!XTools.isEmpty(this.requestUrl)) {
                 return String.format("%s?%s", this.requestUrl, kvJoin(this.requestQueries, charset));
             } else {
                 return this.requestUrl;
@@ -353,17 +343,8 @@ public final class XRequest {
     }
 
     public void setHeader(@Nonnull String key, @Nullable String value, boolean append) {
-        if (this.requestHeaders == null) {
-            this.requestHeaders = new LinkedList<>();
-        }
         if (append) {
-            Iterator<KeyValue> iterator = this.requestHeaders.iterator();
-            while (iterator.hasNext()) {
-                KeyValue keyValue = iterator.next();
-                if (keyValue.key.equals(key)) {
-                    iterator.remove();
-                }
-            }
+            this.requestHeaders.removeIf(keyValue -> keyValue.key.equals(key));
         }
         if (value != null) {
             requestHeaders.add(new KeyValue(key, value));
@@ -680,7 +661,7 @@ public final class XRequest {
      * 字符串类型请求体
      */
     public static class StringContent implements Content {
-        private static final Pattern P_CHARSET = Pattern.compile("charset\\s*=\\s*\"?(.+)\"?\\s*;?");
+        private static final Pattern P_CHARSET = Pattern.compile("charset\\s*=\\s*\"?([^;\\s\"]+)\"?", Pattern.CASE_INSENSITIVE);
         public final String mime;
         public final byte[] bytes;
 

@@ -19,12 +19,14 @@ public class XHashTools {
     public static final String HASH_SHA256 = "SHA-256";
     private static final char[] HEX = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
+    @Nonnull
     private final Config config;
 
-    public XHashTools(Config config) {
+    public XHashTools(@Nonnull Config config) {
         this.config = config;
     }
 
+    @Nonnull
     public Config getConfig() {
         return config;
     }
@@ -59,7 +61,7 @@ public class XHashTools {
         try {
             MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
             try (FileInputStream fileInputStream = new FileInputStream(file); DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)) {
-                byte[] buffer = new byte[this.config.getBufferSize()];
+                byte[] buffer = new byte[this.getConfig().getBufferSize()];
                 while (true) {
                     if (digestInputStream.read(buffer) <= 0) {
                         break;

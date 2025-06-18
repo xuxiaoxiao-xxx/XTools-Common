@@ -6,7 +6,10 @@ import me.xuxiaoxiao.xtools.common.http.impl.XRequest;
 import me.xuxiaoxiao.xtools.common.http.impl.XResponse;
 
 import javax.annotation.Nonnull;
-import javax.net.ssl.*;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.security.SecureRandom;
@@ -16,6 +19,7 @@ import java.security.cert.X509Certificate;
  * HTTP工具类
  */
 public class XHttpTools {
+
     private final Config config;
 
     public XHttpTools(Config config) {
@@ -29,13 +33,13 @@ public class XHttpTools {
     /**
      * 使用给定的请求选项进行HTTP请求
      *
-     * @param request  HTTP请求
+     * @param request HTTP请求
      * @return HTTP响应
      */
     @Nonnull
     public XResponse http(@Nonnull XRequest request) {
         try {
-            return config.executor.execute(request);
+            return getConfig().executor.execute(request);
         } catch (Exception e) {
             throw new XToolsException(e);
         }
@@ -57,12 +61,7 @@ public class XHttpTools {
             this.chunkLength = 262144;
             this.followRedirect = false;
             this.cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
-            this.hostnameVerifier = new HostnameVerifier() {
-                @Override
-                public boolean verify(String s, SSLSession sslSession) {
-                    return true;
-                }
-            };
+            this.hostnameVerifier = (s, sslSession) -> true;
             try {
                 this.sslContext = SSLContext.getInstance("TLS");
                 this.sslContext.init(null, new TrustManager[]{

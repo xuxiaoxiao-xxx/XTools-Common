@@ -16,7 +16,7 @@ import java.util.regex.Pattern;
 /**
  * 常用的基本的关于时间的函数的集合
  */
-public final class XTimeTools {
+public class XTimeTools {
     /**
      * 周一
      */
@@ -712,7 +712,7 @@ public final class XTimeTools {
                 }
             }
         }
-        boolean lunarLeap = !XTools.strEmpty(strLeap);
+        boolean lunarLeap = !XTools.isEmpty(strLeap);
         // 验证年月日闰
         XLunarDb.checkLunarDate(lunarYear, lunarMonth, lunarDay, lunarLeap);
         // 计算与基准日期相差多少天
