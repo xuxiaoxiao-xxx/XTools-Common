@@ -1,7 +1,6 @@
-package me.xuxiaoxiao.xtools.common.http.executor.impl;
+package me.xuxiaoxiao.xtools.common.http.impl;
 
 import me.xuxiaoxiao.xtools.common.XTools;
-import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -20,10 +19,7 @@ import java.util.regex.Pattern;
 /**
  * HTTP请求类，记录了HTTP请求的请求方法，请求地址，请求头，请求体
  */
-public final class XRequest implements XHttpExecutor.Request {
-    public static final String CFG_REQ_CHARSET = XTools.CFG_PREFIX + "http.reqCharset";
-    public static final String CFG_REQ_CHARSET_DEFAULT = "utf-8";
-
+public final class XRequest {
     public static final String MIME_URLENCODED = "application/x-www-form-urlencoded";
     public static final String MIME_MULTIPART = "multipart/form-data";
     public static final String MIME_JSON = "application/json";
@@ -32,12 +28,15 @@ public final class XRequest implements XHttpExecutor.Request {
     public static final String METHOD_GET = "GET";
     public static final String METHOD_POST = "POST";
     public static final String METHOD_PUT = "PUT";
+    public static final String METHOD_PATCH = "PATCH";
     public static final String METHOD_DELETE = "DELETE";
+    public static final String METHOD_OPTIONS = "OPTIONS";
+    public static final String METHOD_HEAD = "HEAD";
 
     /**
      * 请求编码方式
      */
-    private String charset;
+    private String charset = "utf-8";
     /**
      * 请求方法
      */
@@ -49,21 +48,19 @@ public final class XRequest implements XHttpExecutor.Request {
     /**
      * 请求地址参数
      */
-    private List<XHttpExecutor.KeyValue> requestQueries;
+    private List<KeyValue> requestQueries;
     /**
      * 请求头
      */
-    private List<XHttpExecutor.KeyValue> requestHeaders;
+    private List<KeyValue> requestHeaders;
     /**
      * 请求体
      */
-    private XHttpExecutor.Content requestContent;
+    private Content requestContent;
 
-
-    private XRequest(String method, String url) {
-        this.charset = XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT).trim();
-        setMethod(method);
-        setUrl(url);
+    public XRequest(String method, String url) {
+        this.setMethod(method);
+        this.setUrl(url);
     }
 
     /**
@@ -100,6 +97,17 @@ public final class XRequest implements XHttpExecutor.Request {
     }
 
     /**
+     * 新建一个PATCH请求
+     *
+     * @param url 请求url
+     * @return PATCH请求
+     */
+    @Nonnull
+    public static XRequest PATCH(@Nonnull String url) {
+        return new XRequest(METHOD_PATCH, url);
+    }
+
+    /**
      * 新建一个DELETE请求
      *
      * @param url 请求url
@@ -111,21 +119,37 @@ public final class XRequest implements XHttpExecutor.Request {
     }
 
     /**
-     * 将键值对集合经过url编码后用固定的字符串连接起来
+     * 新建一个HEAD请求
      *
-     * @return 连接后的字符串
-     * @throws UnsupportedEncodingException 给定的编码格式不支持时抛出异常
+     * @param url 请求url
+     * @return HEAD请求
      */
     @Nonnull
-    private static String kvJoin(@Nonnull List<XHttpExecutor.KeyValue> keyValues, @Nonnull String charset) throws UnsupportedEncodingException {
-        StringBuilder sbStr = new StringBuilder();
-        for (XHttpExecutor.KeyValue keyValue : keyValues) {
-            if (sbStr.length() > 0) {
-                sbStr.append('&');
-            }
-            sbStr.append(URLEncoder.encode(keyValue.key, charset)).append('=').append(URLEncoder.encode(String.valueOf(keyValue.value), charset));
-        }
-        return sbStr.toString();
+    public static XRequest HEAD(@Nonnull String url) {
+        return new XRequest(METHOD_HEAD, url);
+    }
+
+    /**
+     * 新建一个OPTIONS请求
+     *
+     * @param url 请求url
+     * @return OPTIONS请求
+     */
+    @Nonnull
+    public static XRequest OPTIONS(@Nonnull String url) {
+        return new XRequest(METHOD_OPTIONS, url);
+    }
+
+    /**
+     * 设置请求的字符集
+     *
+     * @param charset 字符集
+     * @return HTTP请求实例
+     */
+    @Nonnull
+    public XRequest charset(@Nonnull String charset) {
+        this.charset = charset;
+        return this;
     }
 
     /**
@@ -143,27 +167,27 @@ public final class XRequest implements XHttpExecutor.Request {
     /**
      * 添加值不为null的HTTP请求地址参数，可选择对于同名的请求地址参数的处理方式
      *
-     * @param key    请求地址参数名称
-     * @param value  请求地址参数值，为null则不会被添加
-     * @param append true：清除已经存在的同名的请求地址参数，false：追加同名的请求地址参数
+     * @param key      请求地址参数名称
+     * @param value    请求地址参数值，为null则不会被添加
+     * @param override true：覆盖同名的请求地址参数，false：追加同名的请求地址参数
      * @return HTTP请求实例
      */
     @Nonnull
-    public XRequest query(@Nonnull String key, @Nullable Object value, boolean append) {
+    public XRequest query(@Nonnull String key, @Nullable Object value, boolean override) {
         if (this.requestQueries == null) {
             this.requestQueries = new LinkedList<>();
         }
-        if (append) {
-            Iterator<XHttpExecutor.KeyValue> iterator = this.requestQueries.iterator();
+        if (override) {
+            Iterator<KeyValue> iterator = this.requestQueries.iterator();
             while (iterator.hasNext()) {
-                XHttpExecutor.KeyValue keyValue = iterator.next();
+                KeyValue keyValue = iterator.next();
                 if (keyValue.key.equals(key)) {
                     iterator.remove();
                 }
             }
         }
         if (value != null) {
-            this.requestQueries.add(new XHttpExecutor.KeyValue(key, value));
+            this.requestQueries.add(new KeyValue(key, value));
         }
         return this;
     }
@@ -183,14 +207,14 @@ public final class XRequest implements XHttpExecutor.Request {
     /**
      * 添加值不为null的HTTP请求头，可选择对于同名的请求头的处理方式
      *
-     * @param key    请求头名称
-     * @param value  请求头值，为null则不会被添加
-     * @param append true：清除已经存在的同名的请求头，false：追加同名的请求头
+     * @param key      请求头名称
+     * @param value    请求头值，为null则不会被添加
+     * @param override true：覆盖同名的请求头，false：追加同名的请求头
      * @return HTTP请求实例
      */
     @Nonnull
-    public XRequest header(@Nonnull String key, @Nullable String value, boolean append) {
-        setHeader(key, value, append);
+    public XRequest header(@Nonnull String key, @Nullable String value, boolean override) {
+        setHeader(key, value, override);
         return this;
     }
 
@@ -211,13 +235,13 @@ public final class XRequest implements XHttpExecutor.Request {
      * 添加值不为null的HTTP请求体参数，可选择对同名的请求体参数的处理方式。
      * 如果有文件参数，则会使用multipart请求体，否则使用urlencoded请求体
      *
-     * @param key    请求体参数名
-     * @param value  请求体参数值，为null则不会被添加
-     * @param append true：清除已经存在的同名的请求体参数，false：追加同名请求体参数
+     * @param key      请求体参数名
+     * @param value    请求体参数值，为null则不会被添加
+     * @param override true：覆盖同名的请求体参数，false：追加同名请求体参数
      * @return HTTP请求实例
      */
     @Nonnull
-    public XRequest content(@Nonnull String key, @Nullable Object value, boolean append) {
+    public XRequest content(@Nonnull String key, @Nullable Object value, boolean override) {
         if (this.requestContent == null) {
             this.requestContent = new UrlencodedContent();
         }
@@ -226,12 +250,12 @@ public final class XRequest implements XHttpExecutor.Request {
             if (value instanceof File || value instanceof MultipartContent.Part) {
                 //如果请求体一开始是urlencoded类型的，现在来了一个文件，则自动转换成multipart类型的，然后交给multipart类型的处理逻辑处理
                 MultipartContent multipartContent = new MultipartContent();
-                for (XHttpExecutor.KeyValue keyValue : urlencodedContent.params) {
+                for (KeyValue keyValue : urlencodedContent.params) {
                     multipartContent.part(keyValue.key, keyValue.value);
                 }
                 this.requestContent = multipartContent;
             } else {
-                urlencodedContent.param(key, value, append);
+                urlencodedContent.param(key, value, override);
                 return this;
             }
         }
@@ -240,12 +264,12 @@ public final class XRequest implements XHttpExecutor.Request {
             if (value instanceof MultipartContent.Part) {
                 MultipartContent.Part part = (MultipartContent.Part) value;
                 if (key.equals(part.name)) {
-                    multipartContent.part((MultipartContent.Part) value, append);
+                    multipartContent.part((MultipartContent.Part) value, override);
                 } else {
                     throw new IllegalArgumentException(String.format("参数的key：%s与表单的名称：%s不相等", key, part.name));
                 }
             } else {
-                multipartContent.part(key, value, append);
+                multipartContent.part(key, value, override);
             }
             return this;
         }
@@ -259,9 +283,13 @@ public final class XRequest implements XHttpExecutor.Request {
      * @return HTTP请求实例
      */
     @Nonnull
-    public XRequest content(@Nonnull XHttpExecutor.Content content) {
+    public XRequest content(@Nonnull Content content) {
         setContent(content);
         return this;
+    }
+
+    public void setCharset(@Nonnull String charset) {
+        this.charset = charset;
     }
 
     @Nonnull
@@ -269,8 +297,8 @@ public final class XRequest implements XHttpExecutor.Request {
         return this.charset;
     }
 
-    public void setCharset(@Nonnull String charset) {
-        this.charset = charset;
+    public void setMethod(@Nonnull String method) {
+        this.requestMethod = method.toUpperCase();
     }
 
     /**
@@ -279,38 +307,10 @@ public final class XRequest implements XHttpExecutor.Request {
      * @return HTTP请求的请求方法
      */
     @Nonnull
-    @Override
     public String getMethod() {
         return this.requestMethod;
     }
 
-    @Override
-    public void setMethod(@Nonnull String method) {
-        if (method.equalsIgnoreCase(METHOD_GET) || method.equalsIgnoreCase(METHOD_POST) || method.equalsIgnoreCase(METHOD_DELETE) || method.equalsIgnoreCase(METHOD_PUT)) {
-            this.requestMethod = method.toUpperCase();
-        }
-    }
-
-    /**
-     * 获得HTTP请求的请求url，如果有请求地址参数则自动拼接成带参数的url
-     *
-     * @return HTTP请求的请求url
-     */
-    @Nonnull
-    @Override
-    public String getUrl() {
-        try {
-            if (this.requestQueries != null) {
-                return String.format("%s?%s", this.requestUrl, kvJoin(this.requestQueries, charset));
-            } else {
-                return this.requestUrl;
-            }
-        } catch (Exception e) {
-            throw new IllegalStateException("生成请求url时出错");
-        }
-    }
-
-    @Override
     public void setUrl(@Nonnull String url) {
         if (!url.toLowerCase().startsWith("http://") && !url.toLowerCase().startsWith("https://")) {
             throw new IllegalArgumentException("XRequest仅支持HTTP协议和HTTPS协议");
@@ -334,22 +334,39 @@ public final class XRequest implements XHttpExecutor.Request {
         }
     }
 
-    @Override
+    /**
+     * 获得HTTP请求的请求url，如果有请求地址参数则自动拼接成带参数的url
+     *
+     * @return HTTP请求的请求url
+     */
+    @Nonnull
+    public String getUrl() {
+        try {
+            if (this.requestQueries != null) {
+                return String.format("%s?%s", this.requestUrl, kvJoin(this.requestQueries, charset));
+            } else {
+                return this.requestUrl;
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("生成请求url时出错");
+        }
+    }
+
     public void setHeader(@Nonnull String key, @Nullable String value, boolean append) {
         if (this.requestHeaders == null) {
             this.requestHeaders = new LinkedList<>();
         }
         if (append) {
-            Iterator<XHttpExecutor.KeyValue> iterator = this.requestHeaders.iterator();
+            Iterator<KeyValue> iterator = this.requestHeaders.iterator();
             while (iterator.hasNext()) {
-                XHttpExecutor.KeyValue keyValue = iterator.next();
+                KeyValue keyValue = iterator.next();
                 if (keyValue.key.equals(key)) {
                     iterator.remove();
                 }
             }
         }
         if (value != null) {
-            requestHeaders.add(new XHttpExecutor.KeyValue(key, value));
+            requestHeaders.add(new KeyValue(key, value));
         }
     }
 
@@ -359,8 +376,7 @@ public final class XRequest implements XHttpExecutor.Request {
      * @return HTTP请求的请求头列表
      */
     @Nullable
-    @Override
-    public List<XHttpExecutor.KeyValue> getHeaders() {
+    public List<KeyValue> getHeaders() {
         if (this.requestContent != null) {
             try {
                 header("Content-Type", this.requestContent.contentType(), true);
@@ -377,29 +393,112 @@ public final class XRequest implements XHttpExecutor.Request {
         return this.requestHeaders;
     }
 
+    public void setContent(@Nonnull Content content) {
+        this.requestContent = content;
+    }
+
     /**
      * 获得HTTP请求的请求体
      *
      * @return HTTP请求的请求体
      */
     @Nullable
-    @Override
-    public XHttpExecutor.Content getContent() {
+    public Content getContent() {
         return this.requestContent;
     }
 
-    @Override
-    public void setContent(@Nonnull XHttpExecutor.Content content) {
-        this.requestContent = content;
+    /**
+     * 将键值对集合经过url编码后用固定的字符串连接起来
+     *
+     * @return 连接后的字符串
+     * @throws UnsupportedEncodingException 给定的编码格式不支持时抛出异常
+     */
+    @Nonnull
+    private static String kvJoin(@Nonnull List<KeyValue> keyValues, @Nonnull String charset) throws UnsupportedEncodingException {
+        StringBuilder sbStr = new StringBuilder();
+        for (KeyValue keyValue : keyValues) {
+            if (sbStr.length() > 0) {
+                sbStr.append('&');
+            }
+            sbStr.append(URLEncoder.encode(keyValue.key, charset)).append('=').append(URLEncoder.encode(String.valueOf(keyValue.value), charset));
+        }
+        return sbStr.toString();
+    }
+
+    /**
+     * HTTP请求体，需要提供请求体的类型、请求体的长度、请求体写出到输出流的方法
+     */
+    public interface Content {
+        /**
+         * 请求体字符编码
+         *
+         * @return 字符编码
+         * @throws IOException IO异常
+         */
+        @Nonnull
+        String charset() throws IOException;
+
+        /**
+         * 请求体的MIME类型
+         *
+         * @return 请求体的MIME类型
+         * @throws IOException IO异常
+         */
+        @Nonnull
+        String contentType() throws IOException;
+
+        /**
+         * 请求体的长度，如果不确定长度可以返回-1，这将使用chunked模式传输
+         *
+         * @return 请求体的长度
+         * @throws IOException IO异常
+         */
+        long contentLength() throws IOException;
+
+        /**
+         * 请求体写出到输出流的具体方法
+         *
+         * @param outStream 目标输出流
+         * @throws IOException 将请求体写出到输出流时可能会发生异常
+         */
+        void writeToStream(@Nonnull OutputStream outStream) throws IOException;
+    }
+
+    /**
+     * 键值对
+     */
+    public static class KeyValue {
+        /**
+         * 键
+         */
+        public final String key;
+        /**
+         * 值
+         */
+        public final Object value;
+
+        public KeyValue(@Nonnull String key, @Nonnull Object value) {
+            this.key = key;
+            this.value = value;
+        }
+
+        @Nonnull
+        public String getKey() {
+            return key;
+        }
+
+        @Nonnull
+        public Object getValue() {
+            return value;
+        }
     }
 
     /**
      * urlencoded类型请求体
      */
-    public static class UrlencodedContent implements XHttpExecutor.Content {
-        private final String charset = charset();
-        private final List<XHttpExecutor.KeyValue> params = new LinkedList<>();
-        private byte[] urlencoded;
+    public static class UrlencodedContent implements Content {
+        private final List<KeyValue> params = new LinkedList<>();
+        private byte[] content;
 
         @Nonnull
         public UrlencodedContent param(@Nonnull String key, @Nullable Object value) {
@@ -408,70 +507,64 @@ public final class XRequest implements XHttpExecutor.Request {
 
         @Nonnull
         public UrlencodedContent param(@Nonnull String key, @Nullable Object value, boolean clear) {
-            this.urlencoded = null;
+            this.content = null;
             if (clear) {
-                Iterator<XHttpExecutor.KeyValue> iterator = this.params.iterator();
+                Iterator<KeyValue> iterator = this.params.iterator();
                 while (iterator.hasNext()) {
-                    XHttpExecutor.KeyValue keyValue = iterator.next();
+                    KeyValue keyValue = iterator.next();
                     if (keyValue.key.equals(key)) {
                         iterator.remove();
                     }
                 }
             }
             if (value != null) {
-                this.params.add(new XHttpExecutor.KeyValue(key, value));
+                this.params.add(new KeyValue(key, value));
             }
             return this;
         }
 
         @Nonnull
-        @Override
         public String charset() {
-            return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
+            return "utf-8";
         }
 
         @Nonnull
-        @Override
         public String contentType() {
-            return MIME_URLENCODED + "; charset=" + charset;
+            return MIME_URLENCODED + "; charset=" + charset();
         }
 
-        @Override
         public long contentLength() throws IOException {
-            if (urlencoded == null) {
-                urlencoded = kvJoin(params, charset).getBytes(charset);
+            if (content == null) {
+                content = kvJoin(params, charset()).getBytes(charset());
             }
-            return urlencoded.length;
+            return content.length;
         }
 
-        @Override
-        public void contentWrite(@Nonnull OutputStream outStream) throws IOException {
-            if (urlencoded == null) {
-                urlencoded = kvJoin(params, charset).getBytes(charset);
+        public void writeToStream(@Nonnull OutputStream outStream) throws IOException {
+            if (content == null) {
+                content = kvJoin(params, charset()).getBytes(charset());
             }
-            outStream.write(urlencoded);
+            outStream.write(content);
         }
     }
 
     /**
      * multipart类型请求体
      */
-    public static class MultipartContent implements XHttpExecutor.Content {
+    public static class MultipartContent implements Content {
         public static final String HYPHENS = "--";
         public static final String CRLF = "\r\n";
-
-        private final String charset = charset();
         private final List<Part> parts = new LinkedList<>();
         private final String boundary = XTools.md5(String.format("multipart-%d-%d", System.currentTimeMillis(), new Random().nextInt()));
 
         @Nonnull
         public MultipartContent part(@Nonnull String key, @Nullable Object value) {
-            return this.part(new Part(key, value, charset), false);
+            return this.part(new Part(key, value, charset()), false);
         }
 
         @Nonnull
         public MultipartContent part(@Nonnull String key, @Nullable Object value, boolean clear) {
-            return this.part(new Part(key, value, charset), clear);
+            return this.part(new Part(key, value, charset()), clear);
         }
 
         @Nonnull
@@ -497,45 +590,41 @@ public final class XRequest implements XHttpExecutor.Request {
         }
 
         @Nonnull
-        @Override
         public String charset() {
-            return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
+            return "utf-8";
         }
 
         @Nonnull
-        @Override
         public String contentType() {
             return MIME_MULTIPART + "; boundary=" + boundary;
         }
 
-        @Override
         public long contentLength() throws IOException {
             long contentLength = 0;
             for (Part part : parts) {
-                contentLength += (HYPHENS + boundary + CRLF).getBytes(charset).length;
+                contentLength += (HYPHENS + boundary + CRLF).getBytes(charset()).length;
                 for (String header : part.headers()) {
-                    contentLength += String.format("%s%s", header, CRLF).getBytes(charset).length;
+                    contentLength += String.format("%s%s", header, CRLF).getBytes(charset()).length;
                 }
-                contentLength += CRLF.getBytes(charset).length;
+                contentLength += CRLF.getBytes(charset()).length;
                 contentLength += part.partLength();
-                contentLength += CRLF.getBytes(charset).length;
+                contentLength += CRLF.getBytes(charset()).length;
             }
-            contentLength = contentLength + (HYPHENS + boundary + HYPHENS + CRLF).getBytes(charset).length;
+            contentLength = contentLength + (HYPHENS + boundary + HYPHENS + CRLF).getBytes(charset()).length;
             return contentLength;
         }
 
-        @Override
-        public void contentWrite(@Nonnull OutputStream outStream) throws IOException {
+        public void writeToStream(@Nonnull OutputStream outStream) throws IOException {
             for (Part part : parts) {
-                outStream.write((HYPHENS + boundary + CRLF).getBytes(charset));
+                outStream.write((HYPHENS + boundary + CRLF).getBytes(charset()));
                 for (String header : part.headers()) {
-                    outStream.write(String.format("%s%s", header, CRLF).getBytes(charset));
+                    outStream.write(String.format("%s%s", header, CRLF).getBytes(charset()));
                 }
-                outStream.write(CRLF.getBytes(charset));
+                outStream.write(CRLF.getBytes(charset()));
                 part.partWrite(outStream);
-                outStream.write(CRLF.getBytes(charset));
+                outStream.write(CRLF.getBytes(charset()));
             }
-            outStream.write((HYPHENS + boundary + HYPHENS + CRLF).getBytes(charset));
+            outStream.write((HYPHENS + boundary + HYPHENS + CRLF).getBytes(charset()));
         }
 
         public static class Part {
@@ -547,7 +636,7 @@ public final class XRequest implements XHttpExecutor.Request {
             public final String charset;
 
             public Part(@Nonnull String name, @Nullable Object value) {
-                this(name, value, XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT));
+                this(name, value, "utf-8");
             }
 
             public Part(@Nonnull String name, @Nullable Object value, @Nonnull String charset) {
@@ -590,10 +679,8 @@ public final class XRequest implements XHttpExecutor.Request {
     /**
      * 字符串类型请求体
      */
-    public static class StringContent implements XHttpExecutor.Content {
-        private static Pattern P_CHARSET = Pattern.compile("charset\\s*=\\s*\"?(.+)\"?\\s*;?");
-
-        public final String charset = charset();
+    public static class StringContent implements Content {
+        private static final Pattern P_CHARSET = Pattern.compile("charset\\s*=\\s*\"?(.+)\"?\\s*;?");
         public final String mime;
         public final byte[] bytes;
 
@@ -604,33 +691,29 @@ public final class XRequest implements XHttpExecutor.Request {
                     this.mime = mime;
                     this.bytes = str.getBytes(matcher.group(1));
                 } else {
-                    this.mime = mime + "; charset=" + charset;
-                    this.bytes = str.getBytes(charset);
+                    this.mime = mime + "; charset=" + charset();
+                    this.bytes = str.getBytes(charset());
                 }
             } catch (UnsupportedEncodingException e) {
-                throw new IllegalStateException(String.format("无法将字符串以指定的编码方式【%s】进行编码", charset));
+                throw new IllegalStateException(String.format("无法将字符串以指定的编码方式【%s】进行编码", charset()));
             }
         }
 
         @Nonnull
-        @Override
         public String charset() {
-            return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
+            return "utf-8";
         }
 
         @Nonnull
-        @Override
         public String contentType() {
             return mime;
         }
 
-        @Override
         public long contentLength() {
             return bytes.length;
         }
 
-        @Override
-        public void contentWrite(@Nonnull OutputStream outStream) throws IOException {
+        public void writeToStream(@Nonnull OutputStream outStream) throws IOException {
             outStream.write(bytes);
         }
     }
@@ -638,7 +721,7 @@ public final class XRequest implements XHttpExecutor.Request {
     /**
      * 文件类型请求体
      */
-    public static class FileContent implements XHttpExecutor.Content {
+    public static class FileContent implements Content {
         public final File file;
 
         public FileContent(@Nonnull File file) {
@@ -646,24 +729,20 @@ public final class XRequest implements XHttpExecutor.Request {
         }
 
         @Nonnull
-        @Override
         public String charset() {
-            return XTools.cfgDef(CFG_REQ_CHARSET, CFG_REQ_CHARSET_DEFAULT);
+            return "utf-8";
         }
 
         @Nonnull
-        @Override
         public String contentType() throws IOException {
             return Files.probeContentType(Paths.get(file.getAbsolutePath()));
         }
 
-        @Override
         public long contentLength() {
             return file.length();
         }
 
-        @Override
-        public void contentWrite(@Nonnull OutputStream outStream) throws IOException {
+        public void writeToStream(@Nonnull OutputStream outStream) throws IOException {
             try (FileInputStream finStream = new FileInputStream(file)) {
                 XTools.streamToStream(finStream, outStream);
             }

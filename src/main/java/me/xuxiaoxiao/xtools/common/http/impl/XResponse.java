@@ -1,7 +1,6 @@
-package me.xuxiaoxiao.xtools.common.http.executor.impl;
+package me.xuxiaoxiao.xtools.common.http.impl;
 
 import me.xuxiaoxiao.xtools.common.XTools;
-import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -12,10 +11,7 @@ import java.net.HttpURLConnection;
 /**
  * HTTP响应类，提供了便捷的方法将输入流转换成字符串或文件
  */
-public class XResponse implements XHttpExecutor.Response {
-    public static final String CFG_RSP_CHARSET = XTools.CFG_PREFIX + "http.rspCharset";
-    public static final String CFG_RSP_CHARSET_DEFAULT = "utf-8";
-
+public class XResponse {
     private final HttpURLConnection connection;
     private final InputStream stream;
 
@@ -40,15 +36,13 @@ public class XResponse implements XHttpExecutor.Response {
      * @return 连接的输入流，记得使用XResponse实例的close()方法关闭输入流和连接
      */
     @Nullable
-    @Override
     public InputStream stream() {
         return this.stream;
     }
 
     @Nullable
-    @Override
     public String string() {
-        return string(XTools.cfgDef(CFG_RSP_CHARSET, CFG_RSP_CHARSET_DEFAULT).trim());
+        return string("utf-8");
     }
 
     /**
@@ -57,7 +51,6 @@ public class XResponse implements XHttpExecutor.Response {
      * @return 转化后的字符串
      */
     @Nullable
-    @Override
     public final String string(@Nonnull String charset) {
         try {
             InputStream inStream = stream();
@@ -85,7 +78,6 @@ public class XResponse implements XHttpExecutor.Response {
      * @return 转化后的文件
      */
     @Nullable
-    @Override
     public final File file(@Nonnull String path) {
         try {
             InputStream inStream = stream();
@@ -111,7 +103,7 @@ public class XResponse implements XHttpExecutor.Response {
      *
      * @throws Exception 在关闭该HTTP响应时可能会出现异常
      */
-    @Override
+
     public void close() throws Exception {
         if (stream != null) {
             stream.close();

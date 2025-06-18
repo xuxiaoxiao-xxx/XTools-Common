@@ -1,11 +1,9 @@
 package me.xuxiaoxiao.xtools.common;
 
-import me.xuxiaoxiao.xtools.common.code.XCodeTools;
-import me.xuxiaoxiao.xtools.common.config.XConfigTools;
-import me.xuxiaoxiao.xtools.common.config.configs.XConfigs;
+import me.xuxiaoxiao.xtools.common.hash.XHashTools;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
-import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
-import me.xuxiaoxiao.xtools.common.log.XLogTools;
+import me.xuxiaoxiao.xtools.common.http.impl.XRequest;
+import me.xuxiaoxiao.xtools.common.http.impl.XResponse;
 import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
 import javax.annotation.Nonnull;
@@ -17,10 +15,11 @@ import java.util.Date;
 import java.util.Map;
 
 /**
- * 常用的基本的函数的集合和索引
+ * 常用的基本的函数
  */
 public final class XTools {
-    public static final String CFG_PREFIX = "me.xuxiaoxiao$xtools-common$";
+    private static XHashTools hashTools = new XHashTools(new XHashTools.Config());
+    private static XHttpTools httpTools = new XHttpTools(new XHttpTools.Config());
 
     private XTools() {
     }
@@ -31,13 +30,9 @@ public final class XTools {
      * @param str 被散列的字符串
      * @return 散列结果，全小写字母
      */
-    @Nullable
+    @Nonnull
     public static String md5(@Nonnull String str) {
-        try {
-            return XCodeTools.hash(XCodeTools.HASH_MD5, str.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            return null;
-        }
+        return hashTools.hash(XHashTools.HASH_MD5, str.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -46,14 +41,9 @@ public final class XTools {
      * @param file 被散列的文件
      * @return 散列结果，全小写字母
      */
-    @Nullable
+    @Nonnull
     public static String md5(@Nonnull File file) {
-        try {
-            return XCodeTools.hash(XCodeTools.HASH_MD5, file);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        return hashTools.hash(XHashTools.HASH_MD5, file);
     }
 
     /**
@@ -62,13 +52,9 @@ public final class XTools {
      * @param str 被散列的字符串
      * @return 散列结果，全小写字母
      */
-    @Nullable
+    @Nonnull
     public static String sha1(@Nonnull String str) {
-        try {
-            return XCodeTools.hash(XCodeTools.HASH_SHA1, str.getBytes(StandardCharsets.UTF_8));
-        } catch (Exception e) {
-            return null;
-        }
+        return hashTools.hash(XHashTools.HASH_SHA1, str.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
@@ -77,14 +63,31 @@ public final class XTools {
      * @param file 被散列的文件
      * @return 散列结果，全小写字母
      */
-    @Nullable
+    @Nonnull
     public static String sha1(@Nonnull File file) {
-        try {
-            return XCodeTools.hash(XCodeTools.HASH_SHA1, file);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
+        return hashTools.hash(XHashTools.HASH_SHA1, file);
+    }
+
+    /**
+     * 字符串SHA1散列
+     *
+     * @param str 被散列的字符串
+     * @return 散列结果，全小写字母
+     */
+    @Nonnull
+    public static String sha256(@Nonnull String str) {
+        return hashTools.hash(XHashTools.HASH_SHA1, str.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 文件SHA1散列
+     *
+     * @param file 被散列的文件
+     * @return 散列结果，全小写字母
+     */
+    @Nonnull
+    public static String sha256(@Nonnull File file) {
+        return hashTools.hash(XHashTools.HASH_SHA256, file);
     }
 
     /**
@@ -95,20 +98,8 @@ public final class XTools {
      * @return 请求的响应体
      */
     @Nonnull
-    public static XHttpExecutor.Response http(@Nonnull XHttpExecutor.Request request) {
-        return XHttpTools.http(XHttpTools.EXECUTOR, request);
-    }
-
-    /**
-     * 使用自定义的请求执行器进行HTTP请求
-     *
-     * @param executor http请求执行器
-     * @param request  http请求
-     * @return 请求的响应体
-     */
-    @Nonnull
-    public static XHttpExecutor.Response http(@Nonnull XHttpExecutor executor, @Nonnull XHttpExecutor.Request request) {
-        return XHttpTools.http(executor, request);
+    public static XResponse http(@Nonnull XRequest request) {
+        return httpTools.http(request);
     }
 
     /**
@@ -118,7 +109,7 @@ public final class XTools {
      * @return str == null || str.length() == 0
      */
     public static boolean strEmpty(@Nullable String str) {
-        return str == null || str.length() == 0;
+        return str == null || str.isEmpty();
     }
 
     /**
@@ -128,7 +119,7 @@ public final class XTools {
      * @return str == null || str.trim().length() == 0
      */
     public static boolean strBlank(@Nullable String str) {
-        return str == null || str.trim().length() == 0;
+        return str == null || str.trim().isEmpty();
     }
 
     /**
@@ -687,110 +678,5 @@ public final class XTools {
     public static boolean sysLinux() {
         String osName = System.getProperties().getProperty("os.name").toLowerCase();
         return osName.contains("linux");
-    }
-
-    /**
-     * 设置配置信息
-     *
-     * @param key 配置键
-     * @param val 配置值
-     */
-    public static void cfgSet(@Nonnull String key, @Nonnull String val) {
-        XConfigTools.X_CONFIGS.cfgSet(key, val);
-    }
-
-    /**
-     * 获取配置信息值
-     *
-     * @param key 配置信息键名
-     * @return 配置信息值
-     */
-    @Nullable
-    public static String cfgGet(@Nonnull String key) {
-        return XConfigTools.X_CONFIGS.cfgGet(key);
-    }
-
-    /**
-     * 获取或设置配置信息
-     *
-     * @param key 配置键
-     * @param def 配置值为null时设置的默认值
-     * @return 当配置值为null时，将def设置为配置值并返回，否则返回原有的配置值并且不做任何更改
-     */
-    @Nonnull
-    public static String cfgDef(@Nonnull String key, @Nonnull String def) {
-        return XConfigTools.X_CONFIGS.cfgDef(key, def);
-    }
-
-    /**
-     * 监听配置信息
-     *
-     * @param prefix  配置键前缀
-     * @param watcher 配置信息监听器
-     */
-    public static void cfgWatch(@Nonnull String prefix, @Nonnull XConfigs.Watcher watcher) {
-        XConfigTools.X_CONFIGS.watcherAdd(prefix, watcher);
-    }
-
-    /**
-     * 记录错误信息的日志
-     *
-     * @param tag   日志tag
-     * @param error 错误信息
-     */
-    public static void logE(@Nonnull String tag, @Nonnull String error) {
-        XLogTools.LOGGER.logE(tag, error);
-    }
-
-    /**
-     * 记录错误信息的日志
-     *
-     * @param tag       日志tag
-     * @param throwable 异常对象
-     * @param error     错误信息
-     */
-    public static void logE(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String error) {
-        XLogTools.LOGGER.logE(tag, throwable, error);
-    }
-
-    /**
-     * 记录警告信息的日志
-     *
-     * @param tag     日志tag
-     * @param warning 警告信息
-     */
-    public static void logW(@Nonnull String tag, @Nonnull String warning) {
-        XLogTools.LOGGER.logW(tag, warning);
-    }
-
-    /**
-     * 记录警告信息的日志
-     *
-     * @param tag       日志tag
-     * @param throwable 异常对象
-     * @param warning   告警信息
-     */
-    public static void logW(@Nonnull String tag, @Nullable Throwable throwable, @Nonnull String warning) {
-        XLogTools.LOGGER.logW(tag, throwable, warning);
-    }
-
-    /**
-     * 记录提示信息的日志
-     *
-     * @param tag    日志tag
-     * @param notice 提示信息
-     */
-    public static void logN(@Nonnull String tag, @Nonnull String notice) {
-        XLogTools.LOGGER.logN(tag, notice);
-    }
-
-    /**
-     * 记录详细信息的日志
-     *
-     * @param tag    日志tag
-     * @param detail 详细信息
-     */
-    public static void logD(@Nonnull String tag, @Nonnull String detail) {
-        XLogTools.LOGGER.logD(tag, detail);
     }
 }

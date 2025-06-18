@@ -1,123 +1,152 @@
 package me.xuxiaoxiao.xtools.common.http;
 
-import me.xuxiaoxiao.xtools.common.XTools;
-import me.xuxiaoxiao.xtools.common.config.XConfigTools;
-import me.xuxiaoxiao.xtools.common.http.executor.XHttpExecutor;
-import me.xuxiaoxiao.xtools.common.http.executor.impl.XHttpExecutorImpl;
-import me.xuxiaoxiao.xtools.common.http.executor.impl.XResponse;
+import me.xuxiaoxiao.xtools.common.XToolsException;
+import me.xuxiaoxiao.xtools.common.http.impl.XExecutor;
+import me.xuxiaoxiao.xtools.common.http.impl.XRequest;
+import me.xuxiaoxiao.xtools.common.http.impl.XResponse;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
-import java.net.HttpCookie;
-import java.net.URI;
-import java.util.List;
+import javax.net.ssl.*;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 
 /**
  * HTTP工具类
  */
-public final class XHttpTools {
-    public static final String CFG_EXECUTOR = XTools.CFG_PREFIX + "http.executor";
-    public static final String CFG_EXECUTOR_DEFAULT = XHttpExecutorImpl.class.getName();
+public class XHttpTools {
+    private final Config config;
 
-    /**
-     * 默认的请求执行器
-     */
-    public static XHttpExecutor EXECUTOR = XConfigTools.supply(XTools.cfgDef(XHttpTools.CFG_EXECUTOR, XHttpTools.CFG_EXECUTOR_DEFAULT).trim());
+    public XHttpTools(Config config) {
+        this.config = config;
+    }
 
-    private XHttpTools() {
+    public Config getConfig() {
+        return config;
     }
 
     /**
      * 使用给定的请求选项进行HTTP请求
      *
-     * @param executor http请求执行器
      * @param request  HTTP请求
      * @return HTTP响应
      */
     @Nonnull
-    public static XHttpExecutor.Response http(@Nonnull XHttpExecutor executor, @Nonnull XHttpExecutor.Request request) {
+    public XResponse http(@Nonnull XRequest request) {
         try {
-            return executor.execute(request);
+            return config.executor.execute(request);
         } catch (Exception e) {
-            e.printStackTrace();
-            return new XResponse(null, null);
+            throw new XToolsException(e);
         }
     }
 
-    /**
-     * 添加HTTP装饰者
-     *
-     * @param decorator HTTP装饰者
-     */
-    public static synchronized void addDecorator(@Nonnull Decorator decorator) {
-        decorator.setOrigin(XHttpTools.EXECUTOR);
-        XHttpTools.EXECUTOR = decorator;
-    }
+    public static class Config {
+        private int connectTimeout;
+        private int readTimeout;
+        private int chunkLength;
+        private boolean followRedirect;
+        private CookieManager cookieManager;
+        private HostnameVerifier hostnameVerifier;
+        private SSLContext sslContext;
+        private XExecutor executor;
 
-    /**
-     * HTTP执行装饰者，对每个执行器的方法进行装饰
-     */
-    public static abstract class Decorator implements XHttpExecutor {
-        private XHttpExecutor origin;
+        public Config() {
+            this.connectTimeout = 10000;
+            this.readTimeout = 30000;
+            this.chunkLength = 262144;
+            this.followRedirect = false;
+            this.cookieManager = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
+            this.hostnameVerifier = new HostnameVerifier() {
+                @Override
+                public boolean verify(String s, SSLSession sslSession) {
+                    return true;
+                }
+            };
+            try {
+                this.sslContext = SSLContext.getInstance("TLS");
+                this.sslContext.init(null, new TrustManager[]{
+                        // 创建一个 TrustManager，它信任所有的证书
+                        new X509TrustManager() {
+                            public X509Certificate[] getAcceptedIssuers() {
+                                return null;
+                            }
 
-        final void setOrigin(@Nonnull XHttpExecutor origin) {
-            this.origin = origin;
+                            public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                            }
+
+                            public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                            }
+                        }
+                }, new SecureRandom());
+            } catch (Exception e) {
+                throw new XToolsException(e);
+            }
+            this.executor = new XExecutor(this);
         }
 
-        @Nonnull
-        public final XHttpExecutor getOrigin() {
-            return this.origin;
-        }
-
-        @Override
         public int getConnectTimeout() {
-            return this.origin.getConnectTimeout();
+            return connectTimeout;
         }
 
-        @Override
-        public void setConnectTimeout(int timeout) {
-            this.origin.setConnectTimeout(timeout);
+        public void setConnectTimeout(int connectTimeout) {
+            this.connectTimeout = connectTimeout;
         }
 
-        @Override
         public int getReadTimeout() {
-            return this.origin.getReadTimeout();
+            return readTimeout;
         }
 
-        @Override
-        public void setReadTimeout(int timeout) {
-            this.origin.setReadTimeout(timeout);
+        public void setReadTimeout(int readTimeout) {
+            this.readTimeout = readTimeout;
         }
 
-        @Override
-        public void addCookie(@Nullable URI uri, @Nonnull HttpCookie cookie) {
-            this.origin.addCookie(uri, cookie);
+        public int getChunkLength() {
+            return chunkLength;
         }
 
-        @Nonnull
-        @Override
-        public List<HttpCookie> getCookies(@Nonnull URI uri) {
-            return this.origin.getCookies(uri);
+        public void setChunkLength(int chunkLength) {
+            this.chunkLength = chunkLength;
         }
 
-        @Nonnull
-        @Override
-        public List<HttpCookie> getCookies() {
-            return this.origin.getCookies();
+        public boolean isFollowRedirect() {
+            return followRedirect;
         }
 
-        @Override
-        public void rmvCookies(@Nullable URI uri, @Nonnull HttpCookie cookie) {
-            this.origin.rmvCookies(uri, cookie);
+        public void setFollowRedirect(boolean followRedirect) {
+            this.followRedirect = followRedirect;
         }
 
-        @Override
-        public void rmvCookies() {
-            this.origin.rmvCookies();
+        public CookieManager getCookieManager() {
+            return cookieManager;
         }
 
-        @Nonnull
-        @Override
-        public abstract Response execute(@Nonnull Request request) throws Exception;
+        public void setCookieManager(CookieManager cookieManager) {
+            this.cookieManager = cookieManager;
+        }
+
+        public HostnameVerifier getHostnameVerifier() {
+            return hostnameVerifier;
+        }
+
+        public void setHostnameVerifier(HostnameVerifier hostnameVerifier) {
+            this.hostnameVerifier = hostnameVerifier;
+        }
+
+        public SSLContext getSslContext() {
+            return sslContext;
+        }
+
+        public void setSslContext(SSLContext sslContext) {
+            this.sslContext = sslContext;
+        }
+
+        public XExecutor getExecutor() {
+            return executor;
+        }
+
+        public void setExecutor(XExecutor executor) {
+            this.executor = executor;
+        }
     }
 }
