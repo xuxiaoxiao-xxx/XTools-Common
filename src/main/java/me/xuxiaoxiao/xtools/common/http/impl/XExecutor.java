@@ -20,32 +20,18 @@ public class XExecutor {
     }
 
     @Nonnull
-    protected HttpURLConnection connect(@Nonnull XRequest request) throws Exception {
-        String url = request.getUrl();
-        if (url.toLowerCase().startsWith("http://")) {
-            HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
-            //根据请求选项进行连接配置
-            connection.setConnectTimeout(config.getConnectTimeout());
-            connection.setReadTimeout(config.getReadTimeout());
-            connection.setInstanceFollowRedirects(config.isFollowRedirect());
-            return connection;
-        } else if (url.toLowerCase().startsWith("https://")) {
-            HttpsURLConnection connection = (HttpsURLConnection) new URL(url).openConnection();
-            connection.setSSLSocketFactory(config.getSslContext().getSocketFactory());
-            connection.setHostnameVerifier(config.getHostnameVerifier());
-            //根据请求选项进行连接配置
-            connection.setConnectTimeout(config.getConnectTimeout());
-            connection.setReadTimeout(config.getReadTimeout());
-            connection.setInstanceFollowRedirects(config.isFollowRedirect());
-            return connection;
-        } else {
-            throw new IllegalArgumentException("XHttpExecutorImpl仅支持HTTP协议和HTTPS协议");
-        }
-    }
-
-    @Nonnull
     public XResponse execute(@Nonnull XRequest request) throws Exception {
-        HttpURLConnection connection = connect(request);
+        String url = request.getUrl();
+        HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
+        //根据请求选项进行连接配置
+        connection.setConnectTimeout(config.getConnectTimeout());
+        connection.setReadTimeout(config.getReadTimeout());
+        connection.setInstanceFollowRedirects(config.isFollowRedirect());
+        if (url.toLowerCase().startsWith("https://")) {
+            ((HttpsURLConnection) connection).setSSLSocketFactory(config.getSslContext().getSocketFactory());
+            ((HttpsURLConnection) connection).setHostnameVerifier(config.getHostnameVerifier());
+        }
+
         //设置请求方法
         connection.setRequestMethod(request.getMethod());
 
