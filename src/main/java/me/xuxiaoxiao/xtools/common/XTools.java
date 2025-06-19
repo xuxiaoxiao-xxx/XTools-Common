@@ -197,14 +197,15 @@ public final class XTools {
     /**
      * 将字符串数组用一个固定的字符串连接起来
      *
-     * @param strArr 字符串集合
-     * @param glue   用于连接的字符串
+     * @param array 数组
+     * @param glue  用于连接的字符串
+     * @param <T>   数组的类型
      * @return 连接后的字符串
      */
     @Nonnull
-    public static <T> String joinArray(@Nonnull T[] strArr, @Nonnull String glue) {
+    public static <T> String joinArray(@Nonnull T[] array, @Nonnull String glue) {
         StringBuilder sbStr = new StringBuilder();
-        for (Object obj : strArr) {
+        for (Object obj : array) {
             if (sbStr.length() > 0) {
                 sbStr.append(glue);
             }

@@ -63,6 +63,7 @@ public class XResponse implements AutoCloseable {
      * 获取返回的输入流，只允许获取一次
      *
      * @return 连接的输入流，记得使用XResponse实例的close()方法关闭输入流和连接
+     * @throws IOException 如果获取输入流失败
      */
     @Nullable
     public InputStream getStream() throws IOException {
@@ -99,6 +100,7 @@ public class XResponse implements AutoCloseable {
     /**
      * 将连接返回的输入流中的数据转化成字符串，并自动关闭输入流
      *
+     * @param charset 字符集
      * @return 转化后的字符串
      */
     @Nullable
