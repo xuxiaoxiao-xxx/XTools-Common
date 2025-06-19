@@ -331,7 +331,7 @@ public class XRequest {
     @Nonnull
     public String getUrl() {
         try {
-            if (!XTools.isEmpty(this.requestUrl)) {
+            if (!XTools.isEmpty(this.requestQueries)) {
                 return String.format("%s?%s", this.requestUrl, kvJoin(this.requestQueries, charset));
             } else {
                 return this.requestUrl;
