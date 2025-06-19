@@ -9,7 +9,6 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
@@ -175,7 +174,7 @@ public class XRequest {
     @Nonnull
     public XRequest query(@Nonnull String key, @Nullable Object value, boolean override) {
         if (override) {
-            this.requestQueries.removeIf(keyValue -> keyValue.key.equals(key));
+            this.requestQueries.removeIf(keyValue -> keyValue.getKey().equals(key));
         }
         if (value != null) {
             this.requestQueries.add(new KeyValue(key, value));
@@ -242,7 +241,7 @@ public class XRequest {
                 //如果请求体一开始是urlencoded类型的，现在来了一个文件，则自动转换成multipart类型的，然后交给multipart类型的处理逻辑处理
                 MultipartContent multipartContent = new MultipartContent();
                 for (KeyValue keyValue : urlencodedContent.params) {
-                    multipartContent.part(keyValue.key, keyValue.value);
+                    multipartContent.part(keyValue.getKey(), keyValue.getValue());
                 }
                 this.requestContent = multipartContent;
             } else {
@@ -344,7 +343,7 @@ public class XRequest {
 
     public void setHeader(@Nonnull String key, @Nullable String value, boolean append) {
         if (append) {
-            this.requestHeaders.removeIf(keyValue -> keyValue.key.equals(key));
+            this.requestHeaders.removeIf(keyValue -> keyValue.getKey().equals(key));
         }
         if (value != null) {
             requestHeaders.add(new KeyValue(key, value));
@@ -401,7 +400,7 @@ public class XRequest {
             if (sbStr.length() > 0) {
                 sbStr.append('&');
             }
-            sbStr.append(URLEncoder.encode(keyValue.key, charset)).append('=').append(URLEncoder.encode(String.valueOf(keyValue.value), charset));
+            sbStr.append(URLEncoder.encode(keyValue.getKey(), charset)).append('=').append(URLEncoder.encode(String.valueOf(keyValue.getValue()), charset));
         }
         return sbStr.toString();
     }
@@ -449,14 +448,8 @@ public class XRequest {
      * 键值对
      */
     public static class KeyValue {
-        /**
-         * 键
-         */
-        public final String key;
-        /**
-         * 值
-         */
-        public final Object value;
+        private final String key;
+        private final Object value;
 
         public KeyValue(@Nonnull String key, @Nonnull Object value) {
             this.key = key;
@@ -487,16 +480,10 @@ public class XRequest {
         }
 
         @Nonnull
-        public UrlencodedContent param(@Nonnull String key, @Nullable Object value, boolean clear) {
+        public UrlencodedContent param(@Nonnull String key, @Nullable Object value, boolean override) {
             this.content = null;
-            if (clear) {
-                Iterator<KeyValue> iterator = this.params.iterator();
-                while (iterator.hasNext()) {
-                    KeyValue keyValue = iterator.next();
-                    if (keyValue.key.equals(key)) {
-                        iterator.remove();
-                    }
-                }
+            if (override) {
+                this.params.removeIf(keyValue -> keyValue.getKey().equals(key));
             }
             if (value != null) {
                 this.params.add(new KeyValue(key, value));
@@ -544,8 +531,8 @@ public class XRequest {
         }
 
         @Nonnull
-        public MultipartContent part(@Nonnull String key, @Nullable Object value, boolean clear) {
-            return this.part(new Part(key, value, charset()), clear);
+        public MultipartContent part(@Nonnull String key, @Nullable Object value, boolean override) {
+            return this.part(new Part(key, value, charset()), override);
         }
 
         @Nonnull
@@ -554,15 +541,9 @@ public class XRequest {
         }
 
         @Nonnull
-        public MultipartContent part(@Nonnull Part part, boolean clear) {
-            if (clear) {
-                Iterator<Part> iterator = this.parts.iterator();
-                while (iterator.hasNext()) {
-                    Part temp = iterator.next();
-                    if (part.name.equals(temp.name)) {
-                        iterator.remove();
-                    }
-                }
+        public MultipartContent part(@Nonnull Part part, boolean override) {
+            if (override) {
+                this.parts.removeIf(temp -> part.name.equals(temp.name));
             }
             if (part.value != null) {
                 this.parts.add(part);
@@ -662,18 +643,18 @@ public class XRequest {
      */
     public static class StringContent implements Content {
         private static final Pattern P_CHARSET = Pattern.compile("charset\\s*=\\s*\"?([^;\\s\"]+)\"?", Pattern.CASE_INSENSITIVE);
-        public final String mime;
-        public final byte[] bytes;
+        private final String mime;
+        private final byte[] content;
 
         public StringContent(@Nonnull String mime, @Nonnull String str) {
             try {
                 Matcher matcher = P_CHARSET.matcher(mime);
                 if (matcher.find()) {
                     this.mime = mime;
-                    this.bytes = str.getBytes(matcher.group(1));
+                    this.content = str.getBytes(matcher.group(1));
                 } else {
                     this.mime = mime + "; charset=" + charset();
-                    this.bytes = str.getBytes(charset());
+                    this.content = str.getBytes(charset());
                 }
             } catch (UnsupportedEncodingException e) {
                 throw new IllegalStateException(String.format("无法将字符串以指定的编码方式【%s】进行编码", charset()));
@@ -691,11 +672,11 @@ public class XRequest {
         }
 
         public long contentLength() {
-            return bytes.length;
+            return content.length;
         }
 
         public void writeToStream(@Nonnull OutputStream outStream) throws IOException {
-            outStream.write(bytes);
+            outStream.write(content);
         }
     }
 
@@ -703,7 +684,7 @@ public class XRequest {
      * 文件类型请求体
      */
     public static class FileContent implements Content {
-        public final File file;
+        private final File file;
 
         public FileContent(@Nonnull File file) {
             this.file = file;

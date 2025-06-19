@@ -50,7 +50,7 @@ public class XExecutor {
         if (headers != null) {
             //设置请求头
             for (XRequest.KeyValue keyValue : headers) {
-                connection.addRequestProperty(keyValue.key, String.valueOf(keyValue.value));
+                connection.addRequestProperty(keyValue.getKey(), String.valueOf(keyValue.getValue()));
             }
         }
 
