@@ -1,7 +1,5 @@
 package me.xuxiaoxiao.xtools.common.hash;
 
-import me.xuxiaoxiao.xtools.common.XToolsException;
-
 import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileInputStream;
@@ -45,7 +43,7 @@ public class XHashTools {
             messageDigest.update(bytes);
             return bytesToHex(messageDigest.digest());
         } catch (NoSuchAlgorithmException e) {
-            throw new XToolsException(e);
+            throw new IllegalArgumentException(e);
         }
     }
 
@@ -70,7 +68,7 @@ public class XHashTools {
                 return bytesToHex(digestInputStream.getMessageDigest().digest());
             }
         } catch (NoSuchAlgorithmException | IOException e) {
-            throw new XToolsException(e);
+            throw new IllegalArgumentException(e);
         }
     }
 

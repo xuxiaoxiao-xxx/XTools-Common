@@ -152,8 +152,7 @@ public class XTimeTools {
         try {
             return dateFormat.parse(dateStr);
         } catch (Exception e) {
-            e.printStackTrace();
-            throw new IllegalArgumentException(String.format("日期:%s 不符合格式:%s", dateStr, format));
+            throw new IllegalArgumentException(String.format("日期:%s 不符合格式:%s", dateStr, format), e);
         }
     }
 
@@ -174,7 +173,7 @@ public class XTimeTools {
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DATE) - 1;
         try {
-            Integer[] holidays = (Integer[]) XHolidayDb.class.getDeclaredField("HOLIDAY_" + year).get(null);
+            short[] holidays = (short[]) XHolidayDb.class.getDeclaredField("HOLIDAY_" + year).get(null);
             for (int typeMD : holidays) {
                 if ((month << 8 | day) == (typeMD & 0xfff)) {
                     return typeMD >> 12;

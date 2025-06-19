@@ -657,7 +657,7 @@ public class XRequest {
                     this.content = str.getBytes(charset());
                 }
             } catch (UnsupportedEncodingException e) {
-                throw new IllegalStateException(String.format("无法将字符串以指定的编码方式【%s】进行编码", charset()));
+                throw new IllegalArgumentException(String.format("无法将字符串以指定的编码方式【%s】进行编码", charset()));
             }
         }
 

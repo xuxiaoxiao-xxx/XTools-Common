@@ -1,6 +1,5 @@
 package me.xuxiaoxiao.xtools.common.http;
 
-import me.xuxiaoxiao.xtools.common.XToolsException;
 import me.xuxiaoxiao.xtools.common.http.impl.XExecutor;
 import me.xuxiaoxiao.xtools.common.http.impl.XRequest;
 import me.xuxiaoxiao.xtools.common.http.impl.XResponse;
@@ -41,7 +40,7 @@ public class XHttpTools {
         try {
             return getConfig().executor.execute(request);
         } catch (Exception e) {
-            throw new XToolsException(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -65,7 +64,6 @@ public class XHttpTools {
             try {
                 this.sslContext = SSLContext.getInstance("TLS");
                 this.sslContext.init(null, new TrustManager[]{
-                        // 创建一个 TrustManager，它信任所有的证书
                         new X509TrustManager() {
                             public X509Certificate[] getAcceptedIssuers() {
                                 return null;
@@ -79,7 +77,7 @@ public class XHttpTools {
                         }
                 }, new SecureRandom());
             } catch (Exception e) {
-                throw new XToolsException(e);
+                throw new IllegalArgumentException(e);
             }
             this.executor = new XExecutor(this);
         }

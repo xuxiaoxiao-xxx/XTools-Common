@@ -1,7 +1,6 @@
 package me.xuxiaoxiao.xtools.common.http.impl;
 
 import me.xuxiaoxiao.xtools.common.XTools;
-import me.xuxiaoxiao.xtools.common.XToolsException;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -45,7 +44,7 @@ public class XResponse implements AutoCloseable {
         try {
             return this.connection.getResponseCode();
         } catch (IOException e) {
-            throw new XToolsException(e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -112,7 +111,7 @@ public class XResponse implements AutoCloseable {
                 return XTools.streamToStr(inStream, charset);
             }
         } catch (IOException e) {
-            throw new XToolsException(e);
+            throw new RuntimeException(e);
         } finally {
             this.close();
         }
@@ -133,7 +132,7 @@ public class XResponse implements AutoCloseable {
                 return XTools.streamToFile(inStream, path);
             }
         } catch (IOException e) {
-            throw new XToolsException(e);
+            throw new RuntimeException(e);
         } finally {
             this.close();
         }
@@ -148,7 +147,7 @@ public class XResponse implements AutoCloseable {
             try {
                 this.inStream.close();
             } catch (IOException e) {
-                throw new XToolsException(e);
+                throw new RuntimeException(e);
             }
         }
         this.connection.disconnect();
