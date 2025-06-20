@@ -5,8 +5,10 @@ import org.junit.jupiter.api.Test;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -63,12 +65,47 @@ public class XRequestTest {
     }
 
     @Test
-    void testCharsetQueryHeaderContent() {
-        XRequest req = XRequest.GET("http://a.com/api")
+    void testCharsetQueryHeaderContent() throws Exception {
+        File temp = File.createTempFile("test", ".txt");
+        Files.write(temp.toPath(), Collections.singletonList("filecontent"));
+
+        XRequest req = XRequest.POST("http://a.com/api")
                 .charset("utf-8")
-                .query("key", "test")
-                .query("key", "over ride", true);
-        assertTrue(req.getUrl().contains("key=over+ride"));
+                .query("q1", "q1Value")
+                .query("q1", "q1Append")
+                .query("q2", "q2Value")
+                .query("q2", "q2 override", true)
+                .header("H1", "H1Value")
+                .header("H1", "H1Append")
+                .header("H2", "H2Value")
+                .header("h2", "H2Override", true)
+                .content("c1", "c1Value")
+                .content("c2", "c2Value")
+                .content("c2", "c2Override", true)
+                .content("c3", temp)
+                .content("c4", new XRequest.MultipartContent.Part("c4", 4))
+                .content("c4", new XRequest.MultipartContent.Part("c4", 4, "utf-8"), true);
+
+        assertEquals("http://a.com/api?q1=q1Value&q1=q1Append&q2=q2+override", req.getUrl());
+
+        List<XRequest.KeyValue> headers = req.getHeaders();
+        assertEquals(headers.size(), 5);
+        assertEquals(headers.get(0), new XRequest.KeyValue("H1", "H1Value"));
+        assertEquals(headers.get(1), new XRequest.KeyValue("H1", "H1Append"));
+        assertEquals(headers.get(2), new XRequest.KeyValue("h2", "H2Override"));
+        assertEquals(headers.get(3).getKey(), "Content-Type");
+        assertTrue(headers.get(3).getValue().toString().startsWith("multipart/form-data; boundary="));
+        assertEquals(headers.get(4).getKey(), "Content-Length");
+        assertTrue(Long.parseLong(headers.get(4).getValue().toString()) > 0);
+
+        assertTrue(req.getContent() instanceof XRequest.MultipartContent);
+        assert temp.delete();
+    }
+
+    @Test
+    void testSetUrl() {
+        XRequest req = XRequest.GET("http://a.com/api?q1=q1Value&q2=&q3=q3Value&q3=q3+override");
+        assertEquals("http://a.com/api?q1=q1Value&q2=&q3=q3Value&q3=q3+override", req.getUrl());
     }
 
     @Test
@@ -107,7 +144,7 @@ public class XRequestTest {
     @Test
     void testMultipartContentWithFile() throws IOException {
         File temp = File.createTempFile("test", ".txt");
-        Files.write(temp.toPath(), Arrays.asList("filecontent"));
+        Files.write(temp.toPath(), Collections.singletonList("filecontent"));
         XRequest.MultipartContent content = new XRequest.MultipartContent();
         content.part("file", temp);
 
@@ -117,7 +154,7 @@ public class XRequestTest {
         String result = out.toString(content.charset());
         assertTrue(result.contains("filename="));
         assertTrue(result.contains("filecontent"));
-        temp.delete();
+        assert temp.delete();
     }
 
     @Test
@@ -137,7 +174,7 @@ public class XRequestTest {
     void testFileContent() throws IOException {
         File temp = File.createTempFile("test", ".txt");
         String fileStr = "abc123";
-        Files.write(temp.toPath(), fileStr.getBytes("utf-8"));
+        Files.write(temp.toPath(), fileStr.getBytes(StandardCharsets.UTF_8));
         XRequest.FileContent content = new XRequest.FileContent(temp);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -145,6 +182,6 @@ public class XRequestTest {
 
         assertEquals(fileStr, out.toString(content.charset()));
         assertEquals(content.contentLength(), temp.length());
-        temp.delete();
+        assertTrue(temp.delete());
     }
 }

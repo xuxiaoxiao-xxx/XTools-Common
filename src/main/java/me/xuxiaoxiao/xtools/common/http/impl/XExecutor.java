@@ -47,7 +47,7 @@ public class XExecutor {
         connection.setRequestMethod(request.getMethod());
 
         List<XRequest.KeyValue> headers = request.getHeaders();
-        if (headers != null) {
+        if (!XTools.isEmpty(headers)) {
             //设置请求头
             for (XRequest.KeyValue keyValue : headers) {
                 connection.addRequestProperty(keyValue.getKey(), String.valueOf(keyValue.getValue()));

@@ -343,7 +343,7 @@ public class XRequest {
 
     public void setHeader(@Nonnull String key, @Nullable String value, boolean append) {
         if (append) {
-            this.requestHeaders.removeIf(keyValue -> keyValue.getKey().equals(key));
+            this.requestHeaders.removeIf(keyValue -> keyValue.getKey().equalsIgnoreCase(key));
         }
         if (value != null) {
             requestHeaders.add(new KeyValue(key, value));
@@ -355,16 +355,30 @@ public class XRequest {
      *
      * @return HTTP请求的请求头列表
      */
-    @Nullable
+    @Nonnull
     public List<KeyValue> getHeaders() {
         if (this.requestContent != null) {
             try {
-                header("Content-Type", this.requestContent.contentType(), true);
-                long contentLength = requestContent.contentLength();
-                if (contentLength > 0) {
-                    header("Content-Length", String.valueOf(contentLength), true);
-                } else {
-                    header("Transfer-Encoding", "chunked", true);
+                boolean hasContentType = false, hasContentLength = false, isChunkedTransfer = false;
+                for (KeyValue kv : this.requestHeaders) {
+                    if (kv.getKey().equalsIgnoreCase("Content-Type")) {
+                        hasContentType = true;
+                    } else if (kv.getKey().equalsIgnoreCase("Content-Length")) {
+                        hasContentLength = true;
+                    } else if (kv.getKey().equalsIgnoreCase("Transfer-Encoding") && kv.getValue().equals("chunked")) {
+                        isChunkedTransfer = true;
+                    }
+                }
+                if (!hasContentType) {
+                    header("Content-Type", this.requestContent.contentType());
+                }
+                if (!hasContentLength && !isChunkedTransfer) {
+                    long contentLength = requestContent.contentLength();
+                    if (contentLength > 0) {
+                        header("Content-Length", String.valueOf(contentLength), true);
+                    } else {
+                        header("Transfer-Encoding", "chunked", true);
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -464,6 +478,24 @@ public class XRequest {
         @Nonnull
         public Object getValue() {
             return value;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            KeyValue keyValue = (KeyValue) o;
+
+            if (!key.equals(keyValue.key)) return false;
+            return value.equals(keyValue.value);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = key.hashCode();
+            result = 31 * result + value.hashCode();
+            return result;
         }
     }
 
