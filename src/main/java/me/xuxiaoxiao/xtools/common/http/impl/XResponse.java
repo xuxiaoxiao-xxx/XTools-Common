@@ -143,8 +143,7 @@ public class XResponse implements AutoCloseable {
         if (this.inStream != null) {
             try {
                 this.inStream.close();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            } catch (IOException ignored) {
             }
         }
         this.connection.disconnect();

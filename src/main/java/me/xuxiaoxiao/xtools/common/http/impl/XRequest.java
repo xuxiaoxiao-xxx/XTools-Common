@@ -380,8 +380,7 @@ public class XRequest {
                         header("Transfer-Encoding", "chunked", true);
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException ignored) {
             }
         }
         return this.requestHeaders;
