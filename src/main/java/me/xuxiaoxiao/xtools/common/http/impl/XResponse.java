@@ -42,7 +42,7 @@ public class XResponse implements AutoCloseable {
      */
     public int getStatusCode() {
         try {
-            return this.connection.getResponseCode();
+            return this.getConnection().getResponseCode();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -66,13 +66,13 @@ public class XResponse implements AutoCloseable {
      */
     @Nullable
     public InputStream getStream() throws IOException {
-        if (this.connection.getResponseCode() >= 200 && this.connection.getResponseCode() < 300) {
+        if (this.getConnection().getResponseCode() >= 200 && this.getConnection().getResponseCode() < 300) {
             if (this.inStream == null) {
-                this.inStream = this.connection.getInputStream();
+                this.inStream = this.getConnection().getInputStream();
             }
         } else {
             if (this.inStream == null) {
-                this.inStream = this.connection.getErrorStream();
+                this.inStream = this.getConnection().getErrorStream();
             }
         }
         return this.inStream;
@@ -83,7 +83,6 @@ public class XResponse implements AutoCloseable {
      *
      * @return 转化后的字符串
      */
-    @Nullable
     public String asString() {
         String charset = "utf-8";
         String contentType = connection.getContentType();
@@ -102,7 +101,6 @@ public class XResponse implements AutoCloseable {
      * @param charset 字符集
      * @return 转化后的字符串
      */
-    @Nullable
     public final String asString(@Nonnull String charset) {
         try (InputStream inStream = getStream()) {
             if (inStream == null) {
@@ -123,7 +121,6 @@ public class XResponse implements AutoCloseable {
      * @param path 文件存储的路径
      * @return 转化后的文件
      */
-    @Nullable
     public final File asFile(@Nonnull String path) {
         try (InputStream inStream = getStream()) {
             if (inStream == null) {

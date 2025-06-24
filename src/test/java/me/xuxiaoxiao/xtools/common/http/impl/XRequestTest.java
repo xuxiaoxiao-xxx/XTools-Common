@@ -65,6 +65,13 @@ public class XRequestTest {
     }
 
     @Test
+    void testCharset() {
+        XRequest req = XRequest.GET("http://a.com/api");
+        req.setCharset("utf-8");
+        assertEquals("utf-8", req.getCharset());
+    }
+
+    @Test
     void testCharsetQueryHeaderContent() throws Exception {
         File temp = File.createTempFile("test", ".txt");
         Files.write(temp.toPath(), Collections.singletonList("filecontent"));
@@ -103,9 +110,113 @@ public class XRequestTest {
     }
 
     @Test
+    void testMultipartContentParamMismatch() {
+        XRequest request = XRequest.POST("http://a.com/api").content(new XRequest.MultipartContent());
+        try {
+            request.content("key", new XRequest.MultipartContent.Part("key2", "value"));
+            throw new RuntimeException("not reachable");
+        } catch (Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+        }
+    }
+
+    @Test
+    void testStringContentNotSupportParam() {
+        XRequest request = XRequest.POST("http://a.com/api").content(new XRequest.StringContent(XRequest.MIME_JSON, "hello world"));
+        try {
+            request.content("key", "value");
+            throw new RuntimeException("not reachable");
+        } catch (Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+        }
+    }
+
+    @Test
     void testSetUrl() {
         XRequest req = XRequest.GET("http://a.com/api?q1=q1Value&q2=&q3=q3Value&q3=q3+override");
         assertEquals("http://a.com/api?q1=q1Value&q2=&q3=q3Value&q3=q3+override", req.getUrl());
+    }
+
+    @Test
+    void testUrlOnlySupportHttp() {
+        try {
+            XRequest.GET("protocol://a.com/api");
+            throw new RuntimeException("not reachable");
+        } catch (Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+        }
+    }
+
+    @Test
+    void testUrlFormatError() {
+        try {
+            XRequest.GET("http://a.com/api?q2");
+            throw new RuntimeException("not reachable");
+        } catch (Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+        }
+    }
+
+    @Test
+    void testSetUrlCharsetError() {
+        try {
+            XRequest.GET("http://a.com/api").charset("err-charset").setUrl("http://a.com/api?q1=%E4%B8%AD%E6%96%87");
+            throw new RuntimeException("not reachable");
+        } catch (Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+        }
+    }
+
+    @Test
+    void testGetUrlCharsetError() {
+        try {
+            XRequest request = XRequest.GET("http://a.com/api").charset("err-charset").query("key", "中文");
+            request.getUrl();
+            throw new RuntimeException("not reachable");
+        } catch (Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+        }
+    }
+
+    @Test
+    void testPresetHeader() {
+        XRequest request = XRequest.POST("http://a.com/api").content(new XRequest.StringContent(XRequest.MIME_JSON, "{}"));
+        request.setHeader("Content-Length", "10", true);
+        request.setHeader("Content-Type", "text", true);
+        request.setHeader("Transfer-Encoding", "chunked", true);
+        List<XRequest.KeyValue> headers = request.getHeaders();
+        assertEquals(headers.size(), 3);
+        for (XRequest.KeyValue kv : headers) {
+            if (kv.getKey().equals("Content-Length")) {
+                assertEquals(kv.getValue(), "10");
+            }
+            if (kv.getKey().equals("Content-Type")) {
+                assertEquals(kv.getValue(), "text");
+            }
+            if (kv.getKey().equals("Transfer-Encoding")) {
+                assertEquals(kv.getValue(), "chunked");
+            }
+        }
+    }
+
+    @Test
+    void testGetHeaderWithContentError() {
+        XRequest request = XRequest.POST("http://a.com/api").content(new XRequest.UrlencodedContent() {
+            @Override
+            public long contentLength() throws IOException {
+                throw new IOException();
+            }
+        });
+        List<XRequest.KeyValue> headers = request.getHeaders();
+        assertEquals(1, headers.size());
+    }
+
+    @Test
+    void testKeyValue() {
+        XRequest.KeyValue kv1 = new XRequest.KeyValue("key", "value");
+        XRequest.KeyValue kv2 = new XRequest.KeyValue("key", "value");
+        assertEquals(kv1, kv2);
+        assertEquals(kv1.hashCode(), kv2.hashCode());
     }
 
     @Test
@@ -115,6 +226,8 @@ public class XRequestTest {
         content.param("b", "2");
         content.param("a", "3", true); // 覆盖a
 
+        assertEquals(content.contentLength(), 7);
+        content.param("c", "4");
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         content.writeToStream(out);
 
@@ -128,6 +241,7 @@ public class XRequestTest {
     @Test
     void testMultipartContentPartAndWrite() throws IOException {
         XRequest.MultipartContent content = new XRequest.MultipartContent();
+        content.part(new XRequest.MultipartContent.Part("foo", "bar"));
         content.part("foo", "bar");
         content.part("foo", "baz", true); // 覆盖foo
 
@@ -171,6 +285,29 @@ public class XRequestTest {
     }
 
     @Test
+    void testStringContentGivenCharset() throws IOException {
+        String str = "hello世界";
+        XRequest.StringContent content = new XRequest.StringContent("text/plain; charset=utf-8", str);
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        content.writeToStream(out);
+
+        assertEquals(str, out.toString(content.charset()));
+        assertEquals(content.contentType(), "text/plain; charset=utf-8");
+        assertEquals(content.contentLength(), str.getBytes(content.charset()).length);
+    }
+
+    @Test
+    void testStringContentWrongCharset() {
+        String str = "hello世界";
+        try {
+            new XRequest.StringContent("text/plain; charset=wrong", str);
+        } catch (Exception e) {
+            assertTrue(e instanceof IllegalArgumentException);
+        }
+    }
+
+    @Test
     void testFileContent() throws IOException {
         File temp = File.createTempFile("test", ".txt");
         String fileStr = "abc123";
@@ -182,6 +319,7 @@ public class XRequestTest {
 
         assertEquals(fileStr, out.toString(content.charset()));
         assertEquals(content.contentLength(), temp.length());
+        assertEquals(content.contentType(), "text/plain");
         assertTrue(temp.delete());
     }
 }

@@ -263,7 +263,7 @@ public class XRequest {
             }
             return this;
         }
-        throw new IllegalStateException(String.format("%s不能接受键值对请求体", this.requestContent.getClass().getName()));
+        throw new IllegalArgumentException(String.format("%s不能接受键值对请求体", this.requestContent.getClass().getName()));
     }
 
     /**
@@ -316,7 +316,7 @@ public class XRequest {
                     }
                 }
             } catch (UnsupportedEncodingException e) {
-                throw new IllegalArgumentException(String.format("不支持编码方式：%s", charset));
+                throw new IllegalArgumentException(String.format("不支持编码方式：%s", charset), e);
             }
         } else {
             this.requestUrl = url;
@@ -330,19 +330,19 @@ public class XRequest {
      */
     @Nonnull
     public String getUrl() {
-        try {
-            if (!XTools.isEmpty(this.requestQueries)) {
+        if (!XTools.isEmpty(this.requestQueries)) {
+            try {
                 return String.format("%s?%s", this.requestUrl, kvJoin(this.requestQueries, charset));
-            } else {
-                return this.requestUrl;
+            } catch (UnsupportedEncodingException e) {
+                throw new IllegalArgumentException(String.format("不支持编码方式：%s", charset), e);
             }
-        } catch (Exception e) {
-            throw new IllegalStateException("生成请求url时出错");
+        } else {
+            return this.requestUrl;
         }
     }
 
-    public void setHeader(@Nonnull String key, @Nullable String value, boolean append) {
-        if (append) {
+    public void setHeader(@Nonnull String key, @Nullable String value, boolean override) {
+        if (override) {
             this.requestHeaders.removeIf(keyValue -> keyValue.getKey().equalsIgnoreCase(key));
         }
         if (value != null) {
