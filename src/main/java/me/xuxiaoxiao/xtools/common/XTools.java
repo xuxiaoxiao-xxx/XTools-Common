@@ -4,16 +4,17 @@ import me.xuxiaoxiao.xtools.common.hash.XHashTools;
 import me.xuxiaoxiao.xtools.common.http.XHttpTools;
 import me.xuxiaoxiao.xtools.common.http.impl.XRequest;
 import me.xuxiaoxiao.xtools.common.http.impl.XResponse;
+import me.xuxiaoxiao.xtools.common.reflect.XReflectTools;
 import me.xuxiaoxiao.xtools.common.time.XTimeTools;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
+import java.util.StringJoiner;
 
 /**
  * 常用的基本的函数
@@ -21,8 +22,21 @@ import java.util.Map;
 public final class XTools {
     private static XHashTools hashTools = new XHashTools(new XHashTools.Config());
     private static XHttpTools httpTools = new XHttpTools(new XHttpTools.Config());
+    private static XReflectTools reflectTools = new XReflectTools();
 
     private XTools() {
+    }
+
+    public static void setTools(XHashTools hashTools) {
+        XTools.hashTools = hashTools;
+    }
+
+    public static void setTools(XHttpTools httpTools) {
+        XTools.httpTools = httpTools;
+    }
+
+    public static void setTools(XReflectTools reflectTools) {
+        XTools.reflectTools = reflectTools;
     }
 
     /**
@@ -33,7 +47,7 @@ public final class XTools {
      */
     @Nonnull
     public static String md5(@Nonnull String str) {
-        return hashTools.hash(XHashTools.HASH_MD5, str.getBytes(StandardCharsets.UTF_8));
+        return hashTools.hash(XHashTools.HASH_MD5, str.getBytes());
     }
 
     /**
@@ -55,7 +69,7 @@ public final class XTools {
      */
     @Nonnull
     public static String sha1(@Nonnull String str) {
-        return hashTools.hash(XHashTools.HASH_SHA1, str.getBytes(StandardCharsets.UTF_8));
+        return hashTools.hash(XHashTools.HASH_SHA1, str.getBytes());
     }
 
     /**
@@ -77,7 +91,7 @@ public final class XTools {
      */
     @Nonnull
     public static String sha256(@Nonnull String str) {
-        return hashTools.hash(XHashTools.HASH_SHA1, str.getBytes(StandardCharsets.UTF_8));
+        return hashTools.hash(XHashTools.HASH_SHA256, str.getBytes());
     }
 
     /**
@@ -172,7 +186,7 @@ public final class XTools {
      * @return 去除前后空白符的字符串，如果传入的字符串为null则返回null
      */
     @Nullable
-    public static String strTrim(@Nullable String str) {
+    public static String trim(@Nullable String str) {
         return str == null ? null : str.trim();
     }
 
@@ -183,7 +197,7 @@ public final class XTools {
      * @return 去除每个元素前后空白符的字符串数组，如果传入的字符串数组为null则返回null，字符串中元素为null的返回的数据中也是null
      */
     @Nullable
-    public static String[] strTrim(@Nullable String[] strs) {
+    public static String[] trim(@Nullable String[] strs) {
         if (strs == null) {
             return null;
         } else {
@@ -195,62 +209,52 @@ public final class XTools {
     }
 
     /**
-     * 将字符串数组用一个固定的字符串连接起来
+     * 将数组用一个固定的字符串连接起来
      *
      * @param array 数组
      * @param glue  用于连接的字符串
-     * @param <T>   数组的类型
      * @return 连接后的字符串
      */
     @Nonnull
-    public static <T> String joinArray(@Nonnull T[] array, @Nonnull String glue) {
-        StringBuilder sbStr = new StringBuilder();
+    public static String join(@Nonnull Object[] array, @Nonnull String glue) {
+        StringJoiner joiner = new StringJoiner(glue);
         for (Object obj : array) {
-            if (sbStr.length() > 0) {
-                sbStr.append(glue);
-            }
-            sbStr.append(obj);
+            joiner.add(String.valueOf(obj));
         }
-        return sbStr.toString();
+        return joiner.toString();
     }
 
     /**
      * 将集合元素用一个固定的字符串连接起来
      *
-     * @param set  需要连接的集合
-     * @param glue 用于连接的字符串
+     * @param collection 需要连接的集合
+     * @param glue       用于连接的字符串
      * @return 连接后的字符串
      */
     @Nonnull
-    public static String joinCollection(@Nonnull Collection<?> set, @Nonnull String glue) {
-        StringBuilder sbStr = new StringBuilder();
-        for (Object obj : set) {
-            if (sbStr.length() > 0) {
-                sbStr.append(glue);
-            }
-            sbStr.append(obj);
+    public static String join(@Nonnull Collection<?> collection, @Nonnull String glue) {
+        StringJoiner joiner = new StringJoiner(glue);
+        for (Object obj : collection) {
+            joiner.add(String.valueOf(obj));
         }
-        return sbStr.toString();
+        return joiner.toString();
     }
 
     /**
      * 将映射用固定的字符串连接起来
      *
-     * @param strMap    键值对集合
+     * @param map       键值对集合
      * @param glueInner 连接键和值的字符串
      * @param glueOuter 连接键值对之间的字符串
      * @return 拼接后的字符串
      */
     @Nonnull
-    public static String joinMap(@Nonnull Map<?, ?> strMap, @Nonnull String glueInner, @Nonnull String glueOuter) {
-        StringBuilder sbStr = new StringBuilder();
-        for (Object key : strMap.keySet()) {
-            if (sbStr.length() > 0) {
-                sbStr.append(glueOuter);
-            }
-            sbStr.append(key).append(glueInner).append(strMap.get(key));
+    public static String join(@Nonnull Map<?, ?> map, @Nonnull String glueInner, @Nonnull String glueOuter) {
+        StringJoiner joiner = new StringJoiner(glueOuter);
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            joiner.add(entry.getKey() + glueInner + entry.getValue());
         }
-        return sbStr.toString();
+        return joiner.toString();
     }
 
     /**
@@ -734,5 +738,33 @@ public final class XTools {
     @Nonnull
     public static XResponse http(@Nonnull XRequest request) {
         return httpTools.http(request);
+    }
+
+    @Nullable
+    public static <T> T getFieldValue(@Nonnull Object obj, @Nonnull String field) {
+        return reflectTools.getFieldValue(obj, field);
+    }
+
+    @Nullable
+    public static <T> T getFieldValue(@Nonnull Class<?> clazz, @Nonnull String field) {
+        return reflectTools.getFieldValue(clazz, field);
+    }
+
+    public static void setFieldValue(@Nonnull Object obj, @Nonnull String field, @Nullable Object value) {
+        reflectTools.setFieldValue(obj, field, value);
+    }
+
+    public static void setFieldValue(@Nonnull Class<?> clazz, @Nonnull String field, @Nullable Object value) {
+        reflectTools.setFieldValue(clazz, field, value);
+    }
+
+    @Nullable
+    public static <T> T invokeMethod(@Nonnull Object obj, @Nonnull String method, @Nullable Object... args) {
+        return reflectTools.invokeMethod(obj, method, args);
+    }
+
+    @Nullable
+    public static <T> T invokeMethod(@Nonnull Class<?> clazz, @Nonnull String method, @Nullable Object... args) {
+        return reflectTools.invokeMethod(clazz, method, args);
     }
 }
