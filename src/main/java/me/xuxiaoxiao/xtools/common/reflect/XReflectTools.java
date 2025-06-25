@@ -87,7 +87,7 @@ public class XReflectTools {
             @Override
             public Void apply(Field field) {
                 try {
-                    field.set(null, value);
+                    field.set(obj, value);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -117,7 +117,7 @@ public class XReflectTools {
         Objects.requireNonNull(obj, "Parameter 'obj' cannot be null");
         Objects.requireNonNull(method, "Parameter 'method' cannot be null");
 
-        return accessMethod(obj.getClass(), "method", new Function<Method, T>() {
+        return accessMethod(obj.getClass(), method, new Function<Method, T>() {
             @Override
             public T apply(Method method) {
                 try {
@@ -133,7 +133,7 @@ public class XReflectTools {
         Objects.requireNonNull(clazz, "Parameter 'clazz cannot be null");
         Objects.requireNonNull(method, "Parameter 'method' cannot be null");
 
-        return accessMethod(clazz, "method", new Function<Method, T>() {
+        return accessMethod(clazz, method, new Function<Method, T>() {
             @Override
             public T apply(Method method) {
                 try {
