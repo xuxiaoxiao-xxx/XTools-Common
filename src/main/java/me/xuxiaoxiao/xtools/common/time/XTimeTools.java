@@ -6,6 +6,9 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -103,6 +106,20 @@ public class XTimeTools {
      * 存储SimpleDateFormat映射的ThreadLocal
      */
     private static final ThreadLocal<HashMap<String, SimpleDateFormat>> DATE_FORMATS = new ThreadLocal<>();
+
+
+    public static String dateFormat() {
+        Date date = new Date();
+
+        Instant instant = date.toInstant();
+        ZoneId zoneId = ZoneId.of("Asia/Tokyo");
+
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        String result = instant.atZone(zoneId).format(formatter);
+        return result;
+    }
 
     /**
      * 将date对象转换成相应格式的字符串，线程安全
