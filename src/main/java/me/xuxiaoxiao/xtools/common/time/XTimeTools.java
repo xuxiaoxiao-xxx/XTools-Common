@@ -5,9 +5,7 @@ import me.xuxiaoxiao.xtools.common.XTools;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
@@ -102,47 +100,19 @@ public class XTimeTools {
      */
     public static final String FORMAT_EEEE = "EEEE";
 
-    /**
-     * 存储SimpleDateFormat映射的ThreadLocal
-     */
-    private static final ThreadLocal<HashMap<String, SimpleDateFormat>> DATE_FORMATS = new ThreadLocal<>();
-
-
-    public static String dateFormat() {
-        Date date = new Date();
-
-        Instant instant = date.toInstant();
-        ZoneId zoneId = ZoneId.of("Asia/Tokyo");
-
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        String result = instant.atZone(zoneId).format(formatter);
-        return result;
-    }
+    private static final HashMap<String, DateTimeFormatter> FORMATTERS = new HashMap<>();
 
     /**
-     * 将date对象转换成相应格式的字符串，线程安全
+     * 按照指定格式，将instant转化成本地时间，并格式化，线程安全
      *
      * @param format 格式字符串
      * @param date   date对象
-     * @return 相应格式的字符串
+     * @return 本地时间字符串
      */
+    @Deprecated
     @Nonnull
     public static String dateFormat(@Nonnull String format, @Nonnull Date date) {
-        Objects.requireNonNull(format);
-        Objects.requireNonNull(date);
-        HashMap<String, SimpleDateFormat> formats = DATE_FORMATS.get();
-        if (formats == null) {
-            formats = new HashMap<>();
-            DATE_FORMATS.set(formats);
-        }
-        SimpleDateFormat dateFormat = formats.get(format);
-        if (dateFormat == null) {
-            dateFormat = new SimpleDateFormat(format);
-            formats.put(format, dateFormat);
-        }
-        return dateFormat.format(date);
+        return formatTime(format, date.toInstant().atZone(ZoneId.systemDefault()));
     }
 
     /**
@@ -153,24 +123,107 @@ public class XTimeTools {
      * @return 相应的date对象
      */
     @Nonnull
+    @Deprecated
     public static Date dateParse(@Nonnull String format, @Nonnull String dateStr) {
         Objects.requireNonNull(format);
         Objects.requireNonNull(dateStr);
-        HashMap<String, SimpleDateFormat> formats = DATE_FORMATS.get();
-        if (formats == null) {
-            formats = new HashMap<>();
-            DATE_FORMATS.set(formats);
-        }
-        SimpleDateFormat dateFormat = formats.get(format);
-        if (dateFormat == null) {
-            dateFormat = new SimpleDateFormat(format);
-            formats.put(format, dateFormat);
-        }
-        try {
-            return dateFormat.parse(dateStr);
-        } catch (Exception e) {
-            throw new IllegalArgumentException(String.format("日期:%s 不符合格式:%s", dateStr, format), e);
-        }
+
+        DateTimeFormatter formatter = FORMATTERS.computeIfAbsent(format, DateTimeFormatter::ofPattern);
+        LocalDateTime dateTime = LocalDateTime.from(formatter.parse(dateStr));
+        return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    public static ZonedDateTime utcTime(Date date) {
+        return ZonedDateTime.ofInstant(date.toInstant(), ZoneId.of("UTC"));
+    }
+
+    public static ZonedDateTime utcTime(LocalDateTime date) {
+        return ZonedDateTime.of(date, ZoneId.of("UTC"));
+    }
+
+    public static ZonedDateTime utcTime(ZonedDateTime date) {
+        return date.withZoneSameInstant(ZoneId.of("UTC"));
+    }
+
+    /**
+     * 按照指定格式，将instant转化成本地时间，并格式化，线程安全
+     *
+     * @param format  格式字符串
+     * @param instant instant对象
+     * @return 本地时间字符串
+     */
+    @Nonnull
+    public static String formatTime(@Nonnull String format, @Nonnull Instant instant) {
+        return formatTime(format, instant.atZone(ZoneId.systemDefault()));
+    }
+
+    /**
+     * 按照指定格式，格式化本地时间，线程安全
+     *
+     * @param format    格式字符串
+     * @param localTime 本地时间对象
+     * @return 本地时间字符串
+     */
+    @Nonnull
+    public static String formatTime(@Nonnull String format, @Nonnull LocalDateTime localTime) {
+        return formatTime(format, localTime.atZone(ZoneId.systemDefault()));
+    }
+
+    /**
+     * 将zonedTime对象转换成相应格式的字符串，线程安全
+     *
+     * @param format    格式字符串
+     * @param zonedTime zonedTime对象
+     * @return 相应格式的字符串
+     */
+    @Nonnull
+    public static String formatTime(@Nonnull String format, @Nonnull ZonedDateTime zonedTime) {
+        Objects.requireNonNull(format);
+        Objects.requireNonNull(zonedTime);
+
+        DateTimeFormatter formatter = FORMATTERS.computeIfAbsent(format, DateTimeFormatter::ofPattern);
+        return zonedTime.format(formatter);
+    }
+
+    /**
+     * 将日期字符串转换成本地时间，线程安全
+     *
+     * @param format    格式字符串
+     * @param localTime 日期字符串
+     * @return 本地时间对象
+     */
+    @Nonnull
+    public static LocalDateTime parseLocal(@Nonnull String format, @Nonnull String localTime) {
+        Objects.requireNonNull(format);
+        Objects.requireNonNull(localTime);
+
+        DateTimeFormatter formatter = FORMATTERS.computeIfAbsent(format, DateTimeFormatter::ofPattern);
+        return LocalDateTime.from(formatter.parse(localTime));
+    }
+
+    /**
+     * 将日期字符串转换成时区时间，线程安全
+     *
+     * @param format    格式字符串
+     * @param zonedTime 日期字符串
+     * @return 时区时间对象
+     */
+    @Nonnull
+    public static ZonedDateTime parseZoned(@Nonnull String format, @Nonnull String zonedTime) {
+        Objects.requireNonNull(format);
+        Objects.requireNonNull(zonedTime);
+
+        DateTimeFormatter formatter = FORMATTERS.computeIfAbsent(format, DateTimeFormatter::ofPattern);
+        return ZonedDateTime.from(formatter.parse(zonedTime));
+    }
+
+    public static void main(String[] args) {
+        ZonedDateTime date = parseZoned("yyyy-MM-dd HH:mm:ss VV", "2026-01-17 21:44:00 UTC");
+
+        LocalDate localDate = date.toLocalDate();
+        LocalDate day = localDate.plusDays(13).plusMonths(1);
+        System.out.println(day);
+        System.out.println(formatTime(FORMAT_YMDHMS, date.withZoneSameInstant(ZoneId.systemDefault())));
     }
 
     /**
@@ -184,6 +237,7 @@ public class XTimeTools {
      */
     public static int dateType(@Nonnull Date date) {
         Objects.requireNonNull(date);
+
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         int year = calendar.get(Calendar.YEAR);
