@@ -116,6 +116,16 @@ public final class XTools {
     }
 
     /**
+     * 判断数组是否为空
+     *
+     * @param array 要判断的数组
+     * @return collection == null || collection.isEmpty()
+     */
+    public static <T> boolean isEmpty(@Nullable T[] array) {
+        return array == null || array.length == 0;
+    }
+
+    /**
      * 判断集合是否为空
      *
      * @param collection 要判断的集合
@@ -143,6 +153,23 @@ public final class XTools {
      */
     public static boolean isBlank(@Nullable String str) {
         return str == null || str.trim().isEmpty();
+    }
+
+    /**
+     * 判断数组是否为空或全是null元素
+     *
+     * @param array 要判断的数组
+     * @return true: 数组里没有有意义的元素；false: 数组中至少有一个非null的元素
+     */
+    public static <T> boolean isBlank(@Nullable T[] array) {
+        if (!XTools.isEmpty(array)) {
+            for (T t : array) {
+                if (t != null) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     /**
@@ -216,10 +243,10 @@ public final class XTools {
      * @return 连接后的字符串
      */
     @Nonnull
-    public static String join(@Nonnull Object[] array, @Nonnull String glue) {
+    public static <T> String join(@Nonnull T[] array, @Nonnull String glue) {
         StringJoiner joiner = new StringJoiner(glue);
-        for (Object obj : array) {
-            joiner.add(String.valueOf(obj));
+        for (T t : array) {
+            joiner.add(String.valueOf(t));
         }
         return joiner.toString();
     }

@@ -6,12 +6,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -103,26 +99,7 @@ public class XTimeTools {
     public static final String FORMAT_EEEE = "EEEE";
 
     /**
-     * 存储SimpleDateFormat映射的ThreadLocal
-     */
-    private static final ThreadLocal<HashMap<String, SimpleDateFormat>> DATE_FORMATS = new ThreadLocal<>();
-
-
-    public static String dateFormat() {
-        Date date = new Date();
-
-        Instant instant = date.toInstant();
-        ZoneId zoneId = ZoneId.of("Asia/Tokyo");
-
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        String result = instant.atZone(zoneId).format(formatter);
-        return result;
-    }
-
-    /**
-     * 将date对象转换成相应格式的字符串，线程安全
+     * 将date对象转换成相应格式的字符串
      *
      * @param format 格式字符串
      * @param date   date对象
@@ -132,17 +109,8 @@ public class XTimeTools {
     public static String dateFormat(@Nonnull String format, @Nonnull Date date) {
         Objects.requireNonNull(format);
         Objects.requireNonNull(date);
-        HashMap<String, SimpleDateFormat> formats = DATE_FORMATS.get();
-        if (formats == null) {
-            formats = new HashMap<>();
-            DATE_FORMATS.set(formats);
-        }
-        SimpleDateFormat dateFormat = formats.get(format);
-        if (dateFormat == null) {
-            dateFormat = new SimpleDateFormat(format);
-            formats.put(format, dateFormat);
-        }
-        return dateFormat.format(date);
+
+        return new SimpleDateFormat(format).format(date);
     }
 
     /**
@@ -156,18 +124,9 @@ public class XTimeTools {
     public static Date dateParse(@Nonnull String format, @Nonnull String dateStr) {
         Objects.requireNonNull(format);
         Objects.requireNonNull(dateStr);
-        HashMap<String, SimpleDateFormat> formats = DATE_FORMATS.get();
-        if (formats == null) {
-            formats = new HashMap<>();
-            DATE_FORMATS.set(formats);
-        }
-        SimpleDateFormat dateFormat = formats.get(format);
-        if (dateFormat == null) {
-            dateFormat = new SimpleDateFormat(format);
-            formats.put(format, dateFormat);
-        }
+
         try {
-            return dateFormat.parse(dateStr);
+            return new SimpleDateFormat(format).parse(dateStr);
         } catch (Exception e) {
             throw new IllegalArgumentException(String.format("日期:%s 不符合格式:%s", dateStr, format), e);
         }
