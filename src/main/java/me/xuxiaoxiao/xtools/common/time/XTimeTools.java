@@ -110,8 +110,7 @@ public class XTimeTools {
         Objects.requireNonNull(format);
         Objects.requireNonNull(date);
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
-        return dateFormat.format(date);
+        return new SimpleDateFormat(format).format(date);
     }
 
     /**
@@ -126,7 +125,6 @@ public class XTimeTools {
         Objects.requireNonNull(format);
         Objects.requireNonNull(dateStr);
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
         try {
             return new SimpleDateFormat(format).parse(dateStr);
         } catch (Exception e) {
