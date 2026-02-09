@@ -99,7 +99,7 @@ public class XTimeTools {
     public static final String FORMAT_EEEE = "EEEE";
 
     /**
-     * 将date对象转换成相应格式的字符串
+     * 将date对象转换成相应格式的字符串，线程安全
      *
      * @param format 格式字符串
      * @param date   date对象
@@ -110,7 +110,8 @@ public class XTimeTools {
         Objects.requireNonNull(format);
         Objects.requireNonNull(date);
 
-        return new SimpleDateFormat(format).format(date);
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
+        return dateFormat.format(date);
     }
 
     /**
@@ -125,6 +126,7 @@ public class XTimeTools {
         Objects.requireNonNull(format);
         Objects.requireNonNull(dateStr);
 
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
         try {
             return new SimpleDateFormat(format).parse(dateStr);
         } catch (Exception e) {
@@ -156,7 +158,7 @@ public class XTimeTools {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            //未找到对应年份假期数据
         }
         return dateInWeek(date) < SATURDAY ? WORKDAY : RESTDAY;
     }
@@ -366,24 +368,16 @@ public class XTimeTools {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
-        switch (calendar.get(Calendar.DAY_OF_WEEK)) {
-            case Calendar.MONDAY:
-                return MONDAY;
-            case Calendar.TUESDAY:
-                return TUESDAY;
-            case Calendar.WEDNESDAY:
-                return WEDNESDAY;
-            case Calendar.THURSDAY:
-                return THURSDAY;
-            case Calendar.FRIDAY:
-                return FRIDAY;
-            case Calendar.SATURDAY:
-                return SATURDAY;
-            case Calendar.SUNDAY:
-                return SUNDAY;
-            default:
-                return -1;
-        }
+        return switch (calendar.get(Calendar.DAY_OF_WEEK)) {
+            case Calendar.MONDAY -> MONDAY;
+            case Calendar.TUESDAY -> TUESDAY;
+            case Calendar.WEDNESDAY -> WEDNESDAY;
+            case Calendar.THURSDAY -> THURSDAY;
+            case Calendar.FRIDAY -> FRIDAY;
+            case Calendar.SATURDAY -> SATURDAY;
+            case Calendar.SUNDAY -> SUNDAY;
+            default -> -1;
+        };
     }
 
     /**
