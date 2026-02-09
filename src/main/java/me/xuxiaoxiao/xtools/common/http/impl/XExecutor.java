@@ -39,8 +39,12 @@ public class XExecutor {
         connection.setReadTimeout(config.getReadTimeout());
         connection.setInstanceFollowRedirects(config.isFollowRedirect());
         if (url.toLowerCase().startsWith("https://")) {
-            ((HttpsURLConnection) connection).setSSLSocketFactory(config.getSslContext().getSocketFactory());
-            ((HttpsURLConnection) connection).setHostnameVerifier(config.getHostnameVerifier());
+            if (config.getSslContext() != null) {
+                ((HttpsURLConnection) connection).setSSLSocketFactory(config.getSslContext().getSocketFactory());
+            }
+            if (config.getHostnameVerifier() != null) {
+                ((HttpsURLConnection) connection).setHostnameVerifier(config.getHostnameVerifier());
+            }
         }
 
         //设置请求方法

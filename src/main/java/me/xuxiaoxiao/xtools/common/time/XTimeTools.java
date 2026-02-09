@@ -6,12 +6,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -103,25 +99,6 @@ public class XTimeTools {
     public static final String FORMAT_EEEE = "EEEE";
 
     /**
-     * 存储SimpleDateFormat映射的ThreadLocal
-     */
-    private static final ThreadLocal<HashMap<String, SimpleDateFormat>> DATE_FORMATS = new ThreadLocal<>();
-
-
-    public static String dateFormat() {
-        Date date = new Date();
-
-        Instant instant = date.toInstant();
-        ZoneId zoneId = ZoneId.of("Asia/Tokyo");
-
-        DateTimeFormatter formatter =
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
-        String result = instant.atZone(zoneId).format(formatter);
-        return result;
-    }
-
-    /**
      * 将date对象转换成相应格式的字符串，线程安全
      *
      * @param format 格式字符串
@@ -132,16 +109,8 @@ public class XTimeTools {
     public static String dateFormat(@Nonnull String format, @Nonnull Date date) {
         Objects.requireNonNull(format);
         Objects.requireNonNull(date);
-        HashMap<String, SimpleDateFormat> formats = DATE_FORMATS.get();
-        if (formats == null) {
-            formats = new HashMap<>();
-            DATE_FORMATS.set(formats);
-        }
-        SimpleDateFormat dateFormat = formats.get(format);
-        if (dateFormat == null) {
-            dateFormat = new SimpleDateFormat(format);
-            formats.put(format, dateFormat);
-        }
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
         return dateFormat.format(date);
     }
 
@@ -156,16 +125,8 @@ public class XTimeTools {
     public static Date dateParse(@Nonnull String format, @Nonnull String dateStr) {
         Objects.requireNonNull(format);
         Objects.requireNonNull(dateStr);
-        HashMap<String, SimpleDateFormat> formats = DATE_FORMATS.get();
-        if (formats == null) {
-            formats = new HashMap<>();
-            DATE_FORMATS.set(formats);
-        }
-        SimpleDateFormat dateFormat = formats.get(format);
-        if (dateFormat == null) {
-            dateFormat = new SimpleDateFormat(format);
-            formats.put(format, dateFormat);
-        }
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat(format);
         try {
             return dateFormat.parse(dateStr);
         } catch (Exception e) {
@@ -197,7 +158,7 @@ public class XTimeTools {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            //未找到对应年份假期数据
         }
         return dateInWeek(date) < SATURDAY ? WORKDAY : RESTDAY;
     }
@@ -407,24 +368,16 @@ public class XTimeTools {
         long baseTime = base != null ? base.getTime() : System.currentTimeMillis();
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(baseTime);
-        switch (calendar.get(Calendar.DAY_OF_WEEK)) {
-            case Calendar.MONDAY:
-                return MONDAY;
-            case Calendar.TUESDAY:
-                return TUESDAY;
-            case Calendar.WEDNESDAY:
-                return WEDNESDAY;
-            case Calendar.THURSDAY:
-                return THURSDAY;
-            case Calendar.FRIDAY:
-                return FRIDAY;
-            case Calendar.SATURDAY:
-                return SATURDAY;
-            case Calendar.SUNDAY:
-                return SUNDAY;
-            default:
-                return -1;
-        }
+        return switch (calendar.get(Calendar.DAY_OF_WEEK)) {
+            case Calendar.MONDAY -> MONDAY;
+            case Calendar.TUESDAY -> TUESDAY;
+            case Calendar.WEDNESDAY -> WEDNESDAY;
+            case Calendar.THURSDAY -> THURSDAY;
+            case Calendar.FRIDAY -> FRIDAY;
+            case Calendar.SATURDAY -> SATURDAY;
+            case Calendar.SUNDAY -> SUNDAY;
+            default -> -1;
+        };
     }
 
     /**
